@@ -1,0 +1,509 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<PageTitle>Спектр — оценка кандидатов</PageTitle>
+
+@if (!IsAuthenticated)
+{
+    <main class="login-shell">
+        <section class="login-manifesto" aria-label="О системе">
+            <div class="brand brand-light"><span class="brand-mark"></span><span>Спектр</span></div>
+
+            <div class="manifesto-copy">
+                <span class="eyebrow">Система оценки кандидатов</span>
+                <h1>Каждое собеседование — на своей шкале</h1>
+                <p>Единый контур для кандидатов, матриц компетенций и решений по найму.</p>
+            </div>
+
+            <div class="spectrum-card" aria-label="Шкала компетенций">
+                @for (var index = 0; index < Competencies.Length; index++)
+                {
+                    var score = 2 + index % 4;
+                    <div class="spectrum-row">
+                        <span class="spectrum-index">0@(index + 1)</span>
+                        <span>@Competencies[index]</span>
+                        <DotScale Value="score" />
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="login-panel">
+            <div class="login-card">
+                <div class="brand brand-mobile"><span class="brand-mark"></span><span>Спектр</span></div>
+                <span class="eyebrow dark">Демо-доступ</span>
+                <h2>Вход в систему</h2>
+                <p class="form-intro">Выберите рабочую роль — пароль для демонстрации не нужен.</p>
+
+                <label for="login">Логин</label>
+                <input id="login" value="p.petrova" autocomplete="username" />
+
+                <label for="password">Пароль</label>
+                <input id="password" type="password" value="spectrum" autocomplete="current-password" />
+
+                <fieldset class="role-picker">
+                    <legend>Роль</legend>
+                    <div class="role-options">
+                        @foreach (var role in Roles)
+                        {
+                            <button type="button" class="role-chip @(Role == role ? "is-active" : null)" @onclick="() => Role = role">@role</button>
+                        }
+                    </div>
+                </fieldset>
+
+                <button class="primary-button login-button" @onclick="Login">
+                    Войти <span>как «@Role»</span>
+                </button>
+                <p class="demo-note">Данные в демо-режиме сохраняются до обновления страницы.</p>
+            </div>
+        </section>
+    </main>
+}
+else
+{
+    <div class="app-shell">
+        <aside class="sidebar @(MobileMenuOpen ? "is-open" : null)">
+            <div>
+                <div class="brand brand-light sidebar-brand"><span class="brand-mark"></span><span>Спектр</span></div>
+                <nav aria-label="Основная навигация">
+                    <button class="nav-item @(View == "dashboard" ? "is-active" : null)" @onclick='() => Navigate("dashboard")'>
+                        <SvgIcon Name="dashboard" /> <span>Дашборд</span>
+                    </button>
+                    <button class="nav-item @(View == "candidates" || View == "candidate" || View == "protocol" ? "is-active" : null)" @onclick='() => Navigate("candidates")'>
+                        <SvgIcon Name="users" /> <span>Реестр кандидатов</span>
+                    </button>
+                    @if (Role == "Решала")
+                    {
+                        <button class="nav-item @(View == "decisions" ? "is-active" : null)" @onclick='() => Navigate("decisions")'>
+                            <SvgIcon Name="clipboard" /> <span>На согласовании</span><span class="nav-counter">@PendingCount</span>
+                        </button>
+                    }
+                    @if (Role == "Администратор")
+                    {
+                        <button class="nav-item @(View == "users" ? "is-active" : null)" @onclick='() => Navigate("users")'>
+                            <SvgIcon Name="shield" /> <span>Пользователи</span>
+                        </button>
+                    }
+                </nav>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="user-summary">
+                    <Initials Name="Петрова Анна" Class="small inverse" />
+                    <div><strong>Петрова А.А.</strong><span>@Role</span></div>
+                </div>
+                <button class="nav-item" @onclick="Logout"><SvgIcon Name="logout" /><span>Выйти</span></button>
+            </div>
+        </aside>
+
+        @if (MobileMenuOpen)
+        {
+            <button class="menu-scrim" aria-label="Закрыть меню" @onclick="() => MobileMenuOpen = false"></button>
+        }
+
+        <main class="workspace">
+            <header class="topbar">
+                <button class="menu-button" aria-label="Открыть меню" @onclick="() => MobileMenuOpen = !MobileMenuOpen"><SvgIcon Name="menu" /></button>
+                <div class="topbar-title">
+                    <span class="eyebrow dark">@SectionLabel</span>
+                    <h1>@PageTitleText</h1>
+                </div>
+                @if (View is "candidates" or "decisions")
+                {
+                    <label class="search-box">
+                        <SvgIcon Name="search" Size="16" />
+                        <input @bind="Search" @bind:event="oninput" placeholder="ФИО или вакансия" aria-label="Поиск кандидатов" />
+                    </label>
+                }
+            </header>
+
+            @if (View == "dashboard")
+            {
+                <section class="page-content dashboard-page">
+                    <div class="welcome-line">
+                        <div><span class="eyebrow dark">Рабочий день · 02 июля 2026</span><h2>С возвращением, Анна</h2></div>
+                        <p>Вы вошли как «@Role»</p>
+                    </div>
+
+                    <div class="kpi-grid">
+                        @foreach (var item in DashboardKpis)
+                        {
+                            <article class="kpi-card @item.Class">
+                                <span>@item.Label</span>
+                                <strong>@item.Value.ToString("00")</strong>
+                                <i></i>
+                            </article>
+                        }
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <article class="panel competency-panel">
+                            <div class="panel-heading"><div><span class="eyebrow dark">Общий срез</span><h3>Профиль компетенций</h3></div><span class="panel-meta">по оценённым интервью</span></div>
+                            <div class="competency-list">
+                                @foreach (var competency in Competencies)
+                                {
+                                    var average = CompetencyAverage(competency);
+                                    <div class="competency-row">
+                                        <span>@competency</span>
+                                        <div class="score-track"><i style="width: @(average / 5 * 100)%"></i></div>
+                                        <strong>@(average > 0 ? average.ToString("0.0", CultureInfo.InvariantCulture) : "—")</strong>
+                                    </div>
+                                }
+                            </div>
+                        </article>
+
+                        <article class="panel recent-panel">
+                            <div class="panel-heading"><div><span class="eyebrow dark">Последние изменения</span><h3>Недавние решения</h3></div></div>
+                            <div class="decision-list">
+                                @foreach (var interview in RecentDecisions)
+                                {
+                                    var person = Candidates.First(x => x.Id == interview.CandidateId);
+                                    <button class="decision-row" @onclick="() => OpenCandidate(person.Id)">
+                                        <Initials Name="@person.Name" Class="small" />
+                                        <span><strong>@person.Name</strong><small>@interview.Vacancy</small></span>
+                                        <StatusBadge Status="@interview.Status" />
+                                    </button>
+                                }
+                            </div>
+                            <button class="text-button" @onclick='() => Navigate("candidates")'>Открыть реестр <span>→</span></button>
+                        </article>
+                    </div>
+                </section>
+            }
+            else if (View is "candidates" or "decisions")
+            {
+                <section class="page-content registry-page">
+                    <div class="registry-toolbar">
+                        <div class="filter-group">
+                            <label>Вакансия<select @bind="VacancyFilter">@foreach (var vacancy in Vacancies) { <option value="@vacancy">@vacancy</option> }</select></label>
+                            <label>Статус<select @bind="StatusFilter">@foreach (var status in Statuses) { <option value="@status">@status</option> }</select></label>
+                        </div>
+                        <span class="result-count">Найдено <strong>@FilteredCandidates.Count</strong></span>
+                    </div>
+
+                    <div class="registry-table panel">
+                        <div class="registry-head"><span>Кандидат</span><span>Вакансия</span><span>Статус</span><span>Оценка</span><span>Дата</span></div>
+                        @if (FilteredCandidates.Count == 0)
+                        {
+                            <div class="empty-state"><strong>Кандидаты не найдены</strong><span>Измените запрос или сбросьте фильтры.</span><button class="text-button" @onclick="ResetFilters">Сбросить фильтры</button></div>
+                        }
+                        @foreach (var candidate in FilteredCandidates)
+                        {
+                            var response = candidate.Responses[0];
+                            var interview = GetInterview(response.InterviewId);
+                            <button class="registry-row" @onclick="() => OpenCandidate(candidate.Id)">
+                                <span class="candidate-cell"><Initials Name="@candidate.Name" /><span><strong>@candidate.Name</strong><small>@candidate.City</small></span></span>
+                                <span data-label="Вакансия">@response.Vacancy @if (candidate.Responses.Count > 1) { <small>+@(candidate.Responses.Count - 1)</small> }</span>
+                                <span data-label="Статус"><StatusBadge Status="@LatestStatus(candidate)" /></span>
+                                <span data-label="Оценка">@if (interview is not null) { <DotScale Value="@AverageScore(interview)" /> } else { <span class="muted">—</span> }</span>
+                                <span data-label="Дата" class="mono">@response.Date</span>
+                            </button>
+                        }
+                    </div>
+                </section>
+            }
+            else if (View == "candidate" && SelectedCandidate is not null)
+            {
+                <section class="page-content candidate-page">
+                    <button class="back-button" @onclick='() => Navigate("candidates")'><SvgIcon Name="back" Size="16" /> К реестру</button>
+
+                    <article class="candidate-hero panel">
+                        <div class="candidate-heading">
+                            <Initials Name="@SelectedCandidate.Name" Class="large" />
+                            <div><span class="eyebrow dark">Карточка кандидата</span><h2>@SelectedCandidate.Name</h2><StatusBadge Status="@LatestStatus(SelectedCandidate)" /></div>
+                            <span class="candidate-number">№ @SelectedCandidate.Id.ToString("0000")</span>
+                        </div>
+                        <div class="candidate-facts">
+                            <div><SvgIcon Name="phone" /><span><small>Телефон</small>@SelectedCandidate.Phone</span></div>
+                            <div><SvgIcon Name="mail" /><span><small>Электронная почта</small>@SelectedCandidate.Email</span></div>
+                            <div><SvgIcon Name="pin" /><span><small>Город</small>@SelectedCandidate.City</span></div>
+                            <div><SvgIcon Name="cap" /><span><small>Образование</small>@SelectedCandidate.Education</span></div>
+                            <div class="wide"><SvgIcon Name="briefcase" /><span><small>Опыт</small>@SelectedCandidate.Experience</span></div>
+                        </div>
+                    </article>
+
+                    <div class="section-heading"><span class="eyebrow dark">История взаимодействия</span><h3>Отклики и собеседования</h3></div>
+                    <div class="response-list">
+                        @foreach (var response in SelectedCandidate.Responses)
+                        {
+                            var interview = GetInterview(response.InterviewId);
+                            <article class="response-card panel">
+                                <div class="response-date"><strong>@response.Date[..2]</strong><span>@MonthName(response.Date)</span><small>@response.Date[^4..]</small></div>
+                                <div class="response-main"><h4>@response.Vacancy</h4><span><SvgIcon Name="calendar" Size="14" /> @response.Date @if (interview is not null) { <span>· @interview.Time · @interview.Format</span> }</span></div>
+                                @if (interview is not null) { <DotScale Value="@AverageScore(interview)" /> }
+                                <StatusBadge Status="@(interview?.Status ?? "Новый")" />
+                                <button class="secondary-button" @onclick="() => OpenProtocol(response)">@(interview is null ? "Начать интервью" : "Открыть протокол")</button>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+            else if (View == "protocol" && SelectedCandidate is not null && SelectedInterview is not null)
+            {
+                <section class="page-content protocol-page">
+                    <div class="protocol-actions">
+                        <button class="back-button" @onclick='() => View = "candidate"'><SvgIcon Name="back" Size="16" /> К карточке кандидата</button>
+                        <button class="secondary-button" @onclick="Print"><SvgIcon Name="print" Size="15" /> Печать / PDF</button>
+                    </div>
+
+                    <article class="protocol-sheet">
+                        <header class="protocol-header">
+                            <div class="protocol-seal"><span>СП</span><small>HR · 2026</small></div>
+                            <div><span class="eyebrow dark">Протокол собеседования</span><h2>@SelectedInterview.Vacancy</h2></div>
+                            <StatusBadge Status="@SelectedInterview.Status" />
+                        </header>
+
+                        <div class="protocol-meta">
+                            <div><small>Кандидат</small><strong>@SelectedCandidate.Name</strong></div>
+                            <div><small>Дата и время</small><strong class="mono">@SelectedInterview.Date · @SelectedInterview.Time</strong></div>
+                            <div><small>Формат</small><strong>@SelectedInterview.Format</strong></div>
+                            <div><small>HR</small><strong>@SelectedInterview.Hr</strong></div>
+                            <div><small>Согласующий</small><strong>@SelectedInterview.Approver</strong></div>
+                        </div>
+
+                        <section class="matrix-section">
+                            <div class="section-heading compact"><span class="eyebrow dark">Шкала 1–5</span><h3>Матрица компетенций</h3></div>
+                            <div class="matrix-list">
+                                @foreach (var competency in Competencies)
+                                {
+                                    <div class="matrix-row">
+                                        <span>@competency</span>
+                                        <DotScale Value="@SelectedInterview.Scores[competency]" Editable="@CanEditProtocol" OnChange="@(score => SetScore(competency, score))" />
+                                        <strong class="mono">@(SelectedInterview.Scores[competency] == 0 ? "—" : SelectedInterview.Scores[competency])/5</strong>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+
+                        <section class="comment-section">
+                            <label for="comment">Комментарий по итогам</label>
+                            <textarea id="comment" @bind="SelectedInterview.Comment" disabled="@(!CanEditProtocol)" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
+                        </section>
+
+                        <section class="decision-section">
+                            <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
+                            <div class="decision-options">
+                                @foreach (var option in DecisionOptions)
+                                {
+                                    <button class="decision-button @DecisionClass(option) @(SelectedInterview.Decision == option ? "is-active" : null)" @onclick="() => SetDecision(option)">
+                                        @if (SelectedInterview.Decision == option) { <SvgIcon Name="check" Size="14" /> } @option
+                                    </button>
+                                }
+                            </div>
+                        </section>
+
+                        <footer class="signature-grid"><span>HR: @SelectedInterview.Hr <i></i></span><span>Согласующий: @SelectedInterview.Approver <i></i></span></footer>
+                    </article>
+                </section>
+            }
+            else if (View == "users")
+            {
+                <section class="page-content users-page">
+                    <div class="registry-table panel users-table">
+                        <div class="users-head"><span>Сотрудник</span><span>Роль</span><span>Почта</span><span>Статус</span></div>
+                        @foreach (var user in Users)
+                        {
+                            <div class="users-row"><span class="candidate-cell"><Initials Name="@user.Name" /><strong>@user.Name</strong></span><span>@user.Role</span><span class="mono">@user.Email</span><span class="online-dot">Активен</span></div>
+                        }
+                    </div>
+                </section>
+            }
+        </main>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ToastMessage))
+    {
+        <div class="toast" role="status"><SvgIcon Name="check" Size="16" /> @ToastMessage</div>
+    }
+}
+
+@code {
+    private static readonly string[] Competencies = ["Коммуникация", "Мотивация", "Обучаемость", "Технические навыки", "Соответствие вакансии"];
+    private static readonly string[] Roles = ["Отдел кадров", "Решала", "Администратор"];
+    private static readonly string[] DecisionOptions = ["Принять", "Следующий этап", "Резерв", "Отказать"];
+    private static readonly string[] Statuses = ["Все статусы", "Новый", "Собеседование запланировано", "На согласовании", "Принят", "Резерв", "Отклонён"];
+
+    private bool IsAuthenticated;
+    private bool MobileMenuOpen;
+    private string Role = "Отдел кадров";
+    private string View = "dashboard";
+    private string Search = string.Empty;
+    private string VacancyFilter = "Все вакансии";
+    private string StatusFilter = "Все статусы";
+    private string? ToastMessage;
+    private Candidate? SelectedCandidate;
+    private Interview? SelectedInterview;
+    private List<Candidate> Candidates { get; } = SeedCandidates();
+    private Dictionary<string, Interview> Interviews { get; } = SeedInterviews();
+
+    private string PageTitleText => View switch
+    {
+        "dashboard" => "Дашборд",
+        "candidates" => "Реестр кандидатов",
+        "decisions" => "На согласовании",
+        "candidate" => SelectedCandidate?.Name ?? "Карточка кандидата",
+        "protocol" => "Протокол собеседования",
+        "users" => "Пользователи",
+        _ => "Спектр"
+    };
+
+    private string SectionLabel => View switch
+    {
+        "candidate" or "protocol" => "Кандидаты / Карточка",
+        "users" => "Управление доступом",
+        _ => "Подбор и оценка"
+    };
+
+    private int PendingCount => Candidates.Count(x => LatestStatus(x) == "На согласовании");
+    private bool CanEditProtocol => Role != "Решала";
+    private IEnumerable<Interview> RecentDecisions => Interviews.Values.Where(x => x.Decision is not null).Reverse().Take(4);
+    private IEnumerable<string> Vacancies => new[] { "Все вакансии" }.Concat(Candidates.SelectMany(x => x.Responses).Select(x => x.Vacancy).Distinct());
+
+    private IReadOnlyList<Candidate> FilteredCandidates
+    {
+        get
+        {
+            IEnumerable<Candidate> source = View == "decisions"
+                ? Candidates.Where(x => LatestStatus(x) == "На согласовании")
+                : Candidates;
+
+            return source.Where(candidate =>
+            {
+                var searchMatch = string.IsNullOrWhiteSpace(Search)
+                    || candidate.Name.Contains(Search, StringComparison.OrdinalIgnoreCase)
+                    || candidate.Responses.Any(x => x.Vacancy.Contains(Search, StringComparison.OrdinalIgnoreCase));
+                var vacancyMatch = VacancyFilter == "Все вакансии" || candidate.Responses.Any(x => x.Vacancy == VacancyFilter);
+                var statusMatch = StatusFilter == "Все статусы" || LatestStatus(candidate) == StatusFilter;
+                return searchMatch && vacancyMatch && statusMatch;
+            }).ToList();
+        }
+    }
+
+    private IEnumerable<(string Label, int Value, string Class)> DashboardKpis =>
+    [
+        ("Активные кандидаты", Candidates.Count(x => LatestStatus(x) is "Новый" or "Собеседование запланировано"), "accent-teal"),
+        ("На согласовании", PendingCount, "accent-amber"),
+        ("Принято", Candidates.Count(x => LatestStatus(x) == "Принят"), "accent-green"),
+        ("Всего в реестре", Candidates.Count, "accent-blue")
+    ];
+
+    private void Login() => IsAuthenticated = true;
+    private void Logout() { IsAuthenticated = false; View = "dashboard"; MobileMenuOpen = false; }
+    private void Navigate(string view) { View = view; MobileMenuOpen = false; if (view is not "candidates" and not "decisions") Search = string.Empty; }
+    private void OpenCandidate(int id) { SelectedCandidate = Candidates.First(x => x.Id == id); View = "candidate"; }
+
+    private void OpenProtocol(Response response)
+    {
+        if (SelectedCandidate is null) return;
+        if (response.InterviewId is null)
+        {
+            response.InterviewId = $"new-{response.Id}";
+            Interviews[response.InterviewId] = NewInterview(SelectedCandidate.Id, response.Vacancy, response.Date);
+        }
+
+        SelectedInterview = Interviews[response.InterviewId];
+        View = "protocol";
+    }
+
+    private void SetScore(string competency, int score)
+    {
+        if (SelectedInterview is not null && CanEditProtocol) SelectedInterview.Scores[competency] = score;
+    }
+
+    private async Task SetDecision(string decision)
+    {
+        if (SelectedInterview is null) return;
+        SelectedInterview.Decision = decision;
+        SelectedInterview.Status = decision switch
+        {
+            "Принять" => "Принят",
+            "Следующий этап" => "Собеседование запланировано",
+            "Резерв" => "Резерв",
+            _ => "Отклонён"
+        };
+        await ShowToast($"Решение «{decision}» сохранено");
+    }
+
+    private async Task ShowToast(string message)
+    {
+        ToastMessage = message;
+        StateHasChanged();
+        await Task.Delay(2200);
+        ToastMessage = null;
+    }
+
+    private async Task Print() => await JS.InvokeVoidAsync("print");
+    private void ResetFilters() { Search = string.Empty; VacancyFilter = "Все вакансии"; StatusFilter = "Все статусы"; }
+    private Interview? GetInterview(string? id) => id is not null && Interviews.TryGetValue(id, out var interview) ? interview : null;
+    private string LatestStatus(Candidate candidate) => GetInterview(candidate.Responses[0].InterviewId)?.Status ?? "Новый";
+    private double AverageScore(Interview interview) => interview.Scores.Values.Where(x => x > 0).DefaultIfEmpty().Average();
+    private double CompetencyAverage(string competency) => Interviews.Values.Select(x => x.Scores[competency]).Where(x => x > 0).DefaultIfEmpty().Average();
+    private string DecisionClass(string decision) => decision switch { "Принять" => "accept", "Следующий этап" => "next", "Резерв" => "reserve", _ => "reject" };
+
+    private static string MonthName(string date) => date.Substring(3, 2) switch
+    {
+        "01" => "янв", "02" => "фев", "03" => "мар", "04" => "апр", "05" => "май", "06" => "июн",
+        "07" => "июл", "08" => "авг", "09" => "сен", "10" => "окт", "11" => "ноя", _ => "дек"
+    };
+
+    private static Dictionary<string, int> Scores(int communication = 0, int motivation = 0, int learning = 0, int technical = 0, int fit = 0) => new()
+    {
+        [Competencies[0]] = communication, [Competencies[1]] = motivation, [Competencies[2]] = learning,
+        [Competencies[3]] = technical, [Competencies[4]] = fit
+    };
+
+    private static Interview NewInterview(int candidateId, string vacancy, string date) => new()
+    {
+        CandidateId = candidateId, Vacancy = vacancy, Date = date, Time = "10:00", Format = "Онлайн",
+        Hr = "Петрова А.А.", Approver = "Сидоров С.С.", Scores = Scores(), Status = "Собеседование запланировано"
+    };
+
+    private static List<Candidate> SeedCandidates() =>
+    [
+        new(1, "Иванов Иван Иванович", "Казань", "+7 900 111-22-33", "ivanov@mail.ru", "КФУ, ИТИС, бакалавриат, 2026", "1 год — Junior .NET Developer, ООО «Софтлайн»", [new("r1", "Junior .NET Developer", "05.07.2026", "i1")]),
+        new(2, "Петрова Анна Сергеевна", "Казань", "+7 900 222-33-44", "petrova@mail.ru", "КНИТУ-КАИ, магистратура, 2023", "3 года — Middle .NET Developer, ПАО «Ак Барс Банк»", [new("r2", "Middle .NET Developer", "01.07.2026", "i2"), new("r3", "Team Lead .NET", "20.06.2026", "i3")]),
+        new(3, "Сидоров Сергей Павлович", "Набережные Челны", "+7 900 333-44-55", "sidorov@mail.ru", "КФУ, ИВМиИТ, 4 курс", "Без опыта, стажировка в студенческом СКБ", [new("r4", "Junior .NET Developer", "28.06.2026", null)]),
+        new(4, "Кузнецова Мария Дмитриевна", "Казань", "+7 900 444-55-66", "kuznetsova@mail.ru", "КНИТУ-КАИ, бакалавриат, 2024", "2 года — QA Engineer, немного .NET", [new("r5", "Junior QA Engineer", "15.06.2026", "i4")]),
+        new(5, "Хабибуллин Артур Ильдарович", "Казань", "+7 900 555-66-77", "habibullin@mail.ru", "КФУ, ИТИС, 2019", "4 года — Senior .NET Developer", [new("r6", "Senior .NET Developer", "10.06.2026", "i5")]),
+        new(6, "Николаева Ольга Викторовна", "Зеленодольск", "+7 900 666-77-88", "nikolaeva@mail.ru", "КНИТУ, экономика + курсы переподготовки", "Без опыта в разработке", [new("r7", "Junior .NET Developer", "06.07.2026", "i6")])
+    ];
+
+    private static Dictionary<string, Interview> SeedInterviews() => new()
+    {
+        ["i1"] = new() { CandidateId = 1, Vacancy = "Junior .NET Developer", Date = "05.07.2026", Time = "14:00", Format = "Онлайн", Hr = "Петрова А.А.", Approver = "Сидоров С.С.", Scores = Scores(), Status = "Собеседование запланировано" },
+        ["i2"] = new() { CandidateId = 2, Vacancy = "Middle .NET Developer", Date = "01.07.2026", Time = "11:00", Format = "Очно", Hr = "Петрова А.А.", Approver = "Габдуллин Р.Н.", Scores = Scores(5, 4, 4, 4, 4), Comment = "Уверенно ответила на вопросы по EF Core и паттернам проектирования. Есть опыт с Kafka и Outbox.", Status = "На согласовании" },
+        ["i3"] = new() { CandidateId = 2, Vacancy = "Team Lead .NET", Date = "20.06.2026", Time = "10:00", Format = "Очно", Hr = "Петрова А.А.", Approver = "Габдуллин Р.Н.", Scores = Scores(4, 4, 3, 4, 3), Comment = "Сильный технический бэкграунд, но пока не хватает опыта управления командой.", Decision = "Резерв", Status = "Резерв" },
+        ["i4"] = new() { CandidateId = 4, Vacancy = "Junior QA Engineer", Date = "15.06.2026", Time = "13:00", Format = "Онлайн", Hr = "Петрова А.А.", Approver = "Сидоров С.С.", Scores = Scores(3, 3, 2, 2, 2), Comment = "Технических знаний недостаточно для закрытия текущей вакансии.", Decision = "Отказать", Status = "Отклонён" },
+        ["i5"] = new() { CandidateId = 5, Vacancy = "Senior .NET Developer", Date = "10.06.2026", Time = "15:30", Format = "Очно", Hr = "Петрова А.А.", Approver = "Габдуллин Р.Н.", Scores = Scores(5, 5, 5, 5, 5), Comment = "Отличный кандидат, полностью закрывает требования вакансии. Готов выйти со следующей недели.", Decision = "Принять", Status = "Принят" },
+        ["i6"] = new() { CandidateId = 6, Vacancy = "Junior .NET Developer", Date = "06.07.2026", Time = "16:00", Format = "Онлайн", Hr = "Петрова А.А.", Approver = "Сидоров С.С.", Scores = Scores(), Status = "Собеседование запланировано" }
+    };
+
+    private sealed record Candidate(int Id, string Name, string City, string Phone, string Email, string Education, string Experience, List<Response> Responses);
+    private sealed record Response(string Id, string Vacancy, string Date, string? InitialInterviewId)
+    {
+        public string? InterviewId { get; set; } = InitialInterviewId;
+    }
+    private sealed class Interview
+    {
+        public int CandidateId { get; init; }
+        public string Vacancy { get; init; } = string.Empty;
+        public string Date { get; init; } = string.Empty;
+        public string Time { get; init; } = string.Empty;
+        public string Format { get; init; } = string.Empty;
+        public string Hr { get; init; } = string.Empty;
+        public string Approver { get; init; } = string.Empty;
+        public Dictionary<string, int> Scores { get; init; } = [];
+        public string Comment { get; set; } = string.Empty;
+        public string? Decision { get; set; }
+        public string Status { get; set; } = "Новый";
+    }
+    private sealed record UserRow(string Name, string Role, string Email);
+    private static readonly UserRow[] Users =
+    [
+        new("Петрова Анна Сергеевна", "Отдел кадров", "petrova@company.ru"),
+        new("Сидоров Сергей Сергеевич", "Решала", "sidorov@company.ru"),
+        new("Габдуллин Рамиль Наилевич", "Решала", "gabdullin@company.ru"),
+        new("Ахметов Тимур Ильясович", "Администратор", "akhmetov@company.ru")
+    ];
+}

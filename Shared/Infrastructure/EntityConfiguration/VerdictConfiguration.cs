@@ -22,7 +22,7 @@ public class VerdictConfiguration : IEntityTypeConfiguration<Verdict>
                 // пока решение может приянть первый решала, остальные не могут
             .HasOne(x => x.Interview)
             .WithOne()
-            .HasForeignKey<builder>(x => x.InterviewId)
+            .HasForeignKey<Verdict>(x => x.InterviewId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder

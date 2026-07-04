@@ -1,0 +1,16 @@
+<span class="status-badge @StatusClass">@Status</span>
+
+@code {
+    [Parameter, EditorRequired] public string Status { get; set; } = "Новый";
+
+    private string StatusClass => Status switch
+    {
+        "Новый" => "status-new",
+        "Собеседование запланировано" => "status-planned",
+        "На согласовании" => "status-pending",
+        "Принят" => "status-hired",
+        "Резерв" => "status-reserve",
+        "Отклонён" => "status-rejected",
+        _ => "status-new"
+    };
+}

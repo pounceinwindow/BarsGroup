@@ -1,0 +1,22 @@
+<div class="dot-scale @(Editable ? "is-editable" : null)" aria-label="Оценка @Value из 5">
+    @foreach (var score in Enumerable.Range(1, 5))
+    {
+        if (Editable)
+        {
+            <button type="button"
+                    class="dot @(score <= Math.Round(Value) ? "is-filled" : null)"
+                    aria-label="Поставить оценку @score"
+                    @onclick="() => OnChange.InvokeAsync(score)"></button>
+        }
+        else
+        {
+            <span class="dot @(score <= Math.Round(Value) ? "is-filled" : null)"></span>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public double Value { get; set; }
+    [Parameter] public bool Editable { get; set; }
+    [Parameter] public EventCallback<int> OnChange { get; set; }
+}
