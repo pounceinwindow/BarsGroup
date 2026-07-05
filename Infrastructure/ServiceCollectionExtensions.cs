@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Application.PdfDocuments;
+using Infrastructure.PdfDocuments;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QuestPDF.Infrastructure;
 
 namespace Infrastructure;
 
@@ -20,7 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AppContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-        // Здесь же можно зарегистрировать репозитории и другие сервисы
+        QuestPDF.Settings.License = LicenseType.Community;
+        services.AddSingleton<IPdfDocumentService, PdfDocumentService>();
 
         return services;
     }

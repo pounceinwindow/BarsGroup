@@ -1,4 +1,4 @@
-namespace PdfDocuments.Contracts;
+namespace Application.PdfDocuments;
 
 public static class DocumentStatuses
 {

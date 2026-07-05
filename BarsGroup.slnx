@@ -1,12 +1,12 @@
 <Solution>
-  <Folder Name="/Shared/">
-    <Project Path="Shared/Domain/Domain.csproj" />
-    <Project Path="Shared/Infrastructure/Infrastructure.csproj" />
+  <Folder Name="/Core/">
+    <Project Path="Domain/Domain.csproj" />
+    <Project Path="Application/Application.csproj" />
   </Folder>
-  <Folder Name="/Modules/">
-    <Project Path="Modules/PdfDocuments/PdfDocuments.csproj" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/Frontend/">
+  <Folder Name="/Presentation/">
     <Project Path="Frontend/WebApplication1/WebApplication1.csproj" />
   </Folder>
 </Solution>

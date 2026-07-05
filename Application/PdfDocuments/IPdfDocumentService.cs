@@ -1,6 +1,4 @@
-using PdfDocuments.Contracts;
-
-namespace PdfDocuments;
+namespace Application.PdfDocuments;
 
 public interface IPdfDocumentService
 {

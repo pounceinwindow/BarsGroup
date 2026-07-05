@@ -7,6 +7,10 @@ namespace Infrastructure;
 // Postgre
 public class AppContext : DbContext
 {
+    public AppContext(DbContextOptions<AppContext> options) : base(options)
+    {
+    }
+
     public DbSet<Candidate> Candidates { get; set; }
     public DbSet<Competition> Competitions { get; set; }
     public DbSet<CompetitionsMatrix> CompetitionsMatrix { get; set; }

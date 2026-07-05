@@ -1,9 +1,9 @@
-using PdfDocuments.Contracts;
+using Application.PdfDocuments;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace PdfDocuments;
+namespace Infrastructure.PdfDocuments;
 
 internal sealed class PdfDocumentService : IPdfDocumentService
 {
