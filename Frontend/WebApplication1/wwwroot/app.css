@@ -194,6 +194,7 @@ h1, h2, h3, h4, p { margin: 0; }
 /* Protocol */
 .protocol-page { max-width: 960px; }
 .protocol-actions { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 16px; }
+.protocol-action-buttons { display: flex; align-items: center; gap: 8px; }
 .protocol-sheet { padding: 35px 39px; border: 1px solid var(--line-strong); border-radius: 2px; background: white; box-shadow: var(--shadow); }
 .protocol-header { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding-bottom: 23px; border-bottom: 2px solid var(--ink); }
 .protocol-header h2 { margin-top: 5px; font-family: "Manrope", sans-serif; font-size: 23px; letter-spacing: -.035em; }
@@ -292,6 +293,7 @@ h1, h2, h3, h4, p { margin: 0; }
     .response-card > .status-badge { grid-column: 2; }
     .response-card > .secondary-button { grid-column: 1 / -1; }
     .protocol-actions { align-items: flex-start; }
+    .protocol-action-buttons { align-items: stretch; flex-direction: column; }
     .protocol-actions .secondary-button { font-size: 0; }
     .protocol-actions .secondary-button .icon { width: 17px; height: 17px; }
     .protocol-sheet { padding: 22px 17px; }

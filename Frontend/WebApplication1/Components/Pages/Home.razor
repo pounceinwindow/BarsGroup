@@ -1,6 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
 @inject IJSRuntime JS
+@inject IPdfDocumentService PdfService
 
 <PageTitle>Спектр — оценка кандидатов</PageTitle>
 
@@ -244,7 +245,10 @@ else
                 <section class="page-content protocol-page">
                     <div class="protocol-actions">
                         <button class="back-button" @onclick='() => View = "candidate"'><SvgIcon Name="back" Size="16" /> К карточке кандидата</button>
-                        <button class="secondary-button" @onclick="Print"><SvgIcon Name="print" Size="15" /> Печать / PDF</button>
+                        <div class="protocol-action-buttons">
+                            <button class="secondary-button" @onclick="Print"><SvgIcon Name="print" Size="15" /> Печать</button>
+                            <button class="secondary-button" @onclick="DownloadPdf" disabled="@IsPdfDownloading"><SvgIcon Name="download" Size="15" /> @(IsPdfDownloading ? "Формирование…" : "Скачать PDF")</button>
+                        </div>
                     </div>
 
                     <article class="protocol-sheet">
@@ -332,6 +336,7 @@ else
     private string VacancyFilter = "Все вакансии";
     private string StatusFilter = "Все статусы";
     private string? ToastMessage;
+    private bool IsPdfDownloading;
     private Candidate? SelectedCandidate;
     private Interview? SelectedInterview;
     private List<Candidate> Candidates { get; } = SeedCandidates();
@@ -434,6 +439,79 @@ else
     }
 
     private async Task Print() => await JS.InvokeVoidAsync("print");
+
+    private async Task DownloadPdf()
+    {
+        if (SelectedCandidate is null || SelectedInterview is null || IsPdfDownloading) return;
+
+        IsPdfDownloading = true;
+        try
+        {
+            var date = DateTime.TryParseExact(
+                $"{SelectedInterview.Date} {SelectedInterview.Time}",
+                "dd.MM.yyyy HH:mm",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var parsedDate)
+                ? parsedDate
+                : DateTime.Now;
+
+            var model = new InterviewProtocolModel(
+                SelectedCandidate.Id,
+                SelectedCandidate.Name,
+                SelectedInterview.Vacancy,
+                date,
+                SelectedInterview.Format,
+                SelectedInterview.Hr,
+                SelectedInterview.Approver,
+                ToDocumentStatus(SelectedInterview.Status),
+                SelectedInterview.Comment,
+                ToDocumentDecision(SelectedInterview.Decision),
+                null,
+                Competencies.Select(name => new CompetencyScoreModel(
+                    name,
+                    null,
+                    SelectedInterview.Scores[name],
+                    null)).ToList());
+
+            var pdf = PdfService.CreateInterviewProtocol(model);
+            await using var stream = new MemoryStream(pdf, writable: false);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"protocol-{SelectedCandidate.Id:0000}.pdf",
+                streamReference);
+            await ShowToast("PDF-протокол сформирован");
+        }
+        catch
+        {
+            await ShowToast("Не удалось сформировать PDF");
+        }
+        finally
+        {
+            IsPdfDownloading = false;
+        }
+    }
+
+    private static string ToDocumentStatus(string status) => status switch
+    {
+        "Новый" => DocumentStatuses.New,
+        "Собеседование запланировано" => DocumentStatuses.InterviewScheduled,
+        "На согласовании" => DocumentStatuses.PendingDecision,
+        "Принят" => DocumentStatuses.Accepted,
+        "Резерв" => DocumentStatuses.TalentPool,
+        "Отклонён" => DocumentStatuses.Rejected,
+        _ => status
+    };
+
+    private static string? ToDocumentDecision(string? decision) => decision switch
+    {
+        "Принять" => DocumentStatuses.Accepted,
+        "Следующий этап" => DocumentStatuses.NextStage,
+        "Резерв" => DocumentStatuses.TalentPool,
+        "Отказать" => DocumentStatuses.Rejected,
+        _ => decision
+    };
     private void ResetFilters() { Search = string.Empty; VacancyFilter = "Все вакансии"; StatusFilter = "Все статусы"; }
     private Interview? GetInterview(string? id) => id is not null && Interviews.TryGetValue(id, out var interview) ? interview : null;
     private string LatestStatus(Candidate candidate) => GetInterview(candidate.Responses[0].InterviewId)?.Status ?? "Новый";
