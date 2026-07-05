@@ -14,16 +14,9 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder.HasKey(x => x.Id);
 
         builder
-            .Property(x => x.FirstName)
+            .Property(x => x.FullName)
             .HasMaxLength(50)
             .IsRequired();
-        builder
-            .Property(x => x.LastName)
-            .HasMaxLength(50)
-            .IsRequired();
-        builder // null (мог не иметь работы)
-            .Property(x => x.PreviousWork)
-            .HasMaxLength(500);
         builder
             .Property(x => x.City)
             .HasMaxLength(100)
@@ -34,7 +27,18 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
             .IsRequired();
         builder // null (может быть без образования)
             .Property(x => x.Education)
-            .HasMaxLength(500);
+            .HasMaxLength(20); // максимальное количество элементов массива
+        builder
+            .PrimitiveCollection(x => x.Education)
+            .ElementType()
+            .HasMaxLength(200); // максимальная длина элементов массива
+        builder // null (мог не иметь работы)
+            .Property(x => x.PreviousWork)
+            .HasMaxLength(20); // максимальное количество элементов массива
+        builder
+            .PrimitiveCollection(x => x.PreviousWork)
+            .ElementType()
+            .HasMaxLength(200); // максимальная длина элементов массива
         builder
             .Property(x => x.Phone)
             .HasMaxLength(50)
