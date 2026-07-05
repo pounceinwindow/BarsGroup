@@ -1,31 +1,75 @@
 services:
-  postgres:
-    image: postgres:18-alpine
+  # тут постгрес и app из базового композа
+  
+  # 1. Тестовый "Active Directory" (LDAP сервер)     
+  test-ad:
+    image: osixia/openldap:1.5.0
+    container_name: local_ad
     environment:
-      POSTGRES_DB: barsgroup
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - barsgroup-postgres:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d barsgroup"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  app:
-    build:
-      context: .
-      dockerfile: Frontend/WebApplication1/Dockerfile
-    environment:
-      ASPNETCORE_URLS: http://+:8080
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=barsgroup;Username=postgres;Password=postgres
-    depends_on:
-      postgres:
-        condition: service_healthy
+      LDAP_ORGANISATION: "Kazan Corp"
+      LDAP_DOMAIN: "company.local"
+      LDAP_ADMIN_PASSWORD: "adminpassword"
     ports:
-      - "5080:8080"
+      - "389:389"
+    volumes:
+      # Прокидываем файл с seed.
+      - ./ldif_data:/container/environment/01-custom
+    networks:
+      - hr_network
+
+  # 2. Веб-интерфейс для заполнения AD (вместо Windows-оснастки)
+  test-ad-admin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: local_ad_ui
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "test-ad"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "6480:80"
+    depends_on:
+      - test-ad
+    networks:
+      - hr_network
+
+  # 3. База данных Keycloak
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak_db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: keycloak_password
+    ports:
+      - "5433:5432"
+    networks:
+      - hr_network
+
+  # 4. Сам сервер Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    container_name: keycloak_server
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      LDAP_ADMIN_PASSWORD: "adminpassword"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Прокидываем экспортированный JSON в специальную папку Keycloak
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+    depends_on:
+      - keycloak-db
+    networks:
+      - hr_network
 
 volumes:
   barsgroup-postgres:
+    
+networks:
+  hr_network:
+    driver: bridge
