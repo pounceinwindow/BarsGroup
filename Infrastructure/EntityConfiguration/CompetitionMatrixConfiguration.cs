@@ -9,11 +9,11 @@ public class CompetitionMatrixConfiguration : IEntityTypeConfiguration<Competiti
 {
     public void Configure(EntityTypeBuilder<CompetitionsMatrix> builder)
     {
-        builder.HasKey(x => new { x.CandidateId, x.CompetitionId });
+        builder.HasKey(x => new { x.InterviewId, x.CompetitionId });
 
-        builder.HasOne(x => x.Candidate)
+        builder.HasOne(x => x.Interview)
             .WithMany()
-            .HasForeignKey(x => x.CandidateId)
+            .HasForeignKey(x => x.InterviewId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.Competition)
             .WithMany()
