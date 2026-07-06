@@ -30,6 +30,7 @@ public class VerdictConfiguration : IEntityTypeConfiguration<Verdict>
             .IsRequired();
         builder // null (может не оставить комментарий и просто принять)
                 // нет ограничений размера
-            .Property(x => x.Comment);
+            .Property(x => x.Comment)
+            .IsRequired(false);
     }
 }

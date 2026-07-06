@@ -22,6 +22,7 @@ public class CompetitionMatrixConfiguration : IEntityTypeConfiguration<Competiti
 
         builder.Property(x => x.Score)
             .IsRequired();
-        builder.Property(x => x.Comment); // не обязателен
+        builder.Property(x => x.Comment)
+            .IsRequired(false); // не обязателен
     }
 }

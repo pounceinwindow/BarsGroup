@@ -23,7 +23,8 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
             .IsRequired();
         builder // null (мог не иметь работы)
             .Property(x => x.PreviousWork)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .IsRequired(false);
         builder
             .Property(x => x.City)
             .HasMaxLength(100)
@@ -34,7 +35,8 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
             .IsRequired();
         builder // null (может быть без образования)
             .Property(x => x.Education)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .IsRequired(false);
         builder
             .Property(x => x.Phone)
             .HasMaxLength(50)

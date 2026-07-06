@@ -9,7 +9,7 @@ public class Candidate
     public string LastName { get; set; }
     [Phone] public string Phone { get; set; }
     public string City { get; set; }
-    public string Education { get; set; }
-    public string PreviousWork { get; set; }
+    public string? Education { get; set; }
+    public string? PreviousWork { get; set; }
     public string Status { get; set; }
 }

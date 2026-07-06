@@ -11,7 +11,7 @@ public class User
     public string LastName { get; set; }
     public string PasswordHash { get; set; }
     public string Role { get; set; }
-    public DateOnly CreatedAt { get; set; }
-    public DateOnly RevokedAt { get; set; }
-    public string RevokedBy { get; set; }
+    public DateOnly? CreatedAt { get; set; }
+    public DateOnly? RevokedAt { get; set; }
+    public string? RevokedBy { get; set; }
 }
