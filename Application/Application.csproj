@@ -7,4 +7,15 @@
   <ItemGroup>
     <ProjectReference Include="../Domain/Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Behaviors\" />
+    <Folder Include="Decider\Abstractions\" />
+    <Folder Include="Decider\Contracts\Queries\" />
+    <Folder Include="Decider\Exceptions\" />
+    <Folder Include="Decider\Handlers\" />
+    <Folder Include="Decider\Validators\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.2.0" />
+  </ItemGroup>
 </Project>
