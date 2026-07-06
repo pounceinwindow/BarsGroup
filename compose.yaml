@@ -5,6 +5,8 @@ services:
       POSTGRES_DB: barsgroup
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
     volumes:
       - barsgroup-postgres:/var/lib/postgresql
     healthcheck:

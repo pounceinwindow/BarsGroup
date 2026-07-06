@@ -11,7 +11,7 @@ public class CompetitionsMatrix
     public int CompetitionId { get; set; }
 
     public int Score { get; set; }
-    public string Comment { get; set; }
+    public string? Comment { get; set; }
 
     // навигационные свойства
     public Candidate Candidate { get; set; }

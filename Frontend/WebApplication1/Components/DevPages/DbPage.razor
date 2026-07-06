@@ -1,0 +1,17 @@
+﻿@page "/database"
+@using Infrastructure
+@inject BarsContext Db
+
+<h3>DbPage</h3>
+
+<div>
+    <p>Очистить и заполнить данные заново</p>
+    <button @onclick="ClearAndSeed">Применить</button>
+</div>
+
+@code {
+    private async Task ClearAndSeed(MouseEventArgs args)
+    {
+        await Db.ClearAndSeed();
+    }
+}
