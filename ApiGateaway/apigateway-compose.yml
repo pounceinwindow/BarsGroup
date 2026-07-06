@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    image: apigateway-api:latest
+    build:
+      context: .
+      dockerfile: APIGateaway/Dockerfile
+    container_name: api_gateway
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=redis-cache:6379,password=SecretRedisPass123!,defaultDatabase=0
+      - Keycloak__Authority=http://identity-provider:8080/realms/your-realm
+      - Keycloak__ClientId=your-client
+      - Keycloak__ClientSecret=your-secret
+    depends_on:
+      redis-cache:
+        condition: service_healthy
+      identity-provider:
+        condition: service_started
+    networks:
+      - gateway-network
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis_cache
+    command: redis-server --requirepass SecretRedisPass123!
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "SecretRedisPass123!", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gateway-network
+  identity-provider:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: keycloak_auth
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_FEATURES=token-exchange
+    volumes:
+      - keycloak_data:/opt/keycloak/data/
+    networks:
+      - gateway-network
+
+networks:
+  gateway-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  keycloak_data:

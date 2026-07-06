@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11822.322 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIGateaway.API", "APIGateaway.API\APIGateaway.API.csproj", "{294CB4FC-644C-4527-9259-E1578DB21667}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{3CA9499F-1597-4A13-ADF9-35CF34D5F1C0}"
+	ProjectSection(SolutionItems) = preProject
+		apigateway-compose.yml = apigateway-compose.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{294CB4FC-644C-4527-9259-E1578DB21667}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{294CB4FC-644C-4527-9259-E1578DB21667}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{294CB4FC-644C-4527-9259-E1578DB21667}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{294CB4FC-644C-4527-9259-E1578DB21667}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C1465C3B-13D9-44D1-B2C2-44A459158A36}
+	EndGlobalSection
+EndGlobal
