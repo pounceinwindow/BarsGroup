@@ -1,12 +1,15 @@
 <Solution>
   <Folder Name="/Core/">
-    <Project Path="Domain/Domain.csproj" />
     <Project Path="Application/Application.csproj" />
+    <Project Path="Domain/Domain.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/">
     <Project Path="Infrastructure/Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Presentation/">
     <Project Path="Frontend/WebApplication1/WebApplication1.csproj" />
+  </Folder>
+  <Folder Name="/TestApiGateway/">
+    <Project Path="TestApiGateway\TestApiGateway.csproj" Type="Classic C#" />
   </Folder>
 </Solution>
