@@ -34,8 +34,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasDefaultValueSql("CURRENT_DATE")
             .IsRequired();
         builder // null (может быть не удален пока что)
-            .Property(x => x.RevokedAt);
+            .Property(x => x.RevokedAt)
+            .IsRequired(false);
         builder // null (по той же причине)
-            .Property(x => x.RevokedBy);
+            .Property(x => x.RevokedBy)
+            .IsRequired(false);
     }
 }

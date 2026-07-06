@@ -18,6 +18,7 @@ public class CompetitionConfiguration : IEntityTypeConfiguration<Competition>
             .HasMaxLength(200)
             .IsRequired();
         builder // размер не ограничен, может быть без описания
-            .Property(x => x.Description);
+            .Property(x => x.Description)
+            .IsRequired(false);
     }
 }
