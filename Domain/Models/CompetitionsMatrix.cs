@@ -15,5 +15,5 @@ public class CompetitionsMatrix
 
     // навигационные свойства
     public Candidate Candidate { get; set; }
-    public Competition Competition { get; set; }
+    public Competency Competition { get; set; }
 }

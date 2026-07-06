@@ -32,6 +32,7 @@ using (var scope = app.Services.CreateScope())
 
     /*
      * "localhost/database" - для очистки и добавления тестовых данных в бд
+     * [TODO: Андрей] - вынести это в Swagger
      */
 }
 

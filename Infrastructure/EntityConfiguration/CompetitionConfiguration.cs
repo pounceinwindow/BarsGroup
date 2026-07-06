@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Infrastructure.ModelConfiguration;
 
-public class CompetitionConfiguration : IEntityTypeConfiguration<Competition>
+public class CompetitionConfiguration : IEntityTypeConfiguration<Competency>
 {
-    public void Configure(EntityTypeBuilder<Competition> builder)
+    public void Configure(EntityTypeBuilder<Competency> builder)
     {
         builder.HasKey(x => x.Id);
 
