@@ -12,7 +12,7 @@ public class BarsContext : DbContext
     }
 
     public DbSet<Candidate> Candidates { get; set; }
-    public DbSet<Competition> Competitions { get; set; }
+    public DbSet<Competency> Competitions { get; set; }
     public DbSet<CompetitionsMatrix> CompetitionsMatrix { get; set; }
     public DbSet<Interview> Interviews { get; set; }
     public DbSet<User> Users { get; set; }

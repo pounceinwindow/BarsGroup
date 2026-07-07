@@ -12,5 +12,5 @@ public class VacancyCompetition
 
     // навигационные свойства
     public Vacancy Vacancy { get; set; }
-    public Competition Competition { get; set; }
+    public Competency Competition { get; set; }
 }

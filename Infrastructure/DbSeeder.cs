@@ -63,10 +63,10 @@ public static class DbSeeder
             new User
             {
                 Id = 3,
-                Role = "Решала",
+                Role = "Decider",
                 FirstName = "Иван",
                 LastName = "Решалов",
-                PasswordHash = Hash("reshala123"),
+                PasswordHash = Hash("decider123"),
                 CreatedAt = DateOnly.FromDateTime(DateTime.Now)
             }
         };
@@ -84,28 +84,28 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // 3. Компетенции (5 на каждую вакансию = 15)
-        var competitions = new List<Competition>
+        var competitions = new List<Competency>
         {
             // Junior Developer
-            new Competition { Id = 1, Name = "C# Basics", Description = "Основы языка C#" },
-            new Competition { Id = 2, Name = "OOP", Description = "Объектно-ориентированное программирование" },
-            new Competition { Id = 3, Name = "SQL Basics", Description = "Основы SQL запросов" },
-            new Competition { Id = 4, Name = "Git", Description = "Система контроля версий" },
-            new Competition { Id = 5, Name = "Algorithms", Description = "Базовые алгоритмы и структуры данных" },
+            new Competency { Id = 1, Name = "C# Basics", Description = "Основы языка C#" },
+            new Competency { Id = 2, Name = "OOP", Description = "Объектно-ориентированное программирование" },
+            new Competency { Id = 3, Name = "SQL Basics", Description = "Основы SQL запросов" },
+            new Competency { Id = 4, Name = "Git", Description = "Система контроля версий" },
+            new Competency { Id = 5, Name = "Algorithms", Description = "Базовые алгоритмы и структуры данных" },
             
             // Middle Developer
-            new Competition { Id = 6, Name = "Advanced C#", Description = "Продвинутые возможности C#" },
-            new Competition { Id = 7, Name = "Entity Framework", Description = "ORM фреймворк" },
-            new Competition { Id = 8, Name = "REST API", Description = "Проектирование REST API" },
-            new Competition { Id = 9, Name = "Unit Testing", Description = "Модульное тестирование" },
-            new Competition { Id = 10, Name = "Design Patterns", Description = "Паттерны проектирования" },
+            new Competency { Id = 6, Name = "Advanced C#", Description = "Продвинутые возможности C#" },
+            new Competency { Id = 7, Name = "Entity Framework", Description = "ORM фреймворк" },
+            new Competency { Id = 8, Name = "REST API", Description = "Проектирование REST API" },
+            new Competency { Id = 9, Name = "Unit Testing", Description = "Модульное тестирование" },
+            new Competency { Id = 10, Name = "Design Patterns", Description = "Паттерны проектирования" },
             
             // Senior Developer
-            new Competition { Id = 11, Name = "Architecture", Description = "Архитектура приложений" },
-            new Competition { Id = 12, Name = "Microservices", Description = "Микросервисная архитектура" },
-            new Competition { Id = 13, Name = "Performance", Description = "Оптимизация производительности" },
-            new Competition { Id = 14, Name = "Security", Description = "Безопасность приложений" },
-            new Competition { Id = 15, Name = "Mentoring", Description = "Наставничество и лидерство" }
+            new Competency { Id = 11, Name = "Architecture", Description = "Архитектура приложений" },
+            new Competency { Id = 12, Name = "Microservices", Description = "Микросервисная архитектура" },
+            new Competency { Id = 13, Name = "Performance", Description = "Оптимизация производительности" },
+            new Competency { Id = 14, Name = "Security", Description = "Безопасность приложений" },
+            new Competency { Id = 15, Name = "Mentoring", Description = "Наставничество и лидерство" }
         };
         await context.Competitions.AddRangeAsync(competitions);
         await context.SaveChangesAsync();

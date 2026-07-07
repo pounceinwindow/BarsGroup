@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Domain.Models;
 
-public class Competition
+public class Competency
 {
     public int Id { get; set; }
     public string Name { get; set; }
