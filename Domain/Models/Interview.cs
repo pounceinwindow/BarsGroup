@@ -11,8 +11,10 @@ public class Interview
     public int CandidateId { get; set; }
     public DateTime Date { get; set; }
     public string Status { get; set; }
+    public readonly IList<CompetitionsMatrix> CompetitionsMatrices = new();
 
     // навигационные свойства
     public Vacancy Vacancy { get; set; }
     public Candidate Candidate { get; set; }
+    public 
 }
