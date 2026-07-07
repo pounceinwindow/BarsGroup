@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Domain.Enums;
+using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
@@ -24,12 +25,12 @@ public static class DbSeeder
         var sql = @"
             TRUNCATE TABLE 
                 ""Verdicts"",
-                ""CompetitionsMatrix"",
-                ""VacancyCompetition"",
+                ""CompetencyMatrices"",
+                ""VacancyCompetencies"",
                 ""Interviews"",
                 ""Candidates"",
                 ""Vacancies"",
-                ""Competitions"",
+                ""Competencies"",
                 ""Users""
             RESTART IDENTITY CASCADE;
         ";
@@ -45,7 +46,7 @@ public static class DbSeeder
             new User
             {
                 Id = 1,
-                Role = "Admin",
+                Role = UserRole.Admin,
                 FirstName = "Админ",
                 LastName = "Системы",
                 PasswordHash = Hash("admin123"),
@@ -54,7 +55,7 @@ public static class DbSeeder
             new User
             {
                 Id = 2,
-                Role = "HR",
+                Role = UserRole.HR,
                 FirstName = "Елена",
                 LastName = "Петрова",
                 PasswordHash = Hash("hr123"),
@@ -63,7 +64,7 @@ public static class DbSeeder
             new User
             {
                 Id = 3,
-                Role = "Decider",
+                Role = UserRole.Decider,
                 FirstName = "Иван",
                 LastName = "Решалов",
                 PasswordHash = Hash("decider123"),
@@ -84,7 +85,7 @@ public static class DbSeeder
         await context.SaveChangesAsync();
 
         // 3. Компетенции (5 на каждую вакансию = 15)
-        var competitions = new List<Competency>
+        var competencies = new List<Competency>
         {
             // Junior Developer
             new Competency { Id = 1, Name = "C# Basics", Description = "Основы языка C#" },
@@ -107,49 +108,129 @@ public static class DbSeeder
             new Competency { Id = 14, Name = "Security", Description = "Безопасность приложений" },
             new Competency { Id = 15, Name = "Mentoring", Description = "Наставничество и лидерство" }
         };
-        await context.Competitions.AddRangeAsync(competitions);
+        await context.Competencies.AddRangeAsync(competencies);
         await context.SaveChangesAsync();
 
         // 4. Связь вакансий с компетенциями
-        var vacancyCompetitions = new List<VacancyCompetition>
+        var vacancyCompetencies = new List<VacancyCompetency>
         {
             // Junior (1-5)
-            new VacancyCompetition { VacancyId = 1, CompetitionId = 1 },
-            new VacancyCompetition { VacancyId = 1, CompetitionId = 2 },
-            new VacancyCompetition { VacancyId = 1, CompetitionId = 3 },
-            new VacancyCompetition { VacancyId = 1, CompetitionId = 4 },
-            new VacancyCompetition { VacancyId = 1, CompetitionId = 5 },
+            new VacancyCompetency { VacancyId = 1, CompetencyId = 1 },
+            new VacancyCompetency { VacancyId = 1, CompetencyId = 2 },
+            new VacancyCompetency { VacancyId = 1, CompetencyId = 3 },
+            new VacancyCompetency { VacancyId = 1, CompetencyId = 4 },
+            new VacancyCompetency { VacancyId = 1, CompetencyId = 5 },
             
             // Middle (6-10)
-            new VacancyCompetition { VacancyId = 2, CompetitionId = 6 },
-            new VacancyCompetition { VacancyId = 2, CompetitionId = 7 },
-            new VacancyCompetition { VacancyId = 2, CompetitionId = 8 },
-            new VacancyCompetition { VacancyId = 2, CompetitionId = 9 },
-            new VacancyCompetition { VacancyId = 2, CompetitionId = 10 },
+            new VacancyCompetency { VacancyId = 2, CompetencyId = 6 },
+            new VacancyCompetency { VacancyId = 2, CompetencyId = 7 },
+            new VacancyCompetency { VacancyId = 2, CompetencyId = 8 },
+            new VacancyCompetency { VacancyId = 2, CompetencyId = 9 },
+            new VacancyCompetency { VacancyId = 2, CompetencyId = 10 },
             
             // Senior (11-15)
-            new VacancyCompetition { VacancyId = 3, CompetitionId = 11 },
-            new VacancyCompetition { VacancyId = 3, CompetitionId = 12 },
-            new VacancyCompetition { VacancyId = 3, CompetitionId = 13 },
-            new VacancyCompetition { VacancyId = 3, CompetitionId = 14 },
-            new VacancyCompetition { VacancyId = 3, CompetitionId = 15 }
+            new VacancyCompetency { VacancyId = 3, CompetencyId = 11 },
+            new VacancyCompetency { VacancyId = 3, CompetencyId = 12 },
+            new VacancyCompetency { VacancyId = 3, CompetencyId = 13 },
+            new VacancyCompetency { VacancyId = 3, CompetencyId = 14 },
+            new VacancyCompetency { VacancyId = 3, CompetencyId = 15 }
         };
-        await context.VacancyCompetition.AddRangeAsync(vacancyCompetitions);
+        await context.VacancyCompetencies.AddRangeAsync(vacancyCompetencies);
         await context.SaveChangesAsync();
 
         // 5. Кандидаты (10 штук)
         var candidates = new List<Candidate>
         {
-            new Candidate { Id = 1, FirstName = "Алексей", LastName = "Иванов", City = "Москва", Status = "Новый", Phone = "+79991112233", Education = "МГУ", PreviousWork = "Нет опыта" },
-            new Candidate { Id = 2, FirstName = "Мария", LastName = "Сидорова", City = "Санкт-Петербург", Status = "В резерве", Phone = "+79992223344", Education = "СПбГУ", PreviousWork = "ООО Технологии" },
-            new Candidate { Id = 3, FirstName = "Дмитрий", LastName = "Козлов", City = "Новосибирск", Status = "Принят", Phone = "+79993334455", Education = "НГУ", PreviousWork = "Яндекс" },
-            new Candidate { Id = 4, FirstName = "Екатерина", LastName = "Новикова", City = "Екатеринбург", Status = "Новый", Phone = "+79994445566", Education = "УрФУ", PreviousWork = "Нет опыта" },
-            new Candidate { Id = 5, FirstName = "Сергей", LastName = "Морозов", City = "Казань", Status = "В резерве", Phone = "+79995556677", Education = "КФУ", PreviousWork = "Татнефть" },
-            new Candidate { Id = 6, FirstName = "Анна", LastName = "Волкова", City = "Москва", Status = "Принят", Phone = "+79996667788", Education = "МФТИ", PreviousWork = "Mail.ru Group" },
-            new Candidate { Id = 7, FirstName = "Андрей", LastName = "Соколов", City = "Нижний Новгород", Status = "Новый", Phone = "+79997778899", Education = "ННГУ", PreviousWork = "Нет опыта" },
-            new Candidate { Id = 8, FirstName = "Ольга", LastName = "Лебедева", City = "Самара", Status = "В резерве", Phone = "+79998889900", Education = "Самарский университет", PreviousWork = "Сбербанк" },
-            new Candidate { Id = 9, FirstName = "Павел", LastName = "Кузнецов", City = "Ростов-на-Дону", Status = "Принят", Phone = "+79999990011", Education = "ЮФУ", PreviousWork = "Ростелеком" },
-            new Candidate { Id = 10, FirstName = "Татьяна", LastName = "Попова", City = "Краснодар", Status = "Новый", Phone = "+79990001122", Education = "КубГУ", PreviousWork = "Нет опыта" }
+            new Candidate
+            {
+                Id = 1, FullName = "Алексей Иванов", City = "Москва",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79991112233", Email = "ivanov@mail.ru",
+                Education = new[] { "МГУ, факультет ВМК" },
+                PreviousWork = Array.Empty<string>(),
+                Skills = new[] { "C#", "SQL", "Git" }
+            },
+            new Candidate
+            {
+                Id = 2, FullName = "Мария Сидорова", City = "Санкт-Петербург",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79992223344", Email = "sidorova@mail.ru", Telegram = "@masha_dev",
+                Education = new[] { "СПбГУ", "Магистратура" },
+                PreviousWork = new[] { "ООО Технологии" },
+                Skills = new[] { "C#", "EF Core", "REST" }
+            },
+            new Candidate
+            {
+                Id = 3, FullName = "Дмитрий Козлов", City = "Новосибирск",
+                Status = CandidateStatus.Hired,
+                Phone = "+79993334455", Email = "kozlov@yandex.ru",
+                Education = new[] { "НГУ" },
+                PreviousWork = new[] { "Яндекс", "ООО Стартап" },
+                Skills = new[] { "C#", "Microservices", "Docker" }
+            },
+            new Candidate
+            {
+                Id = 4, FullName = "Екатерина Новикова", City = "Екатеринбург",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79994445566", Email = "novikova@gmail.com",
+                Education = new[] { "УрФУ" },
+                PreviousWork = Array.Empty<string>(),
+                Skills = new[] { "C#", "OOP" }
+            },
+            new Candidate
+            {
+                Id = 5, FullName = "Сергей Морозов", City = "Казань",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79995556677", Email = "morozov@mail.ru", Telegram = "@sergey_m",
+                Education = new[] { "КФУ" },
+                PreviousWork = new[] { "Татнефть" },
+                Skills = new[] { "C#", "SQL", "WPF" }
+            },
+            new Candidate
+            {
+                Id = 6, FullName = "Анна Волкова", City = "Москва",
+                Status = CandidateStatus.Hired,
+                Phone = "+79996667788", Email = "volkova@inbox.ru",
+                Education = new[] { "МФТИ", "Бакалавриат", "Магистратура" },
+                PreviousWork = new[] { "Mail.ru Group" },
+                Skills = new[] { "C#", "ASP.NET Core", "PostgreSQL" }
+            },
+            new Candidate
+            {
+                Id = 7, FullName = "Андрей Соколов", City = "Нижний Новгород",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79997778899", Email = "sokolov@mail.ru",
+                Education = new[] { "ННГУ" },
+                PreviousWork = Array.Empty<string>(),
+                Skills = new[] { "C#", "Git" }
+            },
+            new Candidate
+            {
+                Id = 8, FullName = "Ольга Лебедева", City = "Самара",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79998889900", Email = "lebedeva@yandex.ru", Telegram = "@olga_lb",
+                Education = new[] { "Самарский университет" },
+                PreviousWork = new[] { "Сбербанк" },
+                Skills = new[] { "C#", "EF Core", "Unit Testing" }
+            },
+            new Candidate
+            {
+                Id = 9, FullName = "Павел Кузнецов", City = "Ростов-на-Дону",
+                Status = CandidateStatus.Hired,
+                Phone = "+79999990011", Email = "kuznetsov@gmail.com",
+                Education = new[] { "ЮФУ" },
+                PreviousWork = new[] { "Ростелеком" },
+                Skills = new[] { "C#", "Architecture", "Microservices" }
+            },
+            new Candidate
+            {
+                Id = 10, FullName = "Татьяна Попова", City = "Краснодар",
+                Status = CandidateStatus.LookingForWork,
+                Phone = "+79990001122", Email = "popova@mail.ru",
+                Education = new[] { "КубГУ" },
+                PreviousWork = Array.Empty<string>(),
+                Skills = new[] { "C#", "OOP", "SQL" }
+            }
         };
         await context.Candidates.AddRangeAsync(candidates);
         await context.SaveChangesAsync();
@@ -157,82 +238,83 @@ public static class DbSeeder
         // 6. Интервью (каждый кандидат хотя бы на одну вакансию)
         var interviews = new List<Interview>
         {
-            new Interview { Id = 1, VacancyId = 1, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-10), Status = "Принят" },
-            new Interview { Id = 2, VacancyId = 1, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-8), Status = "Отклонено" },
-            new Interview { Id = 3, VacancyId = 2, CandidateId = 3, Date = DateTime.UtcNow.AddDays(-7), Status = "Принят" },
-            new Interview { Id = 4, VacancyId = 2, CandidateId = 4, Date = DateTime.UtcNow.AddDays(-5), Status = "Следующий этап" },
-            new Interview { Id = 5, VacancyId = 3, CandidateId = 5, Date = DateTime.UtcNow.AddDays(-4), Status = "Ожидает решения" },
-            new Interview { Id = 6, VacancyId = 3, CandidateId = 6, Date = DateTime.UtcNow.AddDays(-3), Status = "Принят" },
-            new Interview { Id = 7, VacancyId = 1, CandidateId = 7, Date = DateTime.UtcNow.AddDays(-2), Status = "Следующий этап" },
-            new Interview { Id = 8, VacancyId = 2, CandidateId = 8, Date = DateTime.UtcNow.AddDays(-1), Status = "Ожидает решения" },
-            new Interview { Id = 9, VacancyId = 3, CandidateId = 9, Date = DateTime.UtcNow, Status = "Принят" },
-            new Interview { Id = 10, VacancyId = 1, CandidateId = 10, Date = DateTime.UtcNow, Status = "Ожидает решения" },
+            new Interview { Id = 1, VacancyId = 1, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-10), Status = InterviewStatus.Completed },
+            new Interview { Id = 2, VacancyId = 1, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-8), Status = InterviewStatus.Rejected },
+            new Interview { Id = 3, VacancyId = 2, CandidateId = 3, Date = DateTime.UtcNow.AddDays(-7), Status = InterviewStatus.Completed },
+            new Interview { Id = 4, VacancyId = 2, CandidateId = 4, Date = DateTime.UtcNow.AddDays(-5), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 5, VacancyId = 3, CandidateId = 5, Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 6, VacancyId = 3, CandidateId = 6, Date = DateTime.UtcNow.AddDays(-3), Status = InterviewStatus.Completed },
+            new Interview { Id = 7, VacancyId = 1, CandidateId = 7, Date = DateTime.UtcNow.AddDays(-2), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 8, VacancyId = 2, CandidateId = 8, Date = DateTime.UtcNow.AddDays(-1), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 9, VacancyId = 3, CandidateId = 9, Date = DateTime.UtcNow, Status = InterviewStatus.Completed },
+            new Interview { Id = 10, VacancyId = 1, CandidateId = 10, Date = DateTime.UtcNow, Status = InterviewStatus.WaitingForVerdict },
             // Некоторые кандидаты на несколько вакансий
-            new Interview { Id = 11, VacancyId = 2, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-6), Status = "Следующий этап" },
-            new Interview { Id = 12, VacancyId = 3, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-4), Status = "Ожидает решения" }
+            new Interview { Id = 11, VacancyId = 2, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-6), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 12, VacancyId = 3, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict }
         };
         await context.Interviews.AddRangeAsync(interviews);
         await context.SaveChangesAsync();
 
         // 7. Матрица компетенций (оценки кандидатов по компетенциям)
-        var competitionsMatrix = new List<CompetitionsMatrix>();
+        var competencyMatrices = new List<CompetencyMatrix>();
+        var random = new Random(42); // фиксируем seed для воспроизводимости
 
         // Оценки для Junior (компетенции 1-5)
-        for (int candidateId = 1; candidateId <= 10; candidateId++)
+        for (int interviewId = 1; interviewId <= 12; interviewId++)
         {
-            for (int competitionId = 1; competitionId <= 5; competitionId++)
+            for (int competencyId = 1; competencyId <= 5; competencyId++)
             {
-                competitionsMatrix.Add(new CompetitionsMatrix
+                competencyMatrices.Add(new CompetencyMatrix
                 {
-                    CandidateId = candidateId,
-                    CompetitionId = competitionId,
-                    Score = new Random().Next(1, 6), // Оценка от 1 до 5
-                    Comment = candidateId % 3 == 0 ? "Хорошие знания" : null
+                    InterviewId = interviewId,
+                    CompetencyId = competencyId,
+                    Score = random.Next(1, 6),
+                    Comment = interviewId % 3 == 0 ? "Хорошие знания" : null
                 });
             }
         }
 
         // Оценки для Middle (компетенции 6-10)
-        for (int candidateId = 1; candidateId <= 10; candidateId++)
+        for (int interviewId = 1; interviewId <= 12; interviewId++)
         {
-            for (int competitionId = 6; competitionId <= 10; competitionId++)
+            for (int competencyId = 6; competencyId <= 10; competencyId++)
             {
-                competitionsMatrix.Add(new CompetitionsMatrix
+                competencyMatrices.Add(new CompetencyMatrix
                 {
-                    CandidateId = candidateId,
-                    CompetitionId = competitionId,
-                    Score = new Random().Next(1, 6),
-                    Comment = candidateId % 2 == 0 ? "Отличный уровень" : null
+                    InterviewId = interviewId,
+                    CompetencyId = competencyId,
+                    Score = random.Next(1, 6),
+                    Comment = interviewId % 2 == 0 ? "Отличный уровень" : null
                 });
             }
         }
 
         // Оценки для Senior (компетенции 11-15)
-        for (int candidateId = 1; candidateId <= 10; candidateId++)
+        for (int interviewId = 1; interviewId <= 12; interviewId++)
         {
-            for (int competitionId = 11; competitionId <= 15; competitionId++)
+            for (int competencyId = 11; competencyId <= 15; competencyId++)
             {
-                competitionsMatrix.Add(new CompetitionsMatrix
+                competencyMatrices.Add(new CompetencyMatrix
                 {
-                    CandidateId = candidateId,
-                    CompetitionId = competitionId,
-                    Score = new Random().Next(1, 6),
-                    Comment = candidateId % 4 == 0 ? "Экспертный уровень" : null
+                    InterviewId = interviewId,
+                    CompetencyId = competencyId,
+                    Score = random.Next(1, 6),
+                    Comment = interviewId % 4 == 0 ? "Экспертный уровень" : null
                 });
             }
         }
 
-        await context.CompetitionsMatrix.AddRangeAsync(competitionsMatrix);
+        await context.CompetencyMatrices.AddRangeAsync(competencyMatrices);
         await context.SaveChangesAsync();
 
         // 8. Вердикты от решалы (UserId = 3)
         var verdicts = new List<Verdict>
         {
-            new Verdict { InterviewId = 1, UserId = 3, Decision = "Принять", Comment = "Хорошо показал себя на интервью" },
-            new Verdict { InterviewId = 2, UserId = 3, Decision = "Отклонить", Comment = "Недостаточно знаний" },
-            new Verdict { InterviewId = 3, UserId = 3, Decision = "Принять", Comment = "Отличный кандидат" },
-            new Verdict { InterviewId = 6, UserId = 3, Decision = "Принять", Comment = "Рекомендую" },
-            new Verdict { InterviewId = 9, UserId = 3, Decision = "Принять", Comment = "Сильный специалист" }
+            new Verdict { InterviewId = 1, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Хорошо показал себя на интервью" },
+            new Verdict { InterviewId = 2, UserId = 3, Decision = DeciderVerdict.Rejected, Comment = "Недостаточно знаний" },
+            new Verdict { InterviewId = 3, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Отличный кандидат" },
+            new Verdict { InterviewId = 6, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Рекомендую" },
+            new Verdict { InterviewId = 9, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Сильный специалист" }
         };
         await context.Verdicts.AddRangeAsync(verdicts);
         await context.SaveChangesAsync();

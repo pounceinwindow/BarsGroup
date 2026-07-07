@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Domain.Models;
 
-[TODO] - Обсудить свойство "Кандидат"
+// [TODO] - Обсудить свойство "Кандидат"
 public class CompetencyMatrix
 {
     // { InterviewId, CompetencyId} составной ключ

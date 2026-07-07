@@ -13,6 +13,6 @@ public class User
     public string PasswordHash { get; set; }
     public UserRole Role { get; set; }
     public DateOnly CreatedAt { get; set; }
-    public DateOnly RevokedAt { get; set; }
-    public string RevokedBy { get; set; }
+    public DateOnly? RevokedAt { get; set; }
+    public string? RevokedBy { get; set; }
 }
