@@ -1,5 +1,4 @@
-﻿using APIGateaway.API.Infrastructure;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -57,6 +56,8 @@ namespace APIGateaway.API.Configuration
                 options.ClientId = app.Configuration["Keycloak:ClientId"];
                 options.ClientSecret = app.Configuration["Keycloak:ClientSecret"];
                 options.ResponseType = "code";
+
+                options.RequireHttpsMetadata = false;
 
                 options.Scope.Clear();
                 options.Scope.Add("openid");

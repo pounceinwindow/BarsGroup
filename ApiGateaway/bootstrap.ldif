@@ -1,0 +1,219 @@
+# 1. Иван Петров
+dn: uid=ivan.p,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: ivan.p
+cn: ivan_petrov
+sn: Петров
+givenName: Иван
+mail: ivan@company.local
+userPassword: 123
+
+# 2. Петр Иванов
+dn: uid=petr.i,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: petr.i
+cn: petr_ivanov
+sn: Иванов
+givenName: Петр
+mail: petr.i@company.local
+userPassword: 123
+
+# 3. Алексей Смирнов
+dn: uid=alex.s,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: alex.s
+cn: alex_smirnov
+sn: Смирнов
+givenName: Алексей
+mail: alex.s@company.local
+userPassword: 123
+
+# 4. Сергей Кузнецов
+dn: uid=sergey.k,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: sergey.k
+cn: sergey_kuznetsov
+sn: Кузнецов
+givenName: Сергей
+mail: sergey.k@company.local
+userPassword: 123
+
+# 5. Андрей Попов
+dn: uid=andrey.p,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: andrey.p
+cn: andrey_popov
+sn: Попов
+givenName: Андрей
+mail: andrey.p@company.local
+userPassword: 123
+
+# 6. Дмитрий Васильев
+dn: uid=dmitry.v,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: dmitry.v
+cn: dmitry_vasiliev
+sn: Васильев
+givenName: Дмитрий
+mail: dmitry.v@company.local
+userPassword: 123
+
+# 7. Елена Петрова
+dn: uid=elena.p,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: elena.p
+cn: elena_petrova
+sn: Петрова
+givenName: Елена
+mail: elena.p@company.local
+userPassword: 123
+
+# 8. Анна Соколова
+dn: uid=anna.s,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: anna.s
+cn: anna_sokolova
+sn: Соколова
+givenName: Анна
+mail: anna.s@company.local
+userPassword: 123
+
+# 9. Михаил Лазарев
+dn: uid=mikhail.l,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: mikhail.l
+cn: mikhail_lazarev
+sn: Лазарев
+givenName: Михаил
+mail: mikhail.l@company.local
+userPassword: 123
+
+# 10. Ольга Новикова
+dn: uid=olga.n,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: olga.n
+cn: olga_novikova
+sn: Новикова
+givenName: Ольга
+mail: olga.n@company.local
+userPassword: 123
+
+# 11. Федор Федоров
+dn: uid=fedor.f,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: fedor.f
+cn: fedor_fedorov
+sn: Федоров
+givenName: Федор
+mail: fedor.f@company.local
+userPassword: 123
+
+# 12. Татьяна Морозова
+dn: uid=tatyana.m,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: tatyana.m
+cn: tatyana_morozova
+sn: Морозова
+givenName: Татьяна
+mail: tatyana.m@company.local
+userPassword: 123
+
+# 13. Игорь Волков
+dn: uid=igor.v,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: igor.v
+cn: igor_volkov
+sn: Волков
+givenName: Игорь
+mail: igor.v@company.local
+userPassword: 123
+
+# 14. Наталья Алексеева
+dn: uid=nataliya.a,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: nataliya.a
+cn: nataliya_alekseeva
+sn: Алексеева
+givenName: Наталья
+mail: nataliya.a@company.local
+userPassword: 123
+
+# 15. Артем Козлов
+dn: uid=artem.k,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: artem.k
+cn: artem_kozlov
+sn: Козлов
+givenName: Артем
+mail: artem.k@company.local
+userPassword: 123
+
+# 16. Елизавета Борисова
+dn: uid=elizaveta.b,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: elizaveta.b
+cn: elizaveta_borisova
+sn: Борисова
+givenName: Елизавета
+mail: elizaveta.b@company.local
+userPassword: 123
+
+# 17. Владимир Макаров
+dn: uid=vladimir.m,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: vladimir.m
+cn: vladimir_makarov
+sn: Макаров
+givenName: Владимир
+mail: vladimir.m@company.local
+userPassword: 123
+
+# 18. Екатерина Степанова
+dn: uid=ekaterina.s,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: ekaterina.s
+cn: ekaterina_stepanova
+sn: Степанова
+givenName: Екатерина
+mail: ekaterina.s@company.local
+userPassword: 123
+
+# 19. Антон Орлов
+dn: uid=anton.o,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: anton.o
+cn: anton_orlov
+sn: Орлов
+givenName: Антон
+mail: anton.o@company.local
+userPassword: 123
+
+# 20. Мария Гаврилова
+dn: uid=mariya.g,dc=company,dc=local
+objectClass: inetOrgPerson
+objectClass: top
+uid: mariya.g
+cn: mariya_gavrilova
+sn: Гаврилова
+givenName: Мария
+mail: mariya.g@company.local
+userPassword: 123
