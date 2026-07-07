@@ -1,16 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Domain.Models;
 
-namespace Domain.Models;
-
-// Смежная таблица связывающая Компетенции к конкретной вакансии
+/// <summary>
+/// Связь компетенции с вакансией.
+/// </summary>
 public class VacancyCompetency
 {
-    public int VacancyId { get; set; }
-    public int CompetencyId { get; set; }
+    public int VacancyId { get; private set; }
+    public int CompetencyId { get; private set; }
 
-    // навигационные свойства
-    public Vacancy Vacancy { get; set; }
-    public Competency Competency { get; set; }
+    public Vacancy Vacancy { get; private set; } = null!;
+    public Competency Competency { get; private set; } = null!;
+
+    private VacancyCompetency()
+    {
+    }
+
+    /// <summary>
+    /// Создаёт привязку компетенции к вакансии.
+    /// </summary>
+    public static VacancyCompetency Create(int vacancyId, int competencyId)
+    {
+        if (vacancyId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(vacancyId));
+        if (competencyId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(competencyId));
+
+        return new VacancyCompetency
+        {
+            VacancyId = vacancyId,
+            CompetencyId = competencyId
+        };
+    }
 }

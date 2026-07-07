@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BarsContext))]
-    [Migration("20260705140026_Initial")]
+    [Migration("20260707184809_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -38,17 +38,16 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Education")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.PrimitiveCollection<string[]>("Education")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(200)[]");
 
-                    b.Property<string>("FirstName")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("LastName")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -58,13 +57,21 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("PreviousWork")
+                    b.PrimitiveCollection<string[]>("PreviousWork")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(200)[]");
+
+                    b.PrimitiveCollection<string[]>("Skills")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(200)[]");
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Telegram")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
@@ -73,7 +80,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Candidates");
                 });
 
-            modelBuilder.Entity("Domain.Models.Competition", b =>
+            modelBuilder.Entity("Domain.Models.Competency", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +89,6 @@ namespace Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -92,29 +98,28 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Competitions");
+                    b.ToTable("Competencies");
                 });
 
-            modelBuilder.Entity("Domain.Models.CompetitionsMatrix", b =>
+            modelBuilder.Entity("Domain.Models.CompetencyMatrix", b =>
                 {
-                    b.Property<int>("CandidateId")
+                    b.Property<int>("InterviewId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("CompetitionId")
+                    b.Property<int>("CompetencyId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Comment")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 
-                    b.HasKey("CandidateId", "CompetitionId");
+                    b.HasKey("InterviewId", "CompetencyId");
 
-                    b.HasIndex("CompetitionId");
+                    b.HasIndex("CompetencyId");
 
-                    b.ToTable("CompetitionsMatrix");
+                    b.ToTable("CompetencyMatrices");
                 });
 
             modelBuilder.Entity("Domain.Models.Interview", b =>
@@ -131,10 +136,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("ProcessId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SummaryComment")
+                        .HasColumnType("text");
 
                     b.Property<int>("VacancyId")
                         .HasColumnType("integer");
@@ -176,11 +187,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
-                    b.Property<DateOnly>("RevokedAt")
+                    b.Property<DateOnly?>("RevokedAt")
                         .HasColumnType("date");
 
                     b.Property<string>("RevokedBy")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Role")
@@ -211,19 +221,19 @@ namespace Infrastructure.Migrations
                     b.ToTable("Vacancies");
                 });
 
-            modelBuilder.Entity("Domain.Models.VacancyCompetition", b =>
+            modelBuilder.Entity("Domain.Models.VacancyCompetency", b =>
                 {
                     b.Property<int>("VacancyId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("CompetitionId")
+                    b.Property<int>("CompetencyId")
                         .HasColumnType("integer");
 
-                    b.HasKey("VacancyId", "CompetitionId");
+                    b.HasKey("VacancyId", "CompetencyId");
 
-                    b.HasIndex("CompetitionId");
+                    b.HasIndex("CompetencyId");
 
-                    b.ToTable("VacancyCompetition");
+                    b.ToTable("VacancyCompetencies");
                 });
 
             modelBuilder.Entity("Domain.Models.Verdict", b =>
@@ -235,7 +245,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Comment")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Decision")
@@ -252,29 +261,29 @@ namespace Infrastructure.Migrations
                     b.ToTable("Verdicts");
                 });
 
-            modelBuilder.Entity("Domain.Models.CompetitionsMatrix", b =>
+            modelBuilder.Entity("Domain.Models.CompetencyMatrix", b =>
                 {
-                    b.HasOne("Domain.Models.Candidate", "Candidate")
+                    b.HasOne("Domain.Models.Competency", "Competency")
                         .WithMany()
-                        .HasForeignKey("CandidateId")
+                        .HasForeignKey("CompetencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Models.Competition", "Competition")
-                        .WithMany()
-                        .HasForeignKey("CompetitionId")
+                    b.HasOne("Domain.Models.Interview", "Interview")
+                        .WithMany("MatrixRows")
+                        .HasForeignKey("InterviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Candidate");
+                    b.Navigation("Competency");
 
-                    b.Navigation("Competition");
+                    b.Navigation("Interview");
                 });
 
             modelBuilder.Entity("Domain.Models.Interview", b =>
                 {
                     b.HasOne("Domain.Models.Candidate", "Candidate")
-                        .WithMany()
+                        .WithMany("Interviews")
                         .HasForeignKey("CandidateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -290,11 +299,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Vacancy");
                 });
 
-            modelBuilder.Entity("Domain.Models.VacancyCompetition", b =>
+            modelBuilder.Entity("Domain.Models.VacancyCompetency", b =>
                 {
-                    b.HasOne("Domain.Models.Competition", "Competition")
+                    b.HasOne("Domain.Models.Competency", "Competency")
                         .WithMany()
-                        .HasForeignKey("CompetitionId")
+                        .HasForeignKey("CompetencyId")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
@@ -304,7 +313,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Competition");
+                    b.Navigation("Competency");
 
                     b.Navigation("Vacancy");
                 });
@@ -312,7 +321,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.Verdict", b =>
                 {
                     b.HasOne("Domain.Models.Interview", "Interview")
-                        .WithOne()
+                        .WithOne("Verdict")
                         .HasForeignKey("Domain.Models.Verdict", "InterviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -326,6 +335,18 @@ namespace Infrastructure.Migrations
                     b.Navigation("Interview");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Models.Candidate", b =>
+                {
+                    b.Navigation("Interviews");
+                });
+
+            modelBuilder.Entity("Domain.Models.Interview", b =>
+                {
+                    b.Navigation("MatrixRows");
+
+                    b.Navigation("Verdict");
                 });
 #pragma warning restore 612, 618
         }

@@ -2,7 +2,8 @@ namespace Domain.Enums;
 
 public enum InterviewStatus
 {
+    Scheduled,
     WaitingForVerdict,
-    Rejected,
+    Canceled,
     Completed
 }
