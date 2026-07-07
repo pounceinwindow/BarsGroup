@@ -12,12 +12,12 @@ public class BarsContext : DbContext
     }
 
     public DbSet<Candidate> Candidates { get; set; }
-    public DbSet<Competition> Competitions { get; set; }
-    public DbSet<CompetitionsMatrix> CompetitionsMatrix { get; set; }
+    public DbSet<Competency> Competencies { get; set; }
+    public DbSet<CompetencyMatrix> CompetencyMatrices { get; set; }
     public DbSet<Interview> Interviews { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Vacancy> Vacancies { get; set; }
-    public DbSet<VacancyCompetition> VacancyCompetition { get; set; }
+    public DbSet<VacancyCompetency> VacancyCompetencies { get; set; }
     public DbSet<Verdict> Verdicts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

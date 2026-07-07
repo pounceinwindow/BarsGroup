@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Infrastructure.ModelConfiguration;
 
-public class CompetitionConfiguration : IEntityTypeConfiguration<Competition>
+public class CompetencyConfiguration : IEntityTypeConfiguration<Competency>
 {
-    public void Configure(EntityTypeBuilder<Competition> builder)
+    public void Configure(EntityTypeBuilder<Competency> builder)
     {
         builder.HasKey(x => x.Id);
 
@@ -18,7 +18,6 @@ public class CompetitionConfiguration : IEntityTypeConfiguration<Competition>
             .HasMaxLength(200)
             .IsRequired();
         builder // размер не ограничен, может быть без описания
-            .Property(x => x.Description)
-            .IsRequired(false);
+            .Property(x => x.Description);
     }
 }

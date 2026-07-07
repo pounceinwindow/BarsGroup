@@ -16,6 +16,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder
             .Property(x => x.Role)
             .HasMaxLength(100)
+            .HasConversion<string>()
             .IsRequired();
         builder
             .Property(x => x.FirstName)

@@ -14,17 +14,9 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder.HasKey(x => x.Id);
 
         builder
-            .Property(x => x.FirstName)
+            .Property(x => x.FullName)
             .HasMaxLength(50)
             .IsRequired();
-        builder
-            .Property(x => x.LastName)
-            .HasMaxLength(50)
-            .IsRequired();
-        builder // null (мог не иметь работы)
-            .Property(x => x.PreviousWork)
-            .HasMaxLength(500)
-            .IsRequired(false);
         builder
             .Property(x => x.City)
             .HasMaxLength(100)
@@ -32,14 +24,43 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder
             .Property(x => x.Status)
             .HasMaxLength(50)
+            .HasConversion<string>()
             .IsRequired();
-        builder // null (может быть без образования)
+        builder
             .Property(x => x.Education)
-            .HasMaxLength(500)
-            .IsRequired(false);
+            .HasMaxLength(20) // максимальное количество элементов массива
+            .IsRequired(false); // если нет образования - пустой массив
+        builder
+            .PrimitiveCollection(x => x.Education)
+            .ElementType()
+            .HasMaxLength(200); // максимальная длина элементов массива
+        builder
+            .Property(x => x.PreviousWork)
+            .HasMaxLength(20) // максимальное количество элементов массива
+            .IsRequired(false); // если нет работы - пустой массив
+        builder
+            .PrimitiveCollection(x => x.PreviousWork)
+            .ElementType()
+            .HasMaxLength(200); // максимальная длина элементов массива
         builder
             .Property(x => x.Phone)
             .HasMaxLength(50)
             .IsRequired();
+        builder
+            .Property(x => x.Email)
+            .HasMaxLength(50)
+            .IsRequired();
+        builder
+            .Property(x => x.Telegram)
+            .HasMaxLength(50)
+            .IsRequired(false);
+        builder
+            .Property(x => x.Skills)
+            .HasMaxLength(20) // максимальное количество элементов массива
+            .IsRequired();
+        builder
+            .PrimitiveCollection(x => x.Skills)
+            .ElementType()
+            .HasMaxLength(200); // максимальная длина элементов массива
     }
 }
