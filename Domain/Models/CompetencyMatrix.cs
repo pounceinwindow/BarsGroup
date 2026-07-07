@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Domain.Models;
 
+[TODO] - Обсудить свойство "Кандидат"
 public class CompetencyMatrix
 {
     // { InterviewId, CompetencyId} составной ключ
@@ -11,7 +12,7 @@ public class CompetencyMatrix
     public int CompetencyId { get; set; }
 
     public int Score { get; set; }
-    public string Comment { get; set; }
+    public string? Comment { get; set; }
 
     // навигационные свойства
     public Interview Interview { get; set; }
