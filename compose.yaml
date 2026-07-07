@@ -57,6 +57,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       LDAP_ADMIN_PASSWORD: "adminpassword"
+      API_GATEWAY_CLIENT_SECRET: "fReUqrCjHSE49VLEceItCza8XSeOrowB"
     ports:
       - "8080:8080"
     volumes:

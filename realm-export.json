@@ -653,7 +653,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
+      "secret": "${API_GATEWAY_CLIENT_SECRET}",
       "redirectUris": [
         "http://localhost:5000/signin-oidc"
       ],

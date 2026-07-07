@@ -50,7 +50,7 @@ app.MapPost("/api/login", async (LoginRequest req, HttpClient httpClient, HttpCo
     {
         new KeyValuePair<string, string>("grant_type", "password"),
         new KeyValuePair<string, string>("client_id", "api-gateway"),
-        new KeyValuePair<string, string>("client_secret", "BKzeXGQdxw1C6dz2caxIPZE7dHIyRzjP"), 
+        new KeyValuePair<string, string>("client_secret", "fReUqrCjHSE49VLEceItCza8XSeOrowB"), 
         new KeyValuePair<string, string>("username", req.Username),
         new KeyValuePair<string, string>("password", req.Password)
     });
