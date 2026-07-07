@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace Domain.Models;
 
@@ -12,6 +13,6 @@ public class Candidate
     public string City { get; set; }
     public string[] Education { get; set; }
     public string[] PreviousWork { get; set; }
-    public string Status { get; set; }
+    public CandidateStatus Status { get; set; }
     public string[] Skills { get; set; } // [TODO: Артур] - оставить массив или вынести в отдельную таблицу?
 }

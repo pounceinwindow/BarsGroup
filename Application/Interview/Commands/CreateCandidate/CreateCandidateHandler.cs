@@ -35,7 +35,7 @@ public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, Un
             Education = request.Education,
             PreviousWork = request.PreviousWork,
             Skills = request.Skills,
-            Status = CandidateStatuses.LookingForWork
+            Status = CandidateStatus.LookingForWork
         };
 
         _candidates.Add(candidate);

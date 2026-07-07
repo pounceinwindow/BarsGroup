@@ -29,6 +29,7 @@ public class InterviewConfiguration : IEntityTypeConfiguration<Interview>
         builder
             .Property(x => x.Status)
             .HasMaxLength(100)
+            .HasConversion<string>()
             .IsRequired();
         builder
             .HasMany(x => x.CompetitionsMatrix)

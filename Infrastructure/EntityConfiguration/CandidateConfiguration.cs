@@ -24,6 +24,7 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder
             .Property(x => x.Status)
             .HasMaxLength(50)
+            .HasConversion<string>()
             .IsRequired();
         builder
             .Property(x => x.Education)
