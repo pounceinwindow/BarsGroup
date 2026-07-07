@@ -19,9 +19,9 @@ public class VerdictConfiguration : IEntityTypeConfiguration<Verdict>
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Restrict); // При  удалении пользователя - ошибка (за ним привязаны решения)
         builder // [TODO: Андрей] - Гонка за решением собеседования
-                // пока решение может приянть первый решала, остальные не могут
+            // пока решение может приянть первый решала, остальные не могут
             .HasOne(x => x.Interview)
-            .WithOne()
+            .WithOne(x => x.Verdict)
             .HasForeignKey<Verdict>(x => x.InterviewId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -30,7 +30,7 @@ public class VerdictConfiguration : IEntityTypeConfiguration<Verdict>
             .HasConversion<string>()
             .IsRequired();
         builder // null (может не оставить комментарий и просто принять)
-                // нет ограничений размера
+            // нет ограничений размера
             .Property(x => x.Comment)
             .IsRequired(false);
     }
