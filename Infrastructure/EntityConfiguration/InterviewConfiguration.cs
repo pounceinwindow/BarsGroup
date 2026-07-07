@@ -24,6 +24,9 @@ public class InterviewConfiguration : IEntityTypeConfiguration<Interview>
             .HasForeignKey(x => x.CandidateId)
             .OnDelete(DeleteBehavior.Restrict); // Сохранять интервью удаленного кандидата?
         builder
+            .Property(x => x.ProcessId)
+            .IsRequired();
+        builder
             .Property(x => x.Date)
             .IsRequired();
         builder

@@ -235,22 +235,29 @@ public static class DbSeeder
         await context.Candidates.AddRangeAsync(candidates);
         await context.SaveChangesAsync();
 
+        var guid = Guid.NewGuid();
         // 6. Интервью (каждый кандидат хотя бы на одну вакансию)
         var interviews = new List<Interview>
         {
-            new Interview { Id = 1, VacancyId = 1, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-10), Status = InterviewStatus.Completed },
-            new Interview { Id = 2, VacancyId = 1, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-8), Status = InterviewStatus.Rejected },
-            new Interview { Id = 3, VacancyId = 2, CandidateId = 3, Date = DateTime.UtcNow.AddDays(-7), Status = InterviewStatus.Completed },
-            new Interview { Id = 4, VacancyId = 2, CandidateId = 4, Date = DateTime.UtcNow.AddDays(-5), Status = InterviewStatus.WaitingForVerdict },
-            new Interview { Id = 5, VacancyId = 3, CandidateId = 5, Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict },
-            new Interview { Id = 6, VacancyId = 3, CandidateId = 6, Date = DateTime.UtcNow.AddDays(-3), Status = InterviewStatus.Completed },
-            new Interview { Id = 7, VacancyId = 1, CandidateId = 7, Date = DateTime.UtcNow.AddDays(-2), Status = InterviewStatus.WaitingForVerdict },
-            new Interview { Id = 8, VacancyId = 2, CandidateId = 8, Date = DateTime.UtcNow.AddDays(-1), Status = InterviewStatus.WaitingForVerdict },
-            new Interview { Id = 9, VacancyId = 3, CandidateId = 9, Date = DateTime.UtcNow, Status = InterviewStatus.Completed },
-            new Interview { Id = 10, VacancyId = 1, CandidateId = 10, Date = DateTime.UtcNow, Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 1, VacancyId = 1, CandidateId = 1, ProcessId = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(-10), Status = InterviewStatus.Completed },
+            new Interview { Id = 2, VacancyId = 1, CandidateId = 2, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-8), Status = InterviewStatus.Completed },
+            new Interview { Id = 3, VacancyId = 2, CandidateId = 3, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-7), Status = InterviewStatus.Completed },
+            new Interview { Id = 4, VacancyId = 2, CandidateId = 4, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-5), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 5, VacancyId = 3, CandidateId = 5, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 6, VacancyId = 3, CandidateId = 6, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-3), Status = InterviewStatus.Completed },
+            new Interview { Id = 7, VacancyId = 1, CandidateId = 7, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-2), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 8, VacancyId = 2, CandidateId = 8, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-1), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 9, VacancyId = 3, CandidateId = 9, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow, Status = InterviewStatus.Completed },
+            new Interview { Id = 10, VacancyId = 1, CandidateId = 10, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow, Status = InterviewStatus.WaitingForVerdict },
             // Некоторые кандидаты на несколько вакансий
-            new Interview { Id = 11, VacancyId = 2, CandidateId = 1, Date = DateTime.UtcNow.AddDays(-6), Status = InterviewStatus.WaitingForVerdict },
-            new Interview { Id = 12, VacancyId = 3, CandidateId = 2, Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict }
+            new Interview { Id = 11, VacancyId = 2, CandidateId = 1, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-6), Status = InterviewStatus.WaitingForVerdict },
+            new Interview { Id = 12, VacancyId = 3, CandidateId = 2, ProcessId = Guid.NewGuid(),  Date = DateTime.UtcNow.AddDays(-4), Status = InterviewStatus.WaitingForVerdict },
+            // Несколько этапов
+            new Interview { Id = 13, VacancyId = 3, CandidateId = 4, ProcessId = guid, Date = DateTime.UtcNow.AddDays(-7), Status = InterviewStatus.Completed },
+            new Interview { Id = 14, VacancyId = 3, CandidateId = 4, ProcessId = guid, Date = DateTime.UtcNow.AddDays(2), Status = InterviewStatus.Scheduled },
+            // Запланированные интервью
+            new Interview { Id = 15, VacancyId = 3, CandidateId = 3, ProcessId = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(1), Status = InterviewStatus.Scheduled },
+            new Interview { Id = 16, VacancyId = 3, CandidateId = 7, ProcessId = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(2), Status = InterviewStatus.Scheduled },
         };
         await context.Interviews.AddRangeAsync(interviews);
         await context.SaveChangesAsync();
@@ -290,7 +297,7 @@ public static class DbSeeder
         }
 
         // Оценки для Senior (компетенции 11-15)
-        for (int interviewId = 1; interviewId <= 12; interviewId++)
+        for (int interviewId = 1; interviewId <= 13; interviewId++)
         {
             for (int competencyId = 11; competencyId <= 15; competencyId++)
             {
@@ -314,7 +321,8 @@ public static class DbSeeder
             new Verdict { InterviewId = 2, UserId = 3, Decision = DeciderVerdict.Rejected, Comment = "Недостаточно знаний" },
             new Verdict { InterviewId = 3, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Отличный кандидат" },
             new Verdict { InterviewId = 6, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Рекомендую" },
-            new Verdict { InterviewId = 9, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Сильный специалист" }
+            new Verdict { InterviewId = 9, UserId = 3, Decision = DeciderVerdict.Hired, Comment = "Сильный специалист" },
+            new Verdict { InterviewId = 13, UserId = 3, Decision = DeciderVerdict.NextStage, Comment = "Перепроверить навыки наставничества" }
         };
         await context.Verdicts.AddRangeAsync(verdicts);
         await context.SaveChangesAsync();

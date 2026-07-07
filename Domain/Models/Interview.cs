@@ -10,6 +10,7 @@ public class Interview
     public int Id { get; set; }
     public int VacancyId { get; set; }
     public int CandidateId { get; set; }
+    public Guid ProcessId { get; set; } // идентификатор отклика объединяющий несколько этапов интервью одного кандидата на одну вакансию
     public DateTime Date { get; set; }
     public InterviewStatus Status { get; set; }
 
