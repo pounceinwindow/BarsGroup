@@ -30,5 +30,10 @@ public class InterviewConfiguration : IEntityTypeConfiguration<Interview>
             .Property(x => x.Status)
             .HasMaxLength(100)
             .IsRequired();
+        builder
+            .HasMany(x => x.CompetitionsMatrix)
+            .WithOne(x => x.Interview)
+            .HasForeignKey(x => x.InterviewId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
