@@ -27,6 +27,7 @@ public class VerdictConfiguration : IEntityTypeConfiguration<Verdict>
 
         builder
             .Property(x => x.Decision)
+            .HasConversion<string>()
             .IsRequired();
         builder // null (может не оставить комментарий и просто принять)
                 // нет ограничений размера
