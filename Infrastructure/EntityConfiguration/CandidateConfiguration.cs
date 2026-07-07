@@ -29,7 +29,7 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder
             .Property(x => x.Education)
             .HasMaxLength(20) // максимальное количество элементов массива
-            .IsRequired(); // если нет образования - пустой массив
+            .IsRequired(false); // если нет образования - пустой массив
         builder
             .PrimitiveCollection(x => x.Education)
             .ElementType()
@@ -37,7 +37,7 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         builder
             .Property(x => x.PreviousWork)
             .HasMaxLength(20) // максимальное количество элементов массива
-            .IsRequired(); // если нет работы - пустой массив
+            .IsRequired(false); // если нет работы - пустой массив
         builder
             .PrimitiveCollection(x => x.PreviousWork)
             .ElementType()
@@ -52,7 +52,8 @@ public class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
             .IsRequired();
         builder
             .Property(x => x.Telegram)
-            .HasMaxLength(50);
+            .HasMaxLength(50)
+            .IsRequired(false);
         builder
             .Property(x => x.Skills)
             .HasMaxLength(20) // максимальное количество элементов массива
