@@ -5,19 +5,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.ModelConfiguration;
 
-public class CompetitionMatrixConfiguration : IEntityTypeConfiguration<CompetitionsMatrix>
+public class CompetencyMatrixConfiguration : IEntityTypeConfiguration<CompetencyMatrix>
 {
-    public void Configure(EntityTypeBuilder<CompetitionsMatrix> builder)
+    public void Configure(EntityTypeBuilder<CompetencyMatrix> builder)
     {
-        builder.HasKey(x => new { x.InterviewId, x.CompetitionId });
+        builder.HasKey(x => new { x.InterviewId, x.CompetencyId });
 
         builder.HasOne(x => x.Interview)
             .WithMany()
             .HasForeignKey(x => x.InterviewId)
             .OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(x => x.Competition)
+        builder.HasOne(x => x.Competency)
             .WithMany()
-            .HasForeignKey(x => x.CompetitionId)
+            .HasForeignKey(x => x.CompetencyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(x => x.Score)

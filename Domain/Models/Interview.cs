@@ -16,5 +16,5 @@ public class Interview
     // навигационные свойства
     public Vacancy Vacancy { get; set; }
     public Candidate Candidate { get; set; }
-    public List<CompetitionsMatrix> CompetitionsMatrix { get; set; }
+    public List<CompetencyMatrix> CompetencyMatrix { get; set; }
 }

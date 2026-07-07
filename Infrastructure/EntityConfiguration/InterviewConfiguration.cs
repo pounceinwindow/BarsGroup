@@ -32,7 +32,7 @@ public class InterviewConfiguration : IEntityTypeConfiguration<Interview>
             .HasConversion<string>()
             .IsRequired();
         builder
-            .HasMany(x => x.CompetitionsMatrix)
+            .HasMany(x => x.CompetencyMatrix)
             .WithOne(x => x.Interview)
             .HasForeignKey(x => x.InterviewId)
             .OnDelete(DeleteBehavior.Cascade);
