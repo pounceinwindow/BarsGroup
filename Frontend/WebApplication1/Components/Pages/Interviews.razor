@@ -1,0 +1,61 @@
+@page "/interviews"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+<PageTitle>Спектр — реестр собеседований</PageTitle>
+
+<section class="page-content registry-page">
+    <div class="page-heading-row">
+        <div>
+            <span class="eyebrow dark">Собеседования</span>
+            <h2>Реестр собесов</h2>
+        </div>
+        <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/interviews/new")'>
+            <SvgIcon Name="plus" Size="15" /> Новый собес
+        </button>
+    </div>
+
+    <div class="registry-toolbar">
+        <div class="filter-group">
+            <label>Поиск<input class="filter-input" @bind="Search" @bind:event="oninput" placeholder="Кандидат или вакансия" /></label>
+            <label>Вакансия<select @bind="VacancyFilter">@foreach (var vacancy in State.VacancyFilterOptions) { <option value="@vacancy">@vacancy</option> }</select></label>
+            <label>Статус<select @bind="StatusFilter">@foreach (var status in State.Statuses) { <option value="@status">@status</option> }</select></label>
+        </div>
+        <span class="result-count">Найдено <strong>@FilteredInterviews.Count</strong></span>
+    </div>
+
+    <div class="registry-table panel">
+        <div class="registry-head interview-head"><span>Кандидат</span><span>Вакансия</span><span>Статус</span><span>Оценка</span><span>Дата/время</span></div>
+        @if (FilteredInterviews.Count == 0)
+        {
+            <div class="empty-state"><strong>Собеседования не найдены</strong><span>Измените фильтры или создайте новый собес.</span><button class="text-button" @onclick="ResetFilters">Сбросить фильтры</button></div>
+        }
+        @foreach (var interview in FilteredInterviews)
+        {
+            var candidate = State.GetCandidateForInterview(interview);
+            <button class="registry-row interview-row" @onclick='() => Navigation.NavigateTo($"/interviews/{interview.Id}/protocol")'>
+                <span class="candidate-cell"><Initials Name="@(candidate?.Name ?? "Кандидат")" /><span><strong>@(candidate?.Name ?? "Кандидат удалён")</strong><small>@interview.Format · HR @interview.Hr</small></span></span>
+                <span data-label="Вакансия">@interview.Vacancy</span>
+                <span data-label="Статус"><StatusBadge Status="@interview.Status" /></span>
+                <span data-label="Оценка"><DotScale Value="@State.AverageScore(interview)" /></span>
+                <span data-label="Дата" class="mono">@SpectrumDemoState.DisplayDate(interview.Date) · @interview.Time</span>
+            </button>
+        }
+    </div>
+</section>
+
+@code {
+    private string Search = string.Empty;
+    private string VacancyFilter = "Все вакансии";
+    private string StatusFilter = "Все статусы";
+
+    private IReadOnlyList<DemoInterview> FilteredInterviews => State.FilterInterviews(Search, VacancyFilter, StatusFilter);
+
+    private void ResetFilters()
+    {
+        Search = string.Empty;
+        VacancyFilter = "Все вакансии";
+        StatusFilter = "Все статусы";
+    }
+}

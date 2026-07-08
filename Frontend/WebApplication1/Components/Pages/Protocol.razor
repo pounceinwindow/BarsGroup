@@ -1,0 +1,212 @@
+@page "/interviews/{InterviewId}/protocol"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject IPdfDocumentService PdfService
+
+<PageTitle>Спектр — протокол собеседования</PageTitle>
+
+@if (Interview is null || Candidate is null)
+{
+    <section class="page-content">
+        <div class="empty-state panel"><strong>Протокол не найден</strong><span>Вернитесь в реестр собеседований и выберите существующий собес.</span><button class="text-button" @onclick='() => Navigation.NavigateTo("/interviews")'>К реестру</button></div>
+    </section>
+}
+else
+{
+    <section class="page-content protocol-page">
+        <div class="protocol-actions">
+            <button class="back-button" @onclick='() => Navigation.NavigateTo($"/candidates/{Candidate.Id}")'><SvgIcon Name="back" Size="16" /> К карточке кандидата</button>
+            <div class="protocol-action-buttons">
+                <button class="secondary-button" @onclick="Print"><SvgIcon Name="print" Size="15" /> Печать</button>
+                <button class="secondary-button" @onclick="DownloadPdf" disabled="@IsPdfDownloading"><SvgIcon Name="download" Size="15" /> @(IsPdfDownloading ? "Формирование…" : "Скачать PDF")</button>
+            </div>
+        </div>
+
+        <article class="protocol-sheet">
+            <header class="protocol-header">
+                <div class="protocol-seal"><span>СП</span><small>HR · 2026</small></div>
+                <div><span class="eyebrow dark">Протокол собеседования</span><h2>@Interview.Vacancy</h2></div>
+                <StatusBadge Status="@Interview.Status" />
+            </header>
+
+            <div class="protocol-meta">
+                <div><small>Кандидат</small><strong>@Candidate.Name</strong></div>
+                <div><small>Дата и время</small><strong class="mono">@SpectrumDemoState.DisplayDate(Interview.Date) · @Interview.Time</strong></div>
+                <div><small>Формат</small><strong>@Interview.Format</strong></div>
+                <div><small>HR</small><strong>@Interview.Hr</strong></div>
+                <div><small>Согласующий</small><strong>@Interview.Approver</strong></div>
+            </div>
+
+            <section class="matrix-section">
+                <div class="section-heading compact"><span class="eyebrow dark">Шкала 1–5</span><h3>Матрица компетенций</h3></div>
+                <div class="matrix-list">
+                    @foreach (var competency in State.CompetenciesForInterview(Interview))
+                    {
+                        var score = Score(competency);
+                        <div class="matrix-row">
+                            <span>@competency.Name</span>
+                            <DotScale Value="@score" Editable="@State.CanEditProtocol" OnChange="@(newScore => SetScore(competency, newScore))" />
+                            <strong class="mono">@(score == 0 ? "—" : score)/5</strong>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="comment-section">
+                <label for="comment">Комментарий по итогам</label>
+                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol)" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
+            </section>
+
+            <section class="decision-section">
+                <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
+                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol"><SvgIcon Name="check" Size="14" /> Сохранить протокол</button>
+                <div class="decision-options">
+                    @foreach (var option in State.DecisionOptions)
+                    {
+                        <button class="decision-button @DecisionClass(option) @(Interview.Decision == option ? "is-active" : null)" @onclick="() => SetDecision(option)">
+                            @if (Interview.Decision == option) { <SvgIcon Name="check" Size="14" /> } @option
+                        </button>
+                    }
+                </div>
+            </section>
+
+            <footer class="signature-grid"><span>HR: @Interview.Hr <i></i></span><span>Согласующий: @Interview.Approver <i></i></span></footer>
+        </article>
+    </section>
+
+    @if (!string.IsNullOrEmpty(ToastMessage))
+    {
+        <div class="toast" role="status"><SvgIcon Name="check" Size="16" /> @ToastMessage</div>
+    }
+}
+
+@code {
+    [Parameter] public string InterviewId { get; set; } = string.Empty;
+
+    private bool IsPdfDownloading;
+    private string? ToastMessage;
+
+    private DemoInterview? Interview => State.GetInterview(InterviewId);
+    private DemoCandidate? Candidate => Interview is null ? null : State.GetCandidateForInterview(Interview);
+
+    private int Score(DemoCompetency competency)
+    {
+        if (Interview is null)
+            return 0;
+
+        return Interview.Scores.TryGetValue(competency.Id, out var score) ? score : 0;
+    }
+
+    private void SetScore(DemoCompetency competency, int score)
+    {
+        if (Interview is not null && State.CanEditProtocol)
+            State.SetScore(Interview, competency.Id, score);
+    }
+
+    private async Task SaveProtocol()
+    {
+        if (Interview is null)
+            return;
+
+        State.SaveProtocol(Interview);
+        await ShowToast("Протокол сохранён в базе");
+    }
+
+    private async Task SetDecision(string decision)
+    {
+        if (Interview is null)
+            return;
+
+        State.SaveDecision(Interview, decision);
+        await ShowToast($"Решение «{decision}» сохранено");
+    }
+
+    private async Task Print() => await JS.InvokeVoidAsync("print");
+
+    private async Task DownloadPdf()
+    {
+        if (Candidate is null || Interview is null || IsPdfDownloading)
+            return;
+
+        IsPdfDownloading = true;
+        try
+        {
+            var date = Interview.Date.Date;
+            if (TimeSpan.TryParse(Interview.Time, CultureInfo.InvariantCulture, out var time))
+                date = date.Add(time);
+
+            var model = new InterviewProtocolModel(
+                Candidate.Id,
+                Candidate.Name,
+                Interview.Vacancy,
+                date,
+                Interview.Format,
+                Interview.Hr,
+                Interview.Approver,
+                ToDocumentStatus(Interview.Status),
+                Interview.Comment,
+                ToDocumentDecision(Interview.Decision),
+                null,
+                State.CompetenciesForInterview(Interview).Select(competency => new CompetencyScoreModel(
+                    competency.Name,
+                    null,
+                    Score(competency),
+                    null)).ToList());
+
+            var pdf = PdfService.CreateInterviewProtocol(model);
+            await using var stream = new MemoryStream(pdf, writable: false);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"protocol-{Candidate.Id:0000}-{Interview.Id}.pdf",
+                streamReference);
+            await ShowToast("PDF-протокол сформирован");
+        }
+        catch
+        {
+            await ShowToast("Не удалось сформировать PDF");
+        }
+        finally
+        {
+            IsPdfDownloading = false;
+        }
+    }
+
+    private async Task ShowToast(string message)
+    {
+        ToastMessage = message;
+        StateHasChanged();
+        await Task.Delay(2200);
+        ToastMessage = null;
+    }
+
+    private static string DecisionClass(string decision) => decision switch
+    {
+        "Принять" => "accept",
+        "Следующий этап" => "next",
+        "Резерв" => "reserve",
+        _ => "reject"
+    };
+
+    private static string ToDocumentStatus(string status) => status switch
+    {
+        "Новый" => DocumentStatuses.New,
+        "Собеседование запланировано" => DocumentStatuses.InterviewScheduled,
+        "На согласовании" => DocumentStatuses.PendingDecision,
+        "Принят" => DocumentStatuses.Accepted,
+        "Резерв" => DocumentStatuses.TalentPool,
+        "Отклонён" => DocumentStatuses.Rejected,
+        _ => status
+    };
+
+    private static string? ToDocumentDecision(string? decision) => decision switch
+    {
+        "Принять" => DocumentStatuses.Accepted,
+        "Следующий этап" => DocumentStatuses.NextStage,
+        "Резерв" => DocumentStatuses.TalentPool,
+        "Отказать" => DocumentStatuses.Rejected,
+        _ => decision
+    };
+}

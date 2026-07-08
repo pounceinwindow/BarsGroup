@@ -1,0 +1,53 @@
+@page "/interviews/new"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+<PageTitle>Спектр — создание собеседования</PageTitle>
+
+<section class="page-content form-page">
+    <button class="back-button" @onclick='() => Navigation.NavigateTo("/interviews")'><SvgIcon Name="back" Size="16" /> К реестру собесов</button>
+
+    <div class="form-layout">
+        <article class="panel form-card">
+            <div class="panel-heading"><div><span class="eyebrow dark">Новый этап</span><h3>Создание собеса</h3></div></div>
+
+            <div class="form-grid">
+                <label class="span-2">Кандидат<select @bind="Form.CandidateId">@foreach (var candidate in State.Candidates) { <option value="@candidate.Id">@candidate.Name</option> }</select></label>
+                <label class="span-2">Вакансия<select @bind="Form.Vacancy">@foreach (var vacancy in State.VacancyTitles) { <option value="@vacancy">@vacancy</option> }</select></label>
+                <label>Дата<input @bind="Form.Date" @bind:event="oninput" placeholder="2026-07-09" /></label>
+                <label>Время<input @bind="Form.Time" @bind:event="oninput" placeholder="10:00" /></label>
+                <label>Формат<select @bind="Form.Format">@foreach (var format in State.InterviewFormats) { <option value="@format">@format</option> }</select></label>
+                <label>HR<input @bind="Form.Hr" @bind:event="oninput" /></label>
+                <label class="span-2">Согласующий<input @bind="Form.Approver" @bind:event="oninput" /></label>
+            </div>
+
+            <div class="form-actions">
+                <button class="secondary-button" @onclick='() => Navigation.NavigateTo("/interviews")'>Отмена</button>
+                <button class="primary-button action-button" @onclick="Create">Создать собес</button>
+            </div>
+        </article>
+
+        <aside class="panel side-card">
+            <span class="eyebrow dark">После создания</span>
+            <h3>Откроется протокол</h3>
+            <p class="muted">Собес добавится в реестр и в карточку кандидата. В протоколе можно заполнить матрицу и скачать PDF.</p>
+        </aside>
+    </div>
+</section>
+
+@code {
+    private InterviewForm Form { get; } = new();
+
+    protected override void OnInitialized()
+    {
+        Form.CandidateId = State.Candidates.FirstOrDefault()?.Id ?? 0;
+        Form.Vacancy = State.VacancyTitles.FirstOrDefault() ?? string.Empty;
+    }
+
+    private void Create()
+    {
+        var interview = State.CreateInterview(Form);
+        Navigation.NavigateTo($"/interviews/{interview.Id}/protocol");
+    }
+}

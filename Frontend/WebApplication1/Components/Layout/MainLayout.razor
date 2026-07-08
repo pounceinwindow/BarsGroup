@@ -1,0 +1,110 @@
+@inherits LayoutComponentBase
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+@if (!State.IsAuthenticated)
+{
+    <main class="login-panel auth-required-page">
+        <section class="login-card panel">
+            <span class="eyebrow dark">Нужен вход</span>
+            <h2>Сначала авторизуйтесь</h2>
+            <p class="form-intro">Рабочие страницы доступны после выбора роли на демо-экране входа.</p>
+            <button class="primary-button login-button" @onclick='() => Navigation.NavigateTo("/")'>
+                На страницу входа <span>→</span>
+            </button>
+        </section>
+    </main>
+}
+else
+{
+    <div class="app-shell">
+        <aside class="sidebar @(MobileMenuOpen ? "is-open" : null)">
+            <div>
+                <div class="brand brand-light sidebar-brand"><span class="brand-mark"></span><span>Спектр</span></div>
+                <nav aria-label="Основная навигация">
+                    <NavLink class="nav-item" href="/dashboard" Match="NavLinkMatch.All" @onclick="CloseMobileMenu">
+                        <SvgIcon Name="dashboard" /> <span>Дашборд</span>
+                    </NavLink>
+                    <NavLink class="nav-item" href="/candidates" @onclick="CloseMobileMenu">
+                        <SvgIcon Name="users" /> <span>Реестр кандидатов</span>
+                    </NavLink>
+                    <NavLink class="nav-item" href="/interviews" @onclick="CloseMobileMenu">
+                        <SvgIcon Name="calendar" /> <span>Реестр собесов</span>
+                    </NavLink>
+                    <NavLink class="nav-item" href="/candidates/new" @onclick="CloseMobileMenu">
+                        <SvgIcon Name="plus" /> <span>Создать кандидата</span>
+                    </NavLink>
+                    <NavLink class="nav-item" href="/interviews/new" @onclick="CloseMobileMenu">
+                        <SvgIcon Name="clipboard" /> <span>Создать собес</span>
+                    </NavLink>
+                    @if (State.Role == SpectrumDemoState.DeciderRole)
+                    {
+                        <NavLink class="nav-item" href="/decisions" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="checklist" /> <span>На согласовании</span><span class="nav-counter">@State.PendingCount</span>
+                        </NavLink>
+                    }
+                    @if (State.Role == SpectrumDemoState.AdminRole)
+                    {
+                        <div class="nav-divider">Админ</div>
+                        <NavLink class="nav-item" href="/admin" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="shield" /> <span>Справочники</span>
+                        </NavLink>
+                    }
+                </nav>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="user-summary">
+                    <Initials Name="@State.CurrentUserName" Class="small inverse" />
+                    <div><strong>@State.CurrentUserShort</strong><span>@State.Role</span></div>
+                </div>
+                <button class="nav-item" @onclick="Logout"><SvgIcon Name="logout" /><span>Выйти</span></button>
+            </div>
+        </aside>
+
+        @if (MobileMenuOpen)
+        {
+            <button class="menu-scrim" aria-label="Закрыть меню" @onclick="CloseMobileMenu"></button>
+        }
+
+        <main class="workspace">
+            <header class="topbar">
+                <button class="menu-button" aria-label="Открыть меню" @onclick="() => MobileMenuOpen = !MobileMenuOpen"><SvgIcon Name="menu" /></button>
+                <div class="topbar-title">
+                    <span class="eyebrow dark">Подбор и оценка</span>
+                    <h1>@Title</h1>
+                </div>
+            </header>
+
+            @Body
+        </main>
+    </div>
+}
+
+@code {
+    private bool MobileMenuOpen;
+
+    private string Title => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] switch
+    {
+        "" => "Спектр",
+        "dashboard" => "Дашборд",
+        "candidates" => "Реестр кандидатов",
+        "interviews" => "Реестр собесов",
+        "candidates/new" => "Создание кандидата",
+        "interviews/new" => "Создание собеседования",
+        "decisions" => "На согласовании",
+        "admin" => "Администрирование",
+        var route when route.StartsWith("candidates/", StringComparison.OrdinalIgnoreCase) => "Карточка кандидата",
+        var route when route.StartsWith("interviews/", StringComparison.OrdinalIgnoreCase) => "Протокол собеседования",
+        _ => "Спектр"
+    };
+
+    private void CloseMobileMenu() => MobileMenuOpen = false;
+
+    private void Logout()
+    {
+        State.Logout();
+        CloseMobileMenu();
+        Navigation.NavigateTo("/");
+    }
+}

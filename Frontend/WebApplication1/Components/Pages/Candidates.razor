@@ -1,0 +1,64 @@
+@page "/candidates"
+@page "/decisions"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+<PageTitle>Спектр — @(OnlyPending ? "на согласовании" : "реестр кандидатов")</PageTitle>
+
+<section class="page-content registry-page">
+    <div class="page-heading-row">
+        <div>
+            <span class="eyebrow dark">@(OnlyPending ? "Решения" : "Кандидаты")</span>
+            <h2>@(OnlyPending ? "Кандидаты на согласовании" : "Реестр кандидатов")</h2>
+        </div>
+        <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/candidates/new")'>
+            <SvgIcon Name="plus" Size="15" /> Новый кандидат
+        </button>
+    </div>
+
+    <div class="registry-toolbar">
+        <div class="filter-group">
+            <label>Поиск<input class="filter-input" @bind="Search" @bind:event="oninput" placeholder="ФИО, почта или вакансия" /></label>
+            <label>Вакансия<select @bind="VacancyFilter">@foreach (var vacancy in State.VacancyFilterOptions) { <option value="@vacancy">@vacancy</option> }</select></label>
+            <label>Статус<select @bind="StatusFilter">@foreach (var status in State.Statuses) { <option value="@status">@status</option> }</select></label>
+        </div>
+        <span class="result-count">Найдено <strong>@FilteredCandidates.Count</strong></span>
+    </div>
+
+    <div class="registry-table panel">
+        <div class="registry-head"><span>Кандидат</span><span>Вакансия</span><span>Статус</span><span>Оценка</span><span>Дата</span></div>
+        @if (FilteredCandidates.Count == 0)
+        {
+            <div class="empty-state"><strong>Кандидаты не найдены</strong><span>Измените запрос или сбросьте фильтры.</span><button class="text-button" @onclick="ResetFilters">Сбросить фильтры</button></div>
+        }
+        @foreach (var candidate in FilteredCandidates)
+        {
+            var response = candidate.Responses.OrderByDescending(response => response.Date).FirstOrDefault();
+            var interview = response is null ? null : State.GetInterviewByResponse(response);
+            <button class="registry-row" @onclick='() => Navigation.NavigateTo($"/candidates/{candidate.Id}")'>
+                <span class="candidate-cell"><Initials Name="@candidate.Name" /><span><strong>@candidate.Name</strong><small>@candidate.City · @candidate.Email</small></span></span>
+                <span data-label="Вакансия">@(response?.Vacancy ?? "—") @if (candidate.Responses.Count > 1) { <small>+@(candidate.Responses.Count - 1)</small> }</span>
+                <span data-label="Статус"><StatusBadge Status="@State.LatestStatus(candidate)" /></span>
+                <span data-label="Оценка">@if (interview is not null) { <DotScale Value="@State.AverageScore(interview)" /> } else { <span class="muted">—</span> }</span>
+                <span data-label="Дата" class="mono">@(response is null ? "—" : SpectrumDemoState.DisplayDate(response.Date))</span>
+            </button>
+        }
+    </div>
+</section>
+
+@code {
+    private string Search = string.Empty;
+    private string VacancyFilter = "Все вакансии";
+    private string StatusFilter = "Все статусы";
+
+    private bool OnlyPending => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("decisions", StringComparison.OrdinalIgnoreCase);
+    private IReadOnlyList<DemoCandidate> FilteredCandidates => State.FilterCandidates(Search, VacancyFilter, StatusFilter, OnlyPending);
+
+    private void ResetFilters()
+    {
+        Search = string.Empty;
+        VacancyFilter = "Все вакансии";
+        StatusFilter = "Все статусы";
+    }
+}
