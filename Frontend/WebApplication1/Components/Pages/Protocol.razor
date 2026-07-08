@@ -61,7 +61,7 @@ else
 
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol"><SvgIcon Name="check" Size="14" /> Сохранить протокол</button>
+                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(!State.CanEditProtocol)"><SvgIcon Name="check" Size="14" /> Сохранить протокол</button>
                 <div class="decision-options">
                     @foreach (var option in State.DecisionOptions)
                     {
