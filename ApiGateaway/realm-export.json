@@ -1,6 +1,7 @@
 {
   "id": "0e17d6af-0d84-435b-b85c-0d87d3d59955",
   "realm": "hr-platform",
+  "loginTheme": "hr-theme",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,

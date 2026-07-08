@@ -97,6 +97,8 @@ services:
     volumes:
       # Прокидываем экспортированный JSON в специальную папку Keycloak
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+      # Монтируем нашу кастомную тему
+      - ./keycloak-theme/hr-theme:/opt/keycloak/themes/hr-theme
     depends_on:
       - keycloak-db
     networks:
