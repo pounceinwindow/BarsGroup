@@ -8,5 +8,8 @@ public class CancelInterviewValidator : AbstractValidator<CancelInterviewCommand
     {
         RuleFor(x => x.InterviewId)
             .GreaterThan(0);
+
+        RuleFor(x => x.HrId)
+            .GreaterThan(0);
     }
 }

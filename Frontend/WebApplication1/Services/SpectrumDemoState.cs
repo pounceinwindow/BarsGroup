@@ -63,8 +63,20 @@ public sealed class SpectrumDemoState
     };
 
     public string CurrentUserShort => ToShortName(CurrentUserName);
+    // TODO: убрать заглушку на релизе
+    public int CurrentUserId => Role switch
+    {
+        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Id ?? 1,
+        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Id ?? 3,
+        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Id ?? 2
+    };
+
     public bool CanEditProtocol(DemoInterview interview) =>
-        Role != DeciderRole && interview.DbStatus == InterviewStatus.Scheduled;
+        interview.DbStatus == InterviewStatus.Scheduled && CurrentUserId == interview.HrId;
+
+    public bool CanCancelInterview(DemoInterview interview) =>
+        interview.DbStatus == InterviewStatus.Scheduled
+        && (CurrentUserId == interview.HrId || Role == AdminRole);
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
     public IEnumerable<DemoInterview> RecentDecisions =>
@@ -103,6 +115,7 @@ public sealed class SpectrumDemoState
             .AsNoTracking()
             .Include(interview => interview.Candidate)
             .Include(interview => interview.Vacancy)
+            .Include(interview => interview.Hr)
             .Include(interview => interview.Verdict)
             .Include(interview => interview.MatrixRows)
                 .ThenInclude(row => row.Competency)
@@ -247,7 +260,7 @@ public sealed class SpectrumDemoState
 
         var vacancyId = FindVacancyId(response.Vacancy);
         var date = EnsureFutureUtc(response.Date);
-        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, date);
+        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, CurrentUserId, date);
 
         _context.Interviews.Add(interview);
         _context.SaveChanges();
@@ -276,6 +289,7 @@ public sealed class SpectrumDemoState
             var interview = Interview.ScheduleNewProcess(
                 candidate.Id,
                 FindVacancyId(form.Vacancy),
+                CurrentUserId,
                 DateTime.UtcNow.AddDays(1));
             _context.Interviews.Add(interview);
             _context.SaveChanges();
@@ -320,7 +334,7 @@ public sealed class SpectrumDemoState
         var vacancyId = FindVacancyId(form.Vacancy);
         var date = EnsureFutureUtc(ParseDateTime(form.Date, form.Time));
 
-        var interview = Interview.ScheduleNewProcess(candidateId, vacancyId, date);
+        var interview = Interview.ScheduleNewProcess(candidateId, vacancyId, CurrentUserId, date);
         _context.Interviews.Add(interview);
         _context.SaveChanges();
 
@@ -549,11 +563,12 @@ public sealed class SpectrumDemoState
         DbStatus = interview.Status,
         CandidateId = interview.CandidateId,
         VacancyId = interview.VacancyId,
+        HrId = interview.HrId,
         Vacancy = interview.Vacancy?.Name ?? $"Вакансия #{interview.VacancyId}",
         Date = interview.Date.Date,
         Time = interview.Date.ToString("HH:mm"),
         Format = string.Empty,
-        Hr = Users.FirstOrDefault(user => user.Role == HrRole)?.ShortName ?? "Елена П.",
+        Hr = ToShortName($"{interview.Hr.FirstName} {interview.Hr.LastName}"),
         Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),
         ScoreComments = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Comment),
@@ -761,6 +776,7 @@ public sealed class DemoInterview
     public InterviewStatus DbStatus { get; set; }
     public int CandidateId { get; set; }
     public int VacancyId { get; set; }
+    public int HrId { get; set; }
     public string Vacancy { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public string Time { get; set; } = string.Empty;

@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInterviewRepository, InterviewRepository>();
         services.AddScoped<IVacancyRepository, VacancyRepository>();
         services.AddScoped<ICompetencyRepository, CompetencyRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         QuestPDF.Settings.License = LicenseType.Community;

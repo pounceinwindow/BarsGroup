@@ -1,6 +1,7 @@
 using Application.Abstractions;
 using Application.Abstractions.Repositories;
 using Application.Exceptions;
+using Domain.Exceptions;
 using Domain.Models;
 using MediatR;
 
@@ -61,7 +62,15 @@ public class SubmitProtocolHandler : IRequestHandler<SubmitProtocolCommand, int>
             .Select(score => new ProtocolCompetencyScore(score.CompetencyId, score.Score, score.Comment))
             .ToList();
 
-        interview.SubmitProtocol(request.SummaryComment, protocolScores);
+        try
+        {
+            interview.SubmitProtocol(request.HrId, request.SummaryComment, protocolScores);
+        }
+        catch (DomainException ex)
+        {
+            throw new ConflictException(ex.Message);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return interview.Id;

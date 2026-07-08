@@ -10,6 +10,9 @@ public class SubmitProtocolValidator : AbstractValidator<SubmitProtocolCommand>
         RuleFor(x => x.InterviewId)
             .GreaterThan(0);
 
+        RuleFor(x => x.HrId)
+            .GreaterThan(0);
+
         RuleFor(x => x.Scores)
             .NotNull()
             .Must(scores => scores.Count > 0)
