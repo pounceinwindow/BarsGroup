@@ -18,13 +18,15 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    FullName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Phone = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Telegram = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     City = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Education = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    PreviousWork = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    Education = table.Column<string[]>(type: "character varying(200)[]", maxLength: 20, nullable: true),
+                    PreviousWork = table.Column<string[]>(type: "character varying(200)[]", maxLength: 20, nullable: true),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Skills = table.Column<string[]>(type: "character varying(200)[]", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -32,17 +34,17 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Competitions",
+                name: "Competencies",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false)
+                    Description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Competitions", x => x.Id);
+                    table.PrimaryKey("PK_Competencies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -56,8 +58,8 @@ namespace Infrastructure.Migrations
                     PasswordHash = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
                     Role = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateOnly>(type: "date", nullable: false, defaultValueSql: "CURRENT_DATE"),
-                    RevokedAt = table.Column<DateOnly>(type: "date", nullable: false),
-                    RevokedBy = table.Column<string>(type: "text", nullable: false)
+                    RevokedAt = table.Column<DateOnly>(type: "date", nullable: true),
+                    RevokedBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -78,32 +80,6 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CompetitionsMatrix",
-                columns: table => new
-                {
-                    CandidateId = table.Column<int>(type: "integer", nullable: false),
-                    CompetitionId = table.Column<int>(type: "integer", nullable: false),
-                    Score = table.Column<int>(type: "integer", nullable: false),
-                    Comment = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompetitionsMatrix", x => new { x.CandidateId, x.CompetitionId });
-                    table.ForeignKey(
-                        name: "FK_CompetitionsMatrix_Candidates_CandidateId",
-                        column: x => x.CandidateId,
-                        principalTable: "Candidates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CompetitionsMatrix_Competitions_CompetitionId",
-                        column: x => x.CompetitionId,
-                        principalTable: "Competitions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Interviews",
                 columns: table => new
                 {
@@ -111,8 +87,10 @@ namespace Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     VacancyId = table.Column<int>(type: "integer", nullable: false),
                     CandidateId = table.Column<int>(type: "integer", nullable: false),
+                    ProcessId = table.Column<Guid>(type: "uuid", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SummaryComment = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -132,24 +110,50 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VacancyCompetition",
+                name: "VacancyCompetencies",
                 columns: table => new
                 {
                     VacancyId = table.Column<int>(type: "integer", nullable: false),
-                    CompetitionId = table.Column<int>(type: "integer", nullable: false)
+                    CompetencyId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VacancyCompetition", x => new { x.VacancyId, x.CompetitionId });
+                    table.PrimaryKey("PK_VacancyCompetencies", x => new { x.VacancyId, x.CompetencyId });
                     table.ForeignKey(
-                        name: "FK_VacancyCompetition_Competitions_CompetitionId",
-                        column: x => x.CompetitionId,
-                        principalTable: "Competitions",
+                        name: "FK_VacancyCompetencies_Competencies_CompetencyId",
+                        column: x => x.CompetencyId,
+                        principalTable: "Competencies",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_VacancyCompetition_Vacancies_VacancyId",
+                        name: "FK_VacancyCompetencies_Vacancies_VacancyId",
                         column: x => x.VacancyId,
                         principalTable: "Vacancies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CompetencyMatrices",
+                columns: table => new
+                {
+                    InterviewId = table.Column<int>(type: "integer", nullable: false),
+                    CompetencyId = table.Column<int>(type: "integer", nullable: false),
+                    Score = table.Column<int>(type: "integer", nullable: false),
+                    Comment = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompetencyMatrices", x => new { x.InterviewId, x.CompetencyId });
+                    table.ForeignKey(
+                        name: "FK_CompetencyMatrices_Competencies_CompetencyId",
+                        column: x => x.CompetencyId,
+                        principalTable: "Competencies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompetencyMatrices_Interviews_InterviewId",
+                        column: x => x.InterviewId,
+                        principalTable: "Interviews",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -161,7 +165,7 @@ namespace Infrastructure.Migrations
                     InterviewId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     Decision = table.Column<string>(type: "text", nullable: false),
-                    Comment = table.Column<string>(type: "text", nullable: false)
+                    Comment = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -181,9 +185,9 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CompetitionsMatrix_CompetitionId",
-                table: "CompetitionsMatrix",
-                column: "CompetitionId");
+                name: "IX_CompetencyMatrices_CompetencyId",
+                table: "CompetencyMatrices",
+                column: "CompetencyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Interviews_CandidateId",
@@ -196,9 +200,9 @@ namespace Infrastructure.Migrations
                 column: "VacancyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VacancyCompetition_CompetitionId",
-                table: "VacancyCompetition",
-                column: "CompetitionId");
+                name: "IX_VacancyCompetencies_CompetencyId",
+                table: "VacancyCompetencies",
+                column: "CompetencyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Verdicts_InterviewId",
@@ -216,16 +220,16 @@ namespace Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CompetitionsMatrix");
+                name: "CompetencyMatrices");
 
             migrationBuilder.DropTable(
-                name: "VacancyCompetition");
+                name: "VacancyCompetencies");
 
             migrationBuilder.DropTable(
                 name: "Verdicts");
 
             migrationBuilder.DropTable(
-                name: "Competitions");
+                name: "Competencies");
 
             migrationBuilder.DropTable(
                 name: "Interviews");

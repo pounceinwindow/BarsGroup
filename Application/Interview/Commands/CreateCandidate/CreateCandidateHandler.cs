@@ -1,7 +1,6 @@
 using Application.Abstractions;
 using Application.Abstractions.Repositories;
 using Application.Exceptions;
-using Domain.Enums;
 using Domain.Models;
 using MediatR;
 
@@ -25,18 +24,15 @@ public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, Un
             throw new ConflictException("Candidate already exists.");
         }
 
-        var candidate = new Candidate
-        {
-            FullName = request.FullName,
-            Phone = request.Phone,
-            Email = request.Email,
-            Telegram = request.Telegram,
-            City = request.City,
-            Education = request.Education,
-            PreviousWork = request.PreviousWork,
-            Skills = request.Skills,
-            Status = CandidateStatus.LookingForWork
-        };
+        var candidate = Candidate.Create(
+            request.FullName,
+            request.Phone,
+            request.Email,
+            request.Telegram,
+            request.City,
+            request.Education,
+            request.PreviousWork,
+            request.Skills);
 
         _candidates.Add(candidate);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

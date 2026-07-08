@@ -1,12 +1,16 @@
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Components;
+using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<SpectrumDemoState>();
+
 // База данных
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -18,6 +22,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapStaticAssets();
 
@@ -29,6 +34,10 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<Infrastructure.BarsContext>();
     dbContext.Database.Migrate();
+    if (!dbContext.Candidates.Any())
+    {
+        dbContext.ClearAndSeed().GetAwaiter().GetResult();
+    }
 
     /*
      * "localhost/database" - для очистки и добавления тестовых данных в бд

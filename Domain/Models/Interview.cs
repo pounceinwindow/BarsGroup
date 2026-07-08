@@ -1,20 +1,144 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Domain.Exceptions;
 
 namespace Domain.Models;
 
 public class Interview
 {
-    public int Id { get; set; }
-    public int VacancyId { get; set; }
-    public int CandidateId { get; set; }
-    public DateTime Date { get; set; }
-    public InterviewStatus Status { get; set; }
+    // Строки матрицы добавляются только из домена (SubmitProtocol)
+    // Приватный список скрывает мутацию; снаружи доступен только read-only вид.
+    private readonly List<CompetencyMatrix> _matrixRows = [];
 
-    // навигационные свойства
-    public Vacancy Vacancy { get; set; }
-    public Candidate Candidate { get; set; }
-    public List<CompetencyMatrix> CompetencyMatrix { get; set; }
+    public int Id { get; private set; }
+    public int VacancyId { get; private set; }
+    public int CandidateId { get; private set; }
+
+    /// <summary>
+    /// Идентификатор отклика, объединяющий этапы интервью кандидата на одну вакансию.
+    /// </summary>
+    public Guid ProcessId { get; private set; }
+
+    public DateTime Date { get; private set; }
+    public InterviewStatus Status { get; private set; }
+
+    /// <summary>
+    /// Общий комментарий HR по итогам интервью.
+    /// </summary>
+    public string? SummaryComment { get; private set; }
+
+    public Vacancy Vacancy { get; private set; } = null!;
+    public Candidate Candidate { get; private set; } = null!;
+    public Verdict? Verdict { get; private set; }
+
+    /// <summary>
+    /// Строки матрицы компетенций. Заполняются один раз при сабмите протокола HR.
+    /// </summary>
+    public IReadOnlyCollection<CompetencyMatrix> MatrixRows => _matrixRows.AsReadOnly();
+
+    private Interview()
+    {
+    }
+
+    /// <summary>
+    /// Создаёт первое интервью в рамках нового отклика на вакансию.
+    /// </summary>
+    public static Interview ScheduleNewProcess(int candidateId, int vacancyId, DateTime date)
+    {
+        return Schedule(candidateId, vacancyId, Guid.NewGuid(), date);
+    }
+
+    /// <summary>
+    /// Создаёт интервью следующего этапа в рамках существующего отклика.
+    /// </summary>
+    public static Interview ScheduleNextStage(
+        int candidateId,
+        int vacancyId,
+        Guid processId,
+        DateTime date)
+    {
+        if (processId == Guid.Empty)
+            throw new DomainException("ProcessId cannot be empty.");
+
+        return Schedule(candidateId, vacancyId, processId, date);
+    }
+
+    /// <summary>
+    /// Сохраняет протокол HR: создаёт строки матрицы и переводит интервью в ожидание решения.
+    /// </summary>
+    public void SubmitProtocol(
+        string? summaryComment,
+        IReadOnlyList<ProtocolCompetencyScore> scores)
+    {
+        EnsureStatus(InterviewStatus.Scheduled);
+
+        if (_matrixRows.Count > 0)
+            throw new DomainException("Protocol has already been submitted.");
+
+        if (scores.Count == 0)
+            throw new DomainException("Protocol must contain at least one competency score.");
+
+        foreach (var competencyScore in scores)
+        {
+            if (competencyScore.Score is < CompetencyMatrix.NotEvaluatedScore or > CompetencyMatrix.MaxScore)
+                throw new ArgumentOutOfRangeException(
+                    nameof(scores),
+                    $"Score must be between {CompetencyMatrix.NotEvaluatedScore} and {CompetencyMatrix.MaxScore}.");
+        }
+
+        foreach (var competencyScore in scores)
+        {
+            _matrixRows.Add(CompetencyMatrix.Create(
+                Id,
+                competencyScore.CompetencyId,
+                competencyScore.Score,
+                competencyScore.Comment));
+        }
+
+        SummaryComment = summaryComment;
+        Status = InterviewStatus.WaitingForVerdict;
+    }
+
+    /// <summary>
+    /// Отменяет запланированное интервью.
+    /// </summary>
+    public void Cancel()
+    {
+        EnsureStatus(InterviewStatus.Scheduled);
+        Status = InterviewStatus.Canceled;
+    }
+
+    /// <summary>
+    /// Завершает интервью после вынесения решения согласующим.
+    /// </summary>
+    public void Complete()
+    {
+        EnsureStatus(InterviewStatus.WaitingForVerdict);
+        Status = InterviewStatus.Completed;
+    }
+
+    private static Interview Schedule(int candidateId, int vacancyId, Guid processId, DateTime date)
+    {
+        if (candidateId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(candidateId));
+        if (vacancyId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(vacancyId));
+        if (date <= DateTime.Now)
+            throw new ArgumentException("Date must be in the future.");
+
+        return new Interview
+        {
+            CandidateId = candidateId,
+            VacancyId = vacancyId,
+            ProcessId = processId,
+            Date = date,
+            Status = InterviewStatus.Scheduled
+        };
+    }
+
+    private void EnsureStatus(InterviewStatus expected)
+    {
+        if (Status != expected)
+            throw new InvalidStatusTransitionException(
+                $"Interview status must be {expected}, but was {Status}.");
+    }
 }

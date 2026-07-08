@@ -3,7 +3,6 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BarsContext))]
-    [Migration("20260707111326_MatrixUpdate")]
-    partial class MatrixUpdate
+    partial class BarsContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,10 +133,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("ProcessId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SummaryComment")
+                        .HasColumnType("text");
 
                     b.Property<int>("VacancyId")
                         .HasColumnType("integer");
@@ -264,7 +267,7 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Models.Interview", "Interview")
-                        .WithMany("CompetencyMatrix")
+                        .WithMany("MatrixRows")
                         .HasForeignKey("InterviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -277,7 +280,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.Interview", b =>
                 {
                     b.HasOne("Domain.Models.Candidate", "Candidate")
-                        .WithMany()
+                        .WithMany("Interviews")
                         .HasForeignKey("CandidateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -315,7 +318,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Models.Verdict", b =>
                 {
                     b.HasOne("Domain.Models.Interview", "Interview")
-                        .WithOne()
+                        .WithOne("Verdict")
                         .HasForeignKey("Domain.Models.Verdict", "InterviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -331,9 +334,16 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Models.Candidate", b =>
+                {
+                    b.Navigation("Interviews");
+                });
+
             modelBuilder.Entity("Domain.Models.Interview", b =>
                 {
-                    b.Navigation("CompetencyMatrix");
+                    b.Navigation("MatrixRows");
+
+                    b.Navigation("Verdict");
                 });
 #pragma warning restore 612, 618
         }
