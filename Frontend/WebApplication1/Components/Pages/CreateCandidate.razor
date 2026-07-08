@@ -3,6 +3,7 @@
 
 @using Application.Interview.Commands.CreateCandidate
 @using MediatR
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
@@ -13,9 +14,16 @@
 <section class="page-content form-page">
     <button class="back-button" @onclick='() => Navigation.NavigateTo("/candidates")'><SvgIcon Name="back" Size="16" /> К реестру</button>
 
-    <div class="form-layout">
+    <EditForm class="form-layout"
+        FormName="CreateCandidate"
+        Model="Form"
+        OnValidSubmit="Create">
+
         <article class="panel form-card">
             <div class="panel-heading"><div><span class="eyebrow dark">Новая карточка</span><h3>Создание кандидата</h3></div></div>
+
+            <DataAnnotationsValidator/>
+            <ValidationSummary class="validation-summary"/>
 
             <div class="form-grid">
                 <label class="span-2">ФИО<input @bind="Form.FullName" @bind:event="oninput" placeholder="Иванов Иван Иванович" /></label>
@@ -25,13 +33,12 @@
                 <label>Telegram<input @bind="Form.Telegram" @bind:event="oninput" placeholder="@@candidate" /></label>
                 <label class="span-2">Образование<textarea @bind="Form.Education" @bind:event="oninput" placeholder="Вуз, направление, год"></textarea></label>
                 <label class="span-2">Предыдущий опыт<textarea @bind="Form.Experience" @bind:event="oninput" placeholder="Опишите релевантный опыт"></textarea></label>
-                <label class="span-2">Навыки<input @bind="Form.Skills" @bind:event="oninput" placeholder="C#, ASP.NET Core, SQL" /></label>
-                @* <label class="span-2">Первичный отклик<select @bind="Form.Vacancy"><option value="">Без отклика</option>@foreach (var vacancy in State.VacancyTitles) { <option value="@vacancy">@vacancy</option> }</select></label> *@
+                <label class="span-2">Навыки<textarea @bind="Form.Skills" @bind:event="oninput" placeholder="C#, ASP.NET Core, SQL" /></label>
             </div>
 
             <div class="form-actions">
                 <button class="secondary-button" @onclick='() => Navigation.NavigateTo("/candidates")'>Отмена</button>
-                <button class="primary-button action-button" @onclick="Create">Создать кандидата</button>
+                <button type="submit" class="primary-button action-button">Создать кандидата</button>
             </div>
         </article>
 
@@ -40,7 +47,7 @@
             <h3>Карточка кандидата</h3>
             <p class="muted">После сохранения кандидат попадёт в реестр, а если выбрана вакансия — у него появится первичный отклик.</p>
         </aside>
-    </div>
+    </EditForm>
 </section>
 
 @code {
@@ -68,7 +75,6 @@
 
         var candidateId = await _mediator.Send(command);
 
-        // var candidate = State.CreateCandidate(Form);
         Navigation.NavigateTo($"/candidates/{candidateId}");
     }
 }
