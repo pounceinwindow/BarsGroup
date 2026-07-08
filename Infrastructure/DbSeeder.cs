@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
@@ -62,11 +62,11 @@ public static class DbSeeder
 
         // 1. Пользователи
         await context.Database.ExecuteSqlRawAsync($"""
-                                                   INSERT INTO "Users" ("Id", "FirstName", "LastName", "PasswordHash", "Role", "CreatedAt", "RevokedAt", "RevokedBy")
+                                                   INSERT INTO "Users" ("Id", "Username", "FirstName", "LastName", "PasswordHash", "Role", "CreatedAt", "RevokedAt", "RevokedBy")
                                                    OVERRIDING SYSTEM VALUE VALUES
-                                                   (1, 'Админ', 'Системы', {Sql(adminHash)}, 'Admin', CURRENT_DATE, NULL, NULL),
-                                                   (2, 'Елена', 'Петрова', {Sql(hrHash)}, 'HR', CURRENT_DATE, NULL, NULL),
-                                                   (3, 'Иван', 'Решалов', {Sql(deciderHash)}, 'Decider', CURRENT_DATE, NULL, NULL);
+                                                   (1, 'admin', 'Админ', 'Системы', {Sql(adminHash)}, 'Admin', CURRENT_DATE, NULL, NULL),
+                                                   (2, 'hr', 'Елена', 'Петрова', {Sql(hrHash)}, 'HR', CURRENT_DATE, NULL, NULL),
+                                                   (3, 'decider', 'Иван', 'Решалов', {Sql(deciderHash)}, 'Decider', CURRENT_DATE, NULL, NULL);
                                                    """);
 
         // 2. Вакансии

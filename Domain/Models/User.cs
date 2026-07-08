@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 
 namespace Domain.Models;
 
@@ -7,7 +7,8 @@ public class User
     public int Id { get; private set; }
     public string FirstName { get; private set; } = null!;
     public string LastName { get; private set; } = null!;
-    public string PasswordHash { get; private set; } = null!;
+    public string Username { get; private set; } = null!;
+    public string? PasswordHash { get; private set; }
     public UserRole Role { get; private set; }
     public DateOnly CreatedAt { get; private set; }
     public DateOnly? RevokedAt { get; private set; }
@@ -21,18 +22,20 @@ public class User
     /// Создаёт нового пользователя системы.
     /// </summary>
     public static User Create(
+        string username,
         string firstName,
         string lastName,
-        string passwordHash,
+        string? passwordHash,
         UserRole role,
         DateOnly createdAt)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(username);
         ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
         ArgumentException.ThrowIfNullOrWhiteSpace(lastName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
         return new User
         {
+            Username = username,
             FirstName = firstName,
             LastName = lastName,
             PasswordHash = passwordHash,

@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -19,6 +19,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasConversion<string>()
             .IsRequired();
         builder
+            .Property(x => x.Username)
+            .HasMaxLength(100)
+            .IsRequired();
+        builder
             .Property(x => x.FirstName)
             .HasMaxLength(50)
             .IsRequired();
@@ -29,7 +33,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder
             .Property(x => x.PasswordHash)
             .HasMaxLength(300)
-            .IsRequired();
+            .IsRequired(false);
         builder
             .Property(x => x.CreatedAt)
             .HasDefaultValueSql("CURRENT_DATE")
