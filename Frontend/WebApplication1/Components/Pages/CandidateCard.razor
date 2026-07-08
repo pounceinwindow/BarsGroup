@@ -49,7 +49,7 @@ else
                 <div class="section-heading"><span class="eyebrow dark">Отклики</span><h3>Отклики и собеседования</h3></div>
                 @if (Candidate.ApplicationProcesses.Count == 0)
                 {
-                    <div class="empty-state panel"><strong>Откликов пока нет</strong><span>Назначьте собеседование для кандидата.</span></div>
+                    <div class="empty-state panel"><strong>Откликов пока нет</strong><span>Назначьте собеседование для кандидата.</span><button class="secondary-button" type="button" @onclick="ScheduleNewProcess">Назначить собес</button></div>
                 }
                 @foreach (var process in Candidate.ApplicationProcesses)
                 {
@@ -58,16 +58,16 @@ else
                         @foreach (var interview in process.Interviews)
                         {
                             <article class="response-card panel">
-                                <div class="response-date"><strong>@interview.Date.Day.ToString("00")</strong><span>@SpectrumDemoState.MonthName(interview.Date)</span><small>@interview.Date.Year</small></div>
+                                <div class="response-date"><strong>@SpectrumDemoState.AsUtc(interview.Date).Day.ToString("00")</strong><span>@SpectrumDemoState.MonthName(SpectrumDemoState.AsUtc(interview.Date))</span><small>@SpectrumDemoState.AsUtc(interview.Date).Year</small></div>
                                 <div class="response-main">
                                     <h4>@process.VacancyName</h4>
-                                    <span><SvgIcon Name="calendar" Size="14" /> @SpectrumDemoState.DisplayDate(interview.Date) · @interview.Date.ToString("HH:mm")</span>
+                                    <span><SvgIcon Name="calendar" Size="14" /> @SpectrumDemoState.DisplayDate(interview.Date) · @SpectrumDemoState.FormatTimeUtc(interview.Date) (UTC)</span>
                                 </div>
                                 <StatusBadge Status="@SpectrumDemoState.InterviewDisplayStatus(interview)" />
                                 <button class="secondary-button" @onclick='() => Navigation.NavigateTo($"/interviews/{interview.Id}/protocol")'>Открыть протокол</button>
                                 @if (SpectrumDemoState.CanScheduleInterviewInProcess(process, interview))
                                 {
-                                    <button class="secondary-button" type="button">Назначить собес</button>
+                                    <button class="secondary-button" type="button" @onclick="() => ScheduleNextStage(process)">Назначить собес</button>
                                 }
                             </article>
                         }
@@ -83,7 +83,7 @@ else
                         <span>@skill</span>
                     }
                 </div>
-                <button class="secondary-button full-width" type="button"><SvgIcon Name="plus" Size="15" /> Назначить собес</button>
+                <button class="secondary-button full-width" type="button" @onclick="ScheduleNewProcess"><SvgIcon Name="plus" Size="15" /> Назначить собес</button>
             </aside>
         </div>
     </section>
@@ -114,4 +114,10 @@ else
 
     private static string JoinItems(string[]? items) =>
         items is null || items.Length == 0 ? "—" : string.Join("; ", items);
+
+    private void ScheduleNewProcess() =>
+        Navigation.NavigateTo($"/candidates/{CandidateId}/interviews/new");
+
+    private void ScheduleNextStage(ApplicationProcessResponse process) =>
+        Navigation.NavigateTo($"/candidates/{CandidateId}/interviews/new?processId={process.ProcessId}&vacancyId={process.VacancyId}");
 }

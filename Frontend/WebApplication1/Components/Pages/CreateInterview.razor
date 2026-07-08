@@ -1,53 +1,220 @@
-@page "/interviews/new"
+@page "/candidates/{CandidateId:int}/interviews/new"
 @layout MainLayout
+@rendermode InteractiveServer
+
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
+@inject IMediator Mediator
+
+@using Application.Exceptions
+@using Application.Interview.Commands.ScheduleInterview
+@using Application.Interview.DTO
+@using Application.Interview.Queries.GetCandidate
+@using MediatR
+@using System.Globalization
 
 <PageTitle>Спектр — создание собеседования</PageTitle>
 
-<section class="page-content form-page">
-    <button class="back-button" @onclick='() => Navigation.NavigateTo("/interviews")'><SvgIcon Name="back" Size="16" /> К реестру собесов</button>
+@if (!_loaded)
+{
+    <section class="page-content">
+        <p class="muted">Загрузка…</p>
+    </section>
+}
+else if (Candidate is null)
+{
+    <section class="page-content">
+        <div class="empty-state panel"><strong>Кандидат не найден</strong><span>Вернитесь в реестр и выберите существующую карточку.</span><button class="text-button" @onclick='() => Navigation.NavigateTo("/candidates")'>К реестру</button></div>
+    </section>
+}
+else if (ProcessId is not null && VacancyId is null)
+{
+    <section class="page-content">
+        <div class="empty-state panel"><strong>Некорректная ссылка</strong><span>Для следующего этапа нужен идентификатор вакансии.</span><button class="text-button" @onclick='() => Navigation.NavigateTo($"/candidates/{CandidateId}")'>К карточке</button></div>
+    </section>
+}
+else
+{
+    <section class="page-content form-page">
+        <button class="back-button" @onclick='() => Navigation.NavigateTo($"/candidates/{CandidateId}")'><SvgIcon Name="back" Size="16" /> К карточке кандидата</button>
 
-    <div class="form-layout">
-        <article class="panel form-card">
-            <div class="panel-heading"><div><span class="eyebrow dark">Новый этап</span><h3>Создание собеса</h3></div></div>
+        <div class="form-layout">
+            <article class="panel form-card">
+                <div class="panel-heading">
+                    <div>
+                        <span class="eyebrow dark">@(IsNewProcess ? "Новый отклик" : "Следующий этап")</span>
+                        <h3>Назначение собеседования</h3>
+                    </div>
+                </div>
 
-            <div class="form-grid">
-                <label class="span-2">Кандидат<select @bind="Form.CandidateId">@foreach (var candidate in State.Candidates) { <option value="@candidate.Id">@candidate.Name</option> }</select></label>
-                <label class="span-2">Вакансия<select @bind="Form.Vacancy">@foreach (var vacancy in State.VacancyTitles) { <option value="@vacancy">@vacancy</option> }</select></label>
-                <label>Дата<input @bind="Form.Date" @bind:event="oninput" placeholder="2026-07-09" /></label>
-                <label>Время<input @bind="Form.Time" @bind:event="oninput" placeholder="10:00" /></label>
-                <label>Формат<select @bind="Form.Format">@foreach (var format in State.InterviewFormats) { <option value="@format">@format</option> }</select></label>
-                <label>HR<input @bind="Form.Hr" @bind:event="oninput" /></label>
-                <label class="span-2">Согласующий<input @bind="Form.Approver" @bind:event="oninput" /></label>
-            </div>
+                @if (!string.IsNullOrEmpty(Error))
+                {
+                    <p class="validation-summary">@Error</p>
+                }
 
-            <div class="form-actions">
-                <button class="secondary-button" @onclick='() => Navigation.NavigateTo("/interviews")'>Отмена</button>
-                <button class="primary-button action-button" @onclick="Create">Создать собес</button>
-            </div>
-        </article>
+                <div class="form-grid">
+                    <label class="span-2">Кандидат<input value="@Candidate.FullName" readonly /></label>
+                    @if (IsNewProcess)
+                    {
+                        <label class="span-2">Вакансия
+                            <select @bind="Form.VacancyId">
+                                @foreach (var vacancy in State.Vacancies.Where(v => v.IsActive))
+                                {
+                                    <option value="@vacancy.Id">@vacancy.Title</option>
+                                }
+                            </select>
+                        </label>
+                    }
+                    else
+                    {
+                        <label class="span-2">Вакансия<input value="@VacancyName" readonly /></label>
+                    }
+                    <label>Дата<input @bind="Form.Date" @bind:event="oninput" placeholder="2026-07-09" /></label>
+                    <label>Время (UTC)<input @bind="Form.Time" @bind:event="oninput" placeholder="10:00" /></label>
+                    <label class="span-2">HR<input value="@State.CurrentUserName" readonly /></label>
+                </div>
 
-        <aside class="panel side-card">
-            <span class="eyebrow dark">После создания</span>
-            <h3>Откроется протокол</h3>
-            <p class="muted">Собес добавится в реестр и в карточку кандидата. В протоколе можно заполнить матрицу и скачать PDF.</p>
-        </aside>
-    </div>
-</section>
+                <div class="form-actions">
+                    <button class="secondary-button" type="button" @onclick='() => Navigation.NavigateTo($"/candidates/{CandidateId}")'>Отмена</button>
+                    <button class="primary-button action-button" type="button" @onclick="Create" disabled="@IsSaving">@(IsSaving ? "Создание…" : "Создать собес")</button>
+                </div>
+            </article>
+
+            <aside class="panel side-card">
+                <span class="eyebrow dark">После создания</span>
+                <h3>Откроется протокол</h3>
+                <p class="muted">Собес добавится в реестр и в карточку кандидата. В протоколе можно заполнить матрицу и скачать PDF.</p>
+            </aside>
+        </div>
+    </section>
+}
 
 @code {
+    [Parameter] public int CandidateId { get; set; }
+
+    [SupplyParameterFromQuery] public Guid? ProcessId { get; set; }
+
+    [SupplyParameterFromQuery] public int? VacancyId { get; set; }
+
+    private CandidateResponse? Candidate;
+    private bool _loaded;
+    private bool IsSaving;
+    private string? Error;
+
     private InterviewForm Form { get; } = new();
 
-    protected override void OnInitialized()
+    private bool IsNewProcess => ProcessId is null;
+
+    private string VacancyName =>
+        VacancyId is null
+            ? string.Empty
+            : State.Vacancies.FirstOrDefault(v => v.Id == VacancyId)?.Title
+              ?? Candidate?.ApplicationProcesses.FirstOrDefault(p => p.VacancyId == VacancyId)?.VacancyName
+              ?? $"Вакансия #{VacancyId}";
+
+    protected override async Task OnParametersSetAsync()
     {
-        Form.CandidateId = State.Candidates.FirstOrDefault()?.Id ?? 0;
-        Form.Vacancy = State.VacancyTitles.FirstOrDefault() ?? string.Empty;
+        _loaded = false;
+        Error = null;
+        State.Reload();
+
+        try
+        {
+            Candidate = await Mediator.Send(new GetCandidateQuery(CandidateId));
+        }
+        catch (NotFoundException)
+        {
+            Candidate = null;
+            _loaded = true;
+            return;
+        }
+
+        if (IsNewProcess && Form.VacancyId is null)
+        {
+            Form.VacancyId = State.Vacancies.FirstOrDefault(v => v.IsActive)?.Id;
+        }
+
+        _loaded = true;
     }
 
-    private void Create()
+    private async Task Create()
     {
-        var interview = State.CreateInterview(Form);
-        Navigation.NavigateTo($"/interviews/{interview.Id}/protocol");
+        if (Candidate is null || IsSaving)
+            return;
+
+        Error = null;
+
+        var vacancyId = IsNewProcess ? Form.VacancyId : VacancyId;
+        if (vacancyId is null or <= 0)
+        {
+            Error = "Выберите вакансию.";
+            return;
+        }
+
+        if (!TryParseDateTimeUtc(Form.Date, Form.Time, out var dateUtc))
+        {
+            Error = "Укажите корректные дату и время (UTC).";
+            return;
+        }
+
+        if (dateUtc <= DateTime.UtcNow)
+        {
+            Error = "Дата и время должны быть в будущем.";
+            return;
+        }
+
+        IsSaving = true;
+        try
+        {
+            var interviewId = await Mediator.Send(new ScheduleInterviewCommand(
+                CandidateId,
+                vacancyId.Value,
+                State.CurrentUserId,
+                dateUtc,
+                ProcessId));
+
+            State.Reload();
+            Navigation.NavigateTo($"/interviews/{interviewId}/protocol");
+        }
+        catch (NotFoundException ex)
+        {
+            Error = ex.Message;
+        }
+        catch (ConflictException ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private static bool TryParseDateTimeUtc(string dateValue, string timeValue, out DateTime result)
+    {
+        result = default;
+
+        if (DateTime.TryParse(dateValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+        {
+            result = parsedDate.Date;
+        }
+        else if (DateOnly.TryParse(dateValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateOnly))
+        {
+            result = dateOnly.ToDateTime(TimeOnly.MinValue);
+        }
+        else
+        {
+            return false;
+        }
+
+        if (TimeSpan.TryParse(timeValue, CultureInfo.InvariantCulture, out var time))
+            result = result.Add(time);
+        else if (TimeOnly.TryParse(timeValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var timeOnly))
+            result = result.Date.Add(timeOnly.ToTimeSpan());
+        else
+            return false;
+
+        result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
+        return true;
     }
 }

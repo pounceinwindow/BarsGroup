@@ -5,19 +5,21 @@
 @using Application.Interview.DTO
 @using MediatR
 @using Application.Candidate.Query.GetFilteredCandidates
+@using Domain.Enums
+@using Application.Candidate.DTO
 
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
 @inject IMediator _mediator
 
-<PageTitle>Спектр — @(OnlyPending ? "на согласовании" : "реестр кандидатов")</PageTitle>
+@* <PageTitle>Спектр — @(OnlyPending ? "на согласовании" : "реестр кандидатов")</PageTitle> *@
 
 <section class="page-content registry-page">
     <div class="page-heading-row">
-        <div>
+        @* <div>
             <span class="eyebrow dark">@(OnlyPending ? "Решения" : "Кандидаты")</span>
             <h2>@(OnlyPending ? "Кандидаты на согласовании" : "Реестр кандидатов")</h2>
-        </div>
+        </div> *@
         <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/candidates/new")'>
             <SvgIcon Name="plus" Size="15" /> Новый кандидат
         </button>
@@ -25,8 +27,21 @@
 
     <div class="registry-toolbar">
         <div class="filter-group">
-            <label>Поиск<input class="filter-input" @bind="Search" @bind:event="oninput" placeholder="ФИО, почта" /></label>
-            <label>Статус<select @bind="StatusFilter">@foreach (var status in State.Statuses) { <option value="@status">@status</option> }</select></label>
+            <label>
+                Поиск
+                <input class="filter-input" @bind="Filters.Search" 
+                       @bind:after="ApplyFilters" placeholder="ФИО" />
+            </label>
+            <label>
+                Статус
+                <select @bind="Filters.Status" @bind:after="ApplyFilters">
+                    @* <option value="">Все</option> *@
+                    @foreach (var status in Enum.GetValues<CandidateStatus>()) 
+                        { <option value="@status">@status</option> }
+                 </select>
+            </label>
+
+            <button class="secondary-button" @onclick="ResetFilters">Сбросить фильтры</button>
         </div>
     <span class="result-count">Найдено <strong>@Candidates.Count</strong></span>
     </div>
@@ -35,13 +50,16 @@
     <div class="registry-head"><span>Кандидат</span><span>Статус</span><span>Город</span> <span>Почта</span></div>
     @if (Candidates.Count == 0)
         {
-            <div class="empty-state"><strong>Кандидаты не найдены</strong><span>Измените запрос или сбросьте фильтры.</span><button class="text-button" @onclick="ResetFilters">Сбросить фильтры</button></div>
+            <div class="empty-state">
+                <strong>Кандидаты не найдены</strong>
+                <span>Измените запрос или сбросьте фильтры.</span>
+            </div>
         }
     @foreach (var candidate in Candidates)
         {
             <button class="registry-row" @onclick='() => Navigation.NavigateTo($"/candidates/{candidate.Id}")'>
             <span class="candidate-cell"><Initials Name="@candidate.FullName" /><span><strong>@candidate.FullName</strong><small>@candidate.City · @candidate.Email</small></span></span>
-            <span data-label="Статус"><StatusBadge Status="State.LatestStatus(candidate)" /></span>
+            <span data-label="Статус"><StatusBadge Status="@candidate.CandidateStatus.ToString()" /></span>
             <span data-label="Город">@candidate.City</span>
             <span data-label="Почта">@candidate.Email</span>
             </button>
@@ -52,24 +70,27 @@
 @code {
     //
     private List<CandidateListUnit> Candidates = new();
+    private readonly CandidateFilters Filters = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Candidates = await _mediator.Send(new GetFilteredCandidatesQuery());
+        await LoadCandidates();
     }
-    //
 
-    private string Search = string.Empty;
-    private string VacancyFilter = "Все вакансии";
-    private string StatusFilter = "Все статусы";
-
-    private bool OnlyPending => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("decisions", StringComparison.OrdinalIgnoreCase);
-    private IReadOnlyList<DemoCandidate> FilteredCandidates => State.FilterCandidates(Search, VacancyFilter, StatusFilter, OnlyPending);
-
-    private void ResetFilters()
+    private async Task LoadCandidates()
     {
-        Search = string.Empty;
-        VacancyFilter = "Все вакансии";
-        StatusFilter = "Все статусы";
+        Candidates = await _mediator.Send(new GetFilteredCandidatesQuery(Filters));
+    }
+
+    private async Task ApplyFilters()
+    {
+        await LoadCandidates();
+    }
+
+    private async Task ResetFilters()
+    {
+        Filters.Search = string.Empty;
+        Filters.Status = CandidateStatus.All;
+        await LoadCandidates();
     }
 }

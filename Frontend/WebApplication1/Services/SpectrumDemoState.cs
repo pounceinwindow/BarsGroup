@@ -52,7 +52,6 @@ public sealed class SpectrumDemoState
         "Отклонён"
     ];
 
-    public IReadOnlyList<string> InterviewFormats => ["Онлайн", "Очно", "Телефон"];
     public IReadOnlyList<string> DecisionOptions => ["Принять", "Следующий этап", "Отказать"];
 
     public string CurrentUserName => Role switch
@@ -326,22 +325,6 @@ public sealed class SpectrumDemoState
         Reload();
     }
 
-    public DemoInterview CreateInterview(InterviewForm form)
-    {
-        var candidateId = Candidates.Any(candidate => candidate.Id == form.CandidateId)
-            ? form.CandidateId
-            : Candidates.First().Id;
-        var vacancyId = FindVacancyId(form.Vacancy);
-        var date = EnsureFutureUtc(ParseDateTime(form.Date, form.Time));
-
-        var interview = Interview.ScheduleNewProcess(candidateId, vacancyId, CurrentUserId, date);
-        _context.Interviews.Add(interview);
-        _context.SaveChanges();
-
-        Reload();
-        return GetInterview(interview.Id.ToString())!;
-    }
-
     public DemoVacancy SaveVacancy(VacancyForm form, int? id = null)
     {
         var name = RequiredOrDefault(form.Title, "Новая вакансия");
@@ -498,7 +481,16 @@ public sealed class SpectrumDemoState
         IsActive = user.IsActive
     };
 
-    public static string DisplayDate(DateTime date) => date.ToString("dd.MM.yyyy");
+    public static string DisplayDate(DateTime date) => AsUtc(date).ToString("dd.MM.yyyy");
+
+    public static DateTime AsUtc(DateTime date) => date.Kind switch
+    {
+        DateTimeKind.Utc => date,
+        DateTimeKind.Local => date.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(date, DateTimeKind.Utc)
+    };
+
+    public static string FormatTimeUtc(DateTime date) => AsUtc(date).ToString("HH:mm");
 
     public static string CandidateDisplayStatus(CandidateStatus status) => status switch
     {
@@ -565,8 +557,8 @@ public sealed class SpectrumDemoState
         VacancyId = interview.VacancyId,
         HrId = interview.HrId,
         Vacancy = interview.Vacancy?.Name ?? $"Вакансия #{interview.VacancyId}",
-        Date = interview.Date.Date,
-        Time = interview.Date.ToString("HH:mm"),
+        Date = AsUtc(interview.Date).Date,
+        Time = FormatTimeUtc(interview.Date),
         Format = string.Empty,
         Hr = ToShortName($"{interview.Hr.FirstName} {interview.Hr.LastName}"),
         Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
@@ -711,12 +703,7 @@ public sealed class SpectrumDemoState
 
     private static DateTime EnsureFutureUtc(DateTime date)
     {
-        var utcDate = date.Kind switch
-        {
-            DateTimeKind.Utc => date,
-            DateTimeKind.Local => date.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(date, DateTimeKind.Utc)
-        };
+        var utcDate = AsUtc(date);
 
         return utcDate <= DateTime.UtcNow
             ? DateTime.UtcNow.AddDays(1)
@@ -836,13 +823,9 @@ public sealed class CandidateForm
 
 public sealed class InterviewForm
 {
-    public int CandidateId { get; set; } = 1;
-    public string Vacancy { get; set; } = "Junior Developer";
     public string Date { get; set; } = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
     public string Time { get; set; } = "10:00";
-    public string Format { get; set; } = "Онлайн";
-    public string Hr { get; set; } = "Елена П.";
-    public string Approver { get; set; } = "Иван Р.";
+    public int? VacancyId { get; set; }
 }
 
 public sealed class VacancyForm

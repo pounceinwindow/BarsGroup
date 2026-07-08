@@ -11,9 +11,6 @@
             <span class="eyebrow dark">Собеседования</span>
             <h2>Реестр собесов</h2>
         </div>
-        <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/interviews/new")'>
-            <SvgIcon Name="plus" Size="15" /> Новый собес
-        </button>
     </div>
 
     <div class="registry-toolbar">
@@ -35,7 +32,7 @@
         {
             var candidate = State.GetCandidateForInterview(interview);
             <button class="registry-row interview-row" @onclick='() => Navigation.NavigateTo($"/interviews/{interview.Id}/protocol")'>
-                <span class="candidate-cell"><Initials Name="@(candidate?.Name ?? "Кандидат")" /><span><strong>@(candidate?.Name ?? "Кандидат удалён")</strong><small>@interview.Format · HR @interview.Hr</small></span></span>
+                <span class="candidate-cell"><Initials Name="@(candidate?.Name ?? "Кандидат")" /><span><strong>@(candidate?.Name ?? "Кандидат удалён")</strong><small>HR @interview.Hr</small></span></span>
                 <span data-label="Вакансия">@interview.Vacancy</span>
                 <span data-label="Статус"><StatusBadge Status="@interview.Status" /></span>
                 <span data-label="Оценка"><DotScale Value="@State.AverageScore(interview)" /></span>

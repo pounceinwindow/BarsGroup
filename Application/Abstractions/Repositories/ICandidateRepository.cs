@@ -1,3 +1,4 @@
+using Application.Candidate.DTO;
 using Application.Interview.DTO;
 using Domain.Models;
 
@@ -13,5 +14,5 @@ public interface ICandidateRepository
 
     Task<CandidateResponse?> GetByIdDetailedAsync(int id, CancellationToken cancellationToken);
 
-    Task<List<CandidateListUnit>?> GetFilteredCandidates(); 
+    Task<List<CandidateListUnit>?> GetFilteredCandidates(CandidateFilters filters); 
 }

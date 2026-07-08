@@ -40,8 +40,7 @@ else
 
             <div class="protocol-meta">
                 <div><small>Кандидат</small><strong>@Candidate.Name</strong></div>
-                <div><small>Дата и время</small><strong class="mono">@SpectrumDemoState.DisplayDate(Interview.Date) · @Interview.Time</strong></div>
-                <div><small>Формат</small><strong>@Interview.Format</strong></div>
+                <div><small>Дата и время (UTC)</small><strong class="mono">@SpectrumDemoState.DisplayDate(Interview.Date) · @Interview.Time</strong></div>
                 <div><small>HR</small><strong>@Interview.Hr</strong></div>
                 <div><small>Согласующий</small><strong>@Interview.Approver</strong></div>
             </div>
@@ -222,7 +221,7 @@ else
                 Candidate.Name,
                 Interview.Vacancy,
                 date,
-                Interview.Format,
+                string.Empty,
                 Interview.Hr,
                 Interview.Approver,
                 ToDocumentStatus(Interview.Status),

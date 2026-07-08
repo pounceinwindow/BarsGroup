@@ -138,7 +138,7 @@ public class Interview
             throw new ArgumentOutOfRangeException(nameof(vacancyId));
         if (hrId <= 0)
             throw new ArgumentOutOfRangeException(nameof(hrId));
-        if (date <= DateTime.Now)
+        if (date <= DateTime.UtcNow)
             throw new ArgumentException("Date must be in the future.");
 
         return new Interview
