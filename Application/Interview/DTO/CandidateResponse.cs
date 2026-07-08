@@ -15,6 +15,13 @@ public record CandidateResponse(
     CandidateStatus Status,
     IReadOnlyList<ApplicationProcessResponse> ApplicationProcesses);
 
+public record CandidateListUnit(
+    int Id,
+    string FullName,
+    string City,
+    string Email,
+    CandidateStatus CandidateStatus);
+
 public record ApplicationProcessResponse(
     Guid ProcessId,
     int VacancyId,

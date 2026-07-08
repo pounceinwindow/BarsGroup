@@ -60,4 +60,20 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
                     .ToList()))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
+
+    public async Task<List<CandidateListUnit>?> GetFilteredCandidates()
+    {
+
+        return await context
+            .Candidates
+            .AsNoTracking()
+            .Select(c => new CandidateListUnit(
+                c.Id, 
+                c.FullName, 
+                c.City,
+                c.Email,
+                c.Status)
+            )
+            .ToListAsync();
+    }
 }

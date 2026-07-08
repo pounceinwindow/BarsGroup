@@ -24,7 +24,7 @@ public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, in
             throw new ConflictException("Candidate already exists.");
         }
 
-        var candidate = Candidate.Create(
+        var candidate = Domain.Models.Candidate.Create(
             request.FullName,
             request.Phone,
             request.Email,
