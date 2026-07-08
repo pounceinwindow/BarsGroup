@@ -7,6 +7,7 @@
 @inject IMediator Mediator
 
 @using Application.Exceptions
+@using Application.Interview.Commands.CancelInterview
 @using Application.Interview.Commands.SubmitProtocol
 @using Application.Interview.DTO
 @using MediatR
@@ -66,10 +67,15 @@ else
                 <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol(Interview))" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
             </section>
 
-            @* TODO: 1) кнопка отмены интервью 2) скрыть кнопки решения для не решалы *@
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(!State.CanEditProtocol(Interview) || IsSaving)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                @if (State.CanEditProtocol(Interview))
+                {
+                    <div class="protocol-decision-actions">
+                        <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                        <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
+                    </div>
+                }
                 <div class="decision-options">
                     @foreach (var option in State.DecisionOptions)
                     {
@@ -95,6 +101,7 @@ else
 
     private bool IsPdfDownloading;
     private bool IsSaving;
+    private bool IsCanceling;
     private string? ToastMessage;
 
     private DemoInterview? Interview => State.GetInterview(InterviewId);
@@ -148,6 +155,32 @@ else
         finally
         {
             IsSaving = false;
+        }
+    }
+
+    private async Task CancelInterview()
+    {
+        if (Interview is null || !State.CanEditProtocol(Interview))
+            return;
+
+        IsCanceling = true;
+        try
+        {
+            await Mediator.Send(new CancelInterviewCommand(Interview.DbId));
+            State.Reload();
+            await ShowToast("Собеседование отменено");
+        }
+        catch (NotFoundException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        catch (ConflictException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        finally
+        {
+            IsCanceling = false;
         }
     }
 

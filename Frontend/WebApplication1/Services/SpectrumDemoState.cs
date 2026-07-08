@@ -629,7 +629,7 @@ public sealed class SpectrumDemoState
         {
             InterviewStatus.Scheduled => "Собеседование запланировано",
             InterviewStatus.WaitingForVerdict => "На согласовании",
-            InterviewStatus.Canceled => "Отклонён",
+            InterviewStatus.Canceled => "Отменён",
             InterviewStatus.Completed => "На согласовании",
             _ => "Новый"
         }
