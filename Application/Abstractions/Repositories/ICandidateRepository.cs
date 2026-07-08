@@ -5,11 +5,13 @@ namespace Application.Abstractions.Repositories;
 
 public interface ICandidateRepository
 {
-    Task AddAsync(Candidate candidate, CancellationToken cancellationToken);
+    Task AddAsync(Domain.Models.Candidate candidate, CancellationToken cancellationToken);
 
     Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
 
     Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<CandidateResponse?> GetByIdDetailedAsync(int id, CancellationToken cancellationToken);
+
+    Task<List<CandidateListUnit>?> GetFilteredCandidates(); 
 }

@@ -6,11 +6,17 @@
     private string StatusClass => Status switch
     {
         "Новый" => "status-new",
+        "В поиске" => "status-new",
         "Собеседование запланировано" => "status-planned",
         "На согласовании" => "status-pending",
+        "Согласовано" => "status-pending",
         "Принят" => "status-hired",
+        "Принять" => "status-hired",
+        "Следующий этап" => "status-next",
         "Резерв" => "status-reserve",
         "Отклонён" => "status-rejected",
+        "Отказать" => "status-rejected",
+        "Отменён" => "status-canceled",
         _ => "status-new"
     };
 }
