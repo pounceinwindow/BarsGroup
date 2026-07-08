@@ -22,7 +22,7 @@ public interface IVacancyRepository
 
     Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken);
 
-    Task ExistsByNameAsync(string vacancyName, CancellationToken cancellationToken);
+    Task<bool> ExistsByNameAsync(string vacancyName, CancellationToken cancellationToken);
 
     /// <summary>
     /// Id компетенций из шаблона вакансии (VacancyCompetency).

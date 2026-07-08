@@ -28,7 +28,7 @@ namespace Application.Admin.Commands.Vacancy
             {
                 _logger.LogInformation("Trying to add competency to vacancy {VacancyId} {CompetenceId}", request.VacancyId, request.CompetentionId);
 
-                await _repo.AddCompetencyByIdAsync(request.VacancyId, request.CompetentionId);
+                await _repo.AddCompetencyByIdAsync(request.VacancyId, request.CompetentionId, cancellationToken);
 
                 return Result.Success();
             }

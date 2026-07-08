@@ -27,7 +27,7 @@ namespace Application.Admin.Commands.Vacancy
             {
                 _logger.LogInformation("Trying to delete vacancy {VacancyId}", request.VacancyId);
 
-                await _repo.DeleteByIdAsync(request.VacancyId);
+                await _repo.DeleteByIdAsync(request.VacancyId, cancellationToken);
 
                 return Result.Success();
             }

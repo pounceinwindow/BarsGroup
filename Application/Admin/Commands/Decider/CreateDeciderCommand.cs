@@ -42,7 +42,7 @@ namespace Application.Admin.Commands.Decider
 
                 //Если тут упадет неконсистентно
 
-                await _repo.AddAsync(user);
+                await _repo.AddAsync(user, cancellationToken);
 
                 return Result.Success();
             }

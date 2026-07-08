@@ -33,7 +33,7 @@ namespace Application.Admin.Commands.HR
             {
                 _logger.LogInformation("Trying to revoke HR {HRId}", request.Id);
 
-                var user = await _repo.GetUserAsync(request.Id);
+                var user = await _repo.GetUserAsync(request.Id, cancellationToken);
 
                 if (!(user.Role == UserRole.HR))
                     return Result.Failure(new DomainError("The user is not HR"));
@@ -46,7 +46,7 @@ namespace Application.Admin.Commands.HR
 
                 //Если тут или дальше упадет то несогласованность будет
 
-                await _repo.MarkRevokedAsync(user.Id);
+                await _repo.MarkRevokedAsync(user.Id, cancellationToken);
 
                 return Result.Success();
             }

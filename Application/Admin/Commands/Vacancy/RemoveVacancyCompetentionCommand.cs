@@ -28,7 +28,7 @@ namespace Application.Admin.Commands.Vacancy
             {
                 _logger.LogInformation("Trying to delete competence from vacancy {VacancyId} {CompetenceId}", request.VacancyId, request.CompetenceId);
 
-                await _repo.RemoveCompetencyByIdAsync(request.VacancyId, request.CompetenceId);
+                await _repo.RemoveCompetencyByIdAsync(request.VacancyId, request.CompetenceId, cancellationToken);
 
                 return Result.Success();
             }

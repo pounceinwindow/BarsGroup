@@ -30,7 +30,7 @@ namespace Application.Admin.Commands.Vacancy
 
                 var vacancy = Domain.Models.Vacancy.Create(request.VacancyName);
 
-                await _repo.AddAsync(vacancy);
+                await _repo.AddAsync(vacancy, cancellationToken);
 
                 return Result.Success();
             }

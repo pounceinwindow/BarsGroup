@@ -42,7 +42,7 @@ namespace Application.Admin.Commands.HR
                 //TODO хэш пароля
                 var user = User.Create(request.FirstName, request.Lastname, request.Password, Domain.Enums.UserRole.HR, DateOnly.FromDateTime(DateTime.UtcNow));
 
-                await _repo.AddAsync(user);
+                await _repo.AddAsync(user, cancellationToken);
 
                 return Result.Success();
             }
