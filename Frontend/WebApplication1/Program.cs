@@ -1,3 +1,4 @@
+using Application;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Components;
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddApplication();
 // База данных
 builder.Services.AddInfrastructure(builder.Configuration);
 
