@@ -1,0 +1,288 @@
+@page "/admin"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+@inject Infrastructure.BarsContext Db
+
+<PageTitle>Спектр — администрирование</PageTitle>
+
+@if (State.Role != SpectrumDemoState.AdminRole)
+{
+    <section class="page-content">
+        <div class="empty-state panel">
+            <strong>Раздел доступен только администратору</strong>
+            <span>Перезайдите с ролью «Администратор», чтобы управлять справочниками.</span>
+            <button class="text-button" @onclick='() => Navigation.NavigateTo("/dashboard")'>На дашборд</button>
+        </div>
+    </section>
+}
+else
+{
+    <section class="page-content admin-page">
+        <div class="page-heading-row">
+            <div>
+                <span class="eyebrow dark">Администрирование</span>
+                <h2>Справочники и пользователи</h2>
+            </div>
+            <button class="secondary-button" @onclick="Reseed"><SvgIcon Name="database" Size="15" /> Перезалить seed</button>
+        </div>
+
+        <div class="admin-tabs" role="tablist">
+            <button class="role-chip @(Tab == "vacancies" ? "is-active" : null)" @onclick='() => SelectTab("vacancies")'>Вакансии</button>
+            <button class="role-chip @(Tab == "competencies" ? "is-active" : null)" @onclick='() => SelectTab("competencies")'>Компетенции</button>
+            <button class="role-chip @(Tab == "users" ? "is-active" : null)" @onclick='() => SelectTab("users")'>Пользователи</button>
+            <button class="role-chip @(Tab == "candidates" ? "is-active" : null)" @onclick='() => SelectTab("candidates")'>Кандидаты</button>
+        </div>
+
+        @if (Tab == "vacancies")
+        {
+            <div class="admin-grid">
+                <article class="panel form-card">
+                    <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedVacancyId is null ? "Создание" : "Редактирование")</span><h3>Вакансия</h3></div></div>
+                    <div class="form-grid">
+                        <label class="span-2">Название<input @bind="VacancyForm.Title" @bind:event="oninput" /></label>
+                        <p class="form-note span-2">В текущей Domain-модели вакансии хранится только название, поэтому сохраняем именно его.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button class="secondary-button" @onclick="ResetVacancyForm">Очистить</button>
+                        <button class="primary-button action-button" @onclick="SaveVacancy">Сохранить</button>
+                    </div>
+                </article>
+
+                <article class="panel admin-table">
+                    <div class="admin-head"><span>Вакансия</span><span>Статус</span><span></span></div>
+                    @foreach (var vacancy in State.Vacancies)
+                    {
+                        <div class="admin-row">
+                            <span><strong>@vacancy.Title</strong><small>@vacancy.Department</small></span>
+                            <StatusBadge Status="@(vacancy.IsActive ? vacancy.Status : "Отклонён")" />
+                            <button class="text-button" @onclick="() => EditVacancy(vacancy)">Править</button>
+                        </div>
+                    }
+                </article>
+            </div>
+        }
+        else if (Tab == "competencies")
+        {
+            <div class="admin-grid">
+                <article class="panel form-card">
+                    <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedCompetencyId is null ? "Создание" : "Редактирование")</span><h3>Компетенция</h3></div></div>
+                    <div class="form-grid">
+                        <label class="span-2">Название<input @bind="CompetencyForm.Name" @bind:event="oninput" /></label>
+                        <label class="span-2">Описание<textarea @bind="CompetencyForm.Description" @bind:event="oninput"></textarea></label>
+                    </div>
+                    <div class="form-actions">
+                        <button class="secondary-button" @onclick="ResetCompetencyForm">Очистить</button>
+                        <button class="primary-button action-button" @onclick="SaveCompetency">Сохранить</button>
+                    </div>
+                </article>
+
+                <article class="panel admin-table">
+                    <div class="admin-head"><span>Компетенция</span><span>Активность</span><span></span></div>
+                    @foreach (var competency in State.Competencies)
+                    {
+                        <div class="admin-row">
+                            <span><strong>@competency.Name</strong><small>@competency.Description</small></span>
+                            <span class="online-dot">@(competency.IsActive ? "Активна" : "Скрыта")</span>
+                            <button class="text-button" @onclick="() => EditCompetency(competency)">Править</button>
+                        </div>
+                    }
+                </article>
+            </div>
+        }
+        else if (Tab == "users")
+        {
+            <div class="admin-grid">
+                <article class="panel form-card">
+                    <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedUserId is null ? "Создание" : "Редактирование")</span><h3>Пользователь</h3></div></div>
+                    <div class="form-grid">
+                        <label class="span-2">ФИО<input @bind="UserForm.Name" @bind:event="oninput" /></label>
+                        <label>Роль<select @bind="UserForm.Role">@foreach (var role in State.Roles) { <option value="@role">@role</option> }</select></label>
+                        <label class="check-label span-2"><input type="checkbox" @bind="UserForm.IsActive" /> Активен</label>
+                        <p class="form-note span-2">В текущей Domain-модели пользователя нет email, сохраняются ФИО, роль и активность.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button class="secondary-button" @onclick="ResetUserForm">Очистить</button>
+                        <button class="primary-button action-button" @onclick="SaveUser">Сохранить</button>
+                    </div>
+                </article>
+
+                <article class="panel admin-table">
+                    <div class="admin-head"><span>Пользователь</span><span>Роль</span><span></span></div>
+                    @foreach (var user in State.Users)
+                    {
+                        <div class="admin-row">
+                            <span><strong>@user.Name</strong><small>@user.Email</small></span>
+                            <span>@user.Role</span>
+                            <button class="text-button" @onclick="() => EditUser(user)">Править</button>
+                        </div>
+                    }
+                </article>
+            </div>
+        }
+        else if (Tab == "candidates")
+        {
+            <div class="admin-grid">
+                <article class="panel form-card">
+                    <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedCandidateId is null ? "Создание" : "Редактирование")</span><h3>Кандидат</h3></div></div>
+                    <div class="form-grid">
+                        <label class="span-2">ФИО<input @bind="CandidateForm.FullName" @bind:event="oninput" /></label>
+                        <label>Город<input @bind="CandidateForm.City" @bind:event="oninput" /></label>
+                        <label>Телефон<input @bind="CandidateForm.Phone" @bind:event="oninput" /></label>
+                        <label>Email<input @bind="CandidateForm.Email" @bind:event="oninput" /></label>
+                        <label>Telegram<input @bind="CandidateForm.Telegram" @bind:event="oninput" /></label>
+                        <label class="span-2">Образование<textarea @bind="CandidateForm.Education" @bind:event="oninput"></textarea></label>
+                        <label class="span-2">Опыт<textarea @bind="CandidateForm.Experience" @bind:event="oninput"></textarea></label>
+                        <label class="span-2">Навыки<input @bind="CandidateForm.Skills" @bind:event="oninput" /></label>
+                        @if (SelectedCandidateId is null)
+                        {
+                            <label class="span-2">Первичный отклик<select @bind="CandidateForm.Vacancy"><option value="">Без отклика</option>@foreach (var vacancy in State.VacancyTitles) { <option value="@vacancy">@vacancy</option> }</select></label>
+                        }
+                    </div>
+                    <div class="form-actions">
+                        <button class="secondary-button" @onclick="ResetCandidateForm">Очистить</button>
+                        <button class="primary-button action-button" @onclick="SaveCandidate">Сохранить</button>
+                    </div>
+                </article>
+
+                <article class="panel admin-table">
+                    <div class="admin-head"><span>Кандидат</span><span>Статус</span><span></span></div>
+                    @foreach (var candidate in State.Candidates)
+                    {
+                        <div class="admin-row">
+                            <span><strong>@candidate.Name</strong><small>@candidate.Email</small></span>
+                            <StatusBadge Status="@State.LatestStatus(candidate)" />
+                            <button class="text-button" @onclick="() => EditCandidate(candidate)">Править</button>
+                        </div>
+                    }
+                </article>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ToastMessage))
+        {
+            <div class="toast" role="status"><SvgIcon Name="check" Size="16" /> @ToastMessage</div>
+        }
+    </section>
+}
+
+@code {
+    private string Tab = "vacancies";
+    private string? ToastMessage;
+
+    private int? SelectedVacancyId;
+    private int? SelectedCompetencyId;
+    private int? SelectedUserId;
+    private int? SelectedCandidateId;
+
+    private VacancyForm VacancyForm { get; set; } = new();
+    private CompetencyForm CompetencyForm { get; set; } = new();
+    private UserForm UserForm { get; set; } = new();
+    private CandidateForm CandidateForm { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        CandidateForm.Vacancy = State.VacancyTitles.FirstOrDefault() ?? string.Empty;
+    }
+
+    private void SelectTab(string tab)
+    {
+        Tab = tab;
+        ToastMessage = null;
+    }
+
+    private async Task SaveVacancy()
+    {
+        State.SaveVacancy(VacancyForm, SelectedVacancyId);
+        ResetVacancyForm();
+        await ShowToast("Вакансия сохранена");
+    }
+
+    private async Task SaveCompetency()
+    {
+        State.SaveCompetency(CompetencyForm, SelectedCompetencyId);
+        ResetCompetencyForm();
+        await ShowToast("Компетенция сохранена");
+    }
+
+    private async Task SaveUser()
+    {
+        State.SaveUser(UserForm, SelectedUserId);
+        ResetUserForm();
+        await ShowToast("Пользователь сохранён");
+    }
+
+    private async Task SaveCandidate()
+    {
+        if (SelectedCandidateId is null)
+            State.CreateCandidate(CandidateForm);
+        else
+            State.UpdateCandidate(SelectedCandidateId.Value, CandidateForm);
+
+        ResetCandidateForm();
+        await ShowToast("Кандидат сохранён");
+    }
+
+    private void EditVacancy(DemoVacancy vacancy)
+    {
+        SelectedVacancyId = vacancy.Id;
+        VacancyForm = SpectrumDemoState.ToForm(vacancy);
+    }
+
+    private void EditCompetency(DemoCompetency competency)
+    {
+        SelectedCompetencyId = competency.Id;
+        CompetencyForm = SpectrumDemoState.ToForm(competency);
+    }
+
+    private void EditUser(DemoUser user)
+    {
+        SelectedUserId = user.Id;
+        UserForm = SpectrumDemoState.ToForm(user);
+    }
+
+    private void EditCandidate(DemoCandidate candidate)
+    {
+        SelectedCandidateId = candidate.Id;
+        CandidateForm = SpectrumDemoState.ToForm(candidate);
+    }
+
+    private void ResetVacancyForm()
+    {
+        SelectedVacancyId = null;
+        VacancyForm = new VacancyForm();
+    }
+
+    private void ResetCompetencyForm()
+    {
+        SelectedCompetencyId = null;
+        CompetencyForm = new CompetencyForm();
+    }
+
+    private void ResetUserForm()
+    {
+        SelectedUserId = null;
+        UserForm = new UserForm();
+    }
+
+    private void ResetCandidateForm()
+    {
+        SelectedCandidateId = null;
+        CandidateForm = new CandidateForm { Vacancy = State.VacancyTitles.FirstOrDefault() ?? string.Empty };
+    }
+
+    private async Task ShowToast(string message)
+    {
+        ToastMessage = message;
+        StateHasChanged();
+        await Task.Delay(1800);
+        ToastMessage = null;
+    }
+
+    private async Task Reseed()
+    {
+        await Db.ClearAndSeed();
+        State.Reload();
+        await ShowToast("Seed-данные перезалиты");
+    }
+}

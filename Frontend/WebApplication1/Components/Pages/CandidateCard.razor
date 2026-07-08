@@ -1,0 +1,98 @@
+@page "/candidates/{CandidateId:int}"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+<PageTitle>Спектр — карточка кандидата</PageTitle>
+
+@if (Candidate is null)
+{
+    <section class="page-content">
+        <div class="empty-state panel"><strong>Кандидат не найден</strong><span>Вернитесь в реестр и выберите существующую карточку.</span><button class="text-button" @onclick='() => Navigation.NavigateTo("/candidates")'>К реестру</button></div>
+    </section>
+}
+else
+{
+    <section class="page-content candidate-page">
+        <button class="back-button" @onclick='() => Navigation.NavigateTo("/candidates")'><SvgIcon Name="back" Size="16" /> К реестру</button>
+
+        <article class="candidate-hero panel">
+            <div class="candidate-heading">
+                <Initials Name="@Candidate.Name" Class="large" />
+                <div><span class="eyebrow dark">Карточка кандидата</span><h2>@Candidate.Name</h2><StatusBadge Status="@State.LatestStatus(Candidate)" /></div>
+                <span class="candidate-number">№ @Candidate.Id.ToString("0000")</span>
+            </div>
+            <div class="candidate-facts">
+                <div><SvgIcon Name="phone" /><span><small>Телефон</small>@Candidate.Phone</span></div>
+                <div><SvgIcon Name="mail" /><span><small>Электронная почта</small>@Candidate.Email</span></div>
+                <div><SvgIcon Name="pin" /><span><small>Город</small>@Candidate.City</span></div>
+                <div><SvgIcon Name="send" /><span><small>Telegram</small>@(string.IsNullOrWhiteSpace(Candidate.Telegram) ? "—" : Candidate.Telegram)</span></div>
+                <div class="wide"><SvgIcon Name="cap" /><span><small>Образование</small>@Candidate.Education</span></div>
+                <div class="wide"><SvgIcon Name="briefcase" /><span><small>Опыт</small>@Candidate.Experience</span></div>
+            </div>
+        </article>
+
+        <div class="candidate-layout-grid">
+            <section>
+                <div class="section-heading"><span class="eyebrow dark">Последние пройденные собесы</span><h3>История интервью</h3></div>
+                <div class="response-list">
+                    @foreach (var interview in State.CandidateInterviews(Candidate.Id).Take(3))
+                    {
+                        <article class="response-card panel">
+                            <div class="response-date"><strong>@interview.Date.Day.ToString("00")</strong><span>@SpectrumDemoState.MonthName(interview.Date)</span><small>@interview.Date.Year</small></div>
+                            <div class="response-main"><h4>@interview.Vacancy</h4><span><SvgIcon Name="calendar" Size="14" /> @SpectrumDemoState.DisplayDate(interview.Date) · @interview.Time · @interview.Format</span></div>
+                            <DotScale Value="@State.AverageScore(interview)" />
+                            <StatusBadge Status="@interview.Status" />
+                            <button class="secondary-button" @onclick='() => Navigation.NavigateTo($"/interviews/{interview.Id}/protocol")'>Открыть протокол</button>
+                        </article>
+                    }
+                    @if (!State.CandidateInterviews(Candidate.Id).Any())
+                    {
+                        <div class="empty-state panel"><strong>Собеседований пока нет</strong><span>Создайте собес для кандидата из карточки создания.</span></div>
+                    }
+                </div>
+            </section>
+
+            <aside class="panel side-card">
+                <div class="panel-heading"><div><span class="eyebrow dark">Навыки</span><h3>Ключевые теги</h3></div></div>
+                <div class="pill-list">
+                    @foreach (var skill in Candidate.Skills)
+                    {
+                        <span>@skill</span>
+                    }
+                </div>
+                <button class="secondary-button full-width" @onclick='() => Navigation.NavigateTo("/interviews/new")'><SvgIcon Name="plus" Size="15" /> Назначить собес</button>
+            </aside>
+        </div>
+
+        <div class="section-heading"><span class="eyebrow dark">Отклики</span><h3>Отклики и протоколы</h3></div>
+        <div class="response-list">
+            @foreach (var response in Candidate.Responses.OrderByDescending(response => response.Date))
+            {
+                var interview = State.GetInterviewByResponse(response);
+                <article class="response-card panel">
+                    <div class="response-date"><strong>@response.Date.Day.ToString("00")</strong><span>@SpectrumDemoState.MonthName(response.Date)</span><small>@response.Date.Year</small></div>
+                    <div class="response-main"><h4>@response.Vacancy</h4><span><SvgIcon Name="calendar" Size="14" /> @SpectrumDemoState.DisplayDate(response.Date) @if (interview is not null) { <span>· @interview.Time · @interview.Format</span> }</span></div>
+                    @if (interview is not null) { <DotScale Value="@State.AverageScore(interview)" /> } else { <span class="muted">—</span> }
+                    <StatusBadge Status="@(interview?.Status ?? "Новый")" />
+                    <button class="secondary-button" @onclick="() => OpenProtocol(response)">@(interview is null ? "Начать интервью" : "Открыть протокол")</button>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public int CandidateId { get; set; }
+
+    private DemoCandidate? Candidate => State.GetCandidate(CandidateId);
+
+    private void OpenProtocol(DemoResponse response)
+    {
+        if (Candidate is null)
+            return;
+
+        var interview = State.EnsureInterview(Candidate, response);
+        Navigation.NavigateTo($"/interviews/{interview.Id}/protocol");
+    }
+}
