@@ -13,7 +13,7 @@ public class ScheduleInterviewValidator : AbstractValidator<ScheduleInterviewCom
         RuleFor(x => x.HrId)
             .GreaterThan(0);
         RuleFor(x => x.Date)
-            .Must(date => date > DateTime.Now)
+            .Must(date => date > DateTime.UtcNow)
             .WithMessage("Date must be in the future.");
         // ProcessId = null — новый отклик; непустой Guid — следующий этап того же отклика.
         RuleFor(x => x.ProcessId)

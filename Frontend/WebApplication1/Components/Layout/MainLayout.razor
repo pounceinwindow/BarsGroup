@@ -34,9 +34,6 @@ else
                     <NavLink class="nav-item" href="/candidates/new" @onclick="CloseMobileMenu">
                         <SvgIcon Name="plus" /> <span>Создать кандидата</span>
                     </NavLink>
-                    <NavLink class="nav-item" href="/interviews/new" @onclick="CloseMobileMenu">
-                        <SvgIcon Name="clipboard" /> <span>Создать собес</span>
-                    </NavLink>
                     @if (State.Role == SpectrumDemoState.DeciderRole)
                     {
                         <NavLink class="nav-item" href="/decisions" @onclick="CloseMobileMenu">
@@ -91,7 +88,7 @@ else
         "candidates" => "Реестр кандидатов",
         "interviews" => "Реестр собесов",
         "candidates/new" => "Создание кандидата",
-        "interviews/new" => "Создание собеседования",
+        var route when route.Contains("/interviews/new", StringComparison.OrdinalIgnoreCase) => "Назначение собеседования",
         "decisions" => "На согласовании",
         "admin" => "Администрирование",
         var route when route.StartsWith("candidates/", StringComparison.OrdinalIgnoreCase) => "Карточка кандидата",
