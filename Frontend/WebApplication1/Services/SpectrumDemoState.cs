@@ -1,3 +1,4 @@
+using Application.Interview.DTO;
 using Domain.Enums;
 using Domain.Models;
 using Infrastructure;
@@ -485,6 +486,46 @@ public sealed class SpectrumDemoState
 
     public static string DisplayDate(DateTime date) => date.ToString("dd.MM.yyyy");
 
+    public static string CandidateDisplayStatus(CandidateStatus status) => status switch
+    {
+        CandidateStatus.Hired => "Принят",
+        CandidateStatus.Archived => "Отклонён",
+        _ => "В поиске"
+    };
+
+    public static string InterviewDisplayStatus(InterviewResponse interview) =>
+        interview.Status switch
+        {
+            InterviewStatus.Scheduled => "Собеседование запланировано",
+            InterviewStatus.WaitingForVerdict => "На согласовании",
+            InterviewStatus.Canceled => "Отменён",
+            InterviewStatus.Completed => interview.Decision switch
+            {
+                DeciderVerdict.Hired => "Принять",
+                DeciderVerdict.NextStage => "Следующий этап",
+                DeciderVerdict.Rejected => "Отказать",
+                _ => "Согласовано"
+            },
+            _ => "Новый"
+        };
+
+    public static bool CanScheduleInterviewInProcess(
+        ApplicationProcessResponse process,
+        InterviewResponse interview)
+    {
+        if (process.Interviews.Count == 0)
+            return false;
+
+        var latest = process.Interviews.MaxBy(item => item.Date);
+        if (latest is null || interview.Id != latest.Id)
+            return false;
+
+        if (interview.Status == InterviewStatus.Canceled)
+            return true;
+
+        return interview.Decision == DeciderVerdict.NextStage;
+    }
+
     public static string MonthName(DateTime date) => date.Month switch
     {
         1 => "янв",
@@ -511,7 +552,7 @@ public sealed class SpectrumDemoState
         Vacancy = interview.Vacancy?.Name ?? $"Вакансия #{interview.VacancyId}",
         Date = interview.Date.Date,
         Time = interview.Date.ToString("HH:mm"),
-        Format = interview.Date > DateTime.Now ? "Онлайн" : "Очно",
+        Format = string.Empty,
         Hr = Users.FirstOrDefault(user => user.Role == HrRole)?.ShortName ?? "Елена П.",
         Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),

@@ -104,9 +104,11 @@ h1, h2, h3, h4, p { margin: 0; }
 .status-badge { display: inline-flex; align-items: center; width: max-content; min-height: 24px; padding: 3px 9px; border-radius: 99px; font-family: "Manrope", sans-serif; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
 .status-new { color: var(--blue); background: var(--blue-pale); }
 .status-planned, .status-pending { color: var(--amber); background: var(--amber-pale); }
+.status-next { color: var(--teal); background: var(--teal-pale); }
 .status-hired { color: var(--green); background: var(--green-pale); }
 .status-reserve { color: var(--teal); background: var(--teal-pale); }
 .status-rejected { color: var(--red); background: var(--red-pale); }
+.status-canceled { color: var(--muted); background: var(--line); }
 .dot-scale { display: inline-flex; align-items: center; gap: 5px; min-width: 72px; }
 .dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
 .dot.is-filled { background: var(--teal); }

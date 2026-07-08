@@ -66,6 +66,7 @@ else
                 <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol(Interview))" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
             </section>
 
+            @* TODO: 1) кнопка отмены интервью 2) скрыть кнопки решения для не решалы *@
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
                 <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(!State.CanEditProtocol(Interview) || IsSaving)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
