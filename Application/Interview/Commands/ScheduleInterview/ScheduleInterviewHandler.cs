@@ -10,17 +10,20 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
     private readonly ICandidateRepository _candidates;
     private readonly IVacancyRepository _vacancies;
     private readonly IInterviewRepository _interviews;
+    private readonly IUserRepository _users;
     private readonly IUnitOfWork _unitOfWork;
 
     public ScheduleInterviewHandler(
         ICandidateRepository candidates,
         IVacancyRepository vacancies,
         IInterviewRepository interviews,
+        IUserRepository users,
         IUnitOfWork unitOfWork)
     {
         _candidates = candidates;
         _vacancies = vacancies;
         _interviews = interviews;
+        _users = users;
         _unitOfWork = unitOfWork;
     }
 
@@ -36,6 +39,11 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
             throw new NotFoundException($"Vacancy with id {request.VacancyId} was not found.");
         }
 
+        if (!await _users.ExistsByIdAsync(request.HrId, cancellationToken))
+        {
+            throw new NotFoundException($"User with id {request.HrId} was not found.");
+        }
+
         // На одну пару кандидат+вакансия одновременно только одно активное интервью.
         if (await _interviews.HasActiveAsync(request.CandidateId, request.VacancyId, cancellationToken))
         {
@@ -49,6 +57,7 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
             interview = Domain.Models.Interview.ScheduleNewProcess(
                 request.CandidateId,
                 request.VacancyId,
+                request.HrId,
                 request.Date);
         }
         else
@@ -68,6 +77,7 @@ public class ScheduleInterviewHandler : IRequestHandler<ScheduleInterviewCommand
                 request.CandidateId,
                 request.VacancyId,
                 request.ProcessId.Value,
+                request.HrId,
                 request.Date);
         }
 

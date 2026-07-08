@@ -10,6 +10,8 @@ public class ScheduleInterviewValidator : AbstractValidator<ScheduleInterviewCom
             .GreaterThan(0);
         RuleFor(x => x.VacancyId)
             .GreaterThan(0);
+        RuleFor(x => x.HrId)
+            .GreaterThan(0);
         RuleFor(x => x.Date)
             .Must(date => date > DateTime.Now)
             .WithMessage("Date must be in the future.");

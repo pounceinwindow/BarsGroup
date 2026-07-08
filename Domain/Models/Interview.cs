@@ -22,12 +22,18 @@ public class Interview
     public InterviewStatus Status { get; private set; }
 
     /// <summary>
+    /// HR, создавший и ведущий интервью.
+    /// </summary>
+    public int HrId { get; private set; }
+
+    /// <summary>
     /// Общий комментарий HR по итогам интервью.
     /// </summary>
     public string? SummaryComment { get; private set; }
 
     public Vacancy Vacancy { get; private set; } = null!;
     public Candidate Candidate { get; private set; } = null!;
+    public User Hr { get; private set; } = null!;
     public Verdict? Verdict { get; private set; }
 
     /// <summary>
@@ -42,9 +48,9 @@ public class Interview
     /// <summary>
     /// Создаёт первое интервью в рамках нового отклика на вакансию.
     /// </summary>
-    public static Interview ScheduleNewProcess(int candidateId, int vacancyId, DateTime date)
+    public static Interview ScheduleNewProcess(int candidateId, int vacancyId, int hrId, DateTime date)
     {
-        return Schedule(candidateId, vacancyId, Guid.NewGuid(), date);
+        return Schedule(candidateId, vacancyId, Guid.NewGuid(), hrId, date);
     }
 
     /// <summary>
@@ -54,21 +60,24 @@ public class Interview
         int candidateId,
         int vacancyId,
         Guid processId,
+        int hrId,
         DateTime date)
     {
         if (processId == Guid.Empty)
             throw new DomainException("ProcessId cannot be empty.");
 
-        return Schedule(candidateId, vacancyId, processId, date);
+        return Schedule(candidateId, vacancyId, processId, hrId, date);
     }
 
     /// <summary>
     /// Сохраняет протокол HR: создаёт строки матрицы и переводит интервью в ожидание решения.
     /// </summary>
     public void SubmitProtocol(
+        int hrId,
         string? summaryComment,
         IReadOnlyList<ProtocolCompetencyScore> scores)
     {
+        EnsureAssignedHr(hrId);
         EnsureStatus(InterviewStatus.Scheduled);
 
         if (_matrixRows.Count > 0)
@@ -116,12 +125,19 @@ public class Interview
         Status = InterviewStatus.Completed;
     }
 
-    private static Interview Schedule(int candidateId, int vacancyId, Guid processId, DateTime date)
+    private static Interview Schedule(
+        int candidateId,
+        int vacancyId,
+        Guid processId,
+        int hrId,
+        DateTime date)
     {
         if (candidateId <= 0)
             throw new ArgumentOutOfRangeException(nameof(candidateId));
         if (vacancyId <= 0)
             throw new ArgumentOutOfRangeException(nameof(vacancyId));
+        if (hrId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(hrId));
         if (date <= DateTime.Now)
             throw new ArgumentException("Date must be in the future.");
 
@@ -130,9 +146,16 @@ public class Interview
             CandidateId = candidateId,
             VacancyId = vacancyId,
             ProcessId = processId,
+            HrId = hrId,
             Date = date,
             Status = InterviewStatus.Scheduled
         };
+    }
+
+    private void EnsureAssignedHr(int hrId)
+    {
+        if (HrId != hrId)
+            throw new DomainException("Only the assigned HR can modify this interview protocol.");
     }
 
     private void EnsureStatus(InterviewStatus expected)

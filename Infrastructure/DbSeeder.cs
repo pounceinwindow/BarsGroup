@@ -141,27 +141,27 @@ public static class DbSeeder
 
         // 6. Интервью (каждый кандидат хотя бы на одну вакансию)
         await context.Database.ExecuteSqlRawAsync($"""
-                                                   INSERT INTO "Interviews" ("Id", "VacancyId", "CandidateId", "ProcessId", "Date", "Status", "SummaryComment")
+                                                   INSERT INTO "Interviews" ("Id", "VacancyId", "CandidateId", "ProcessId", "Date", "Status", "SummaryComment", "HrId")
                                                    OVERRIDING SYSTEM VALUE VALUES
-                                                   (1, 1, 1, {Sql(interviewProcessIds[0])}, {SqlTimestamp(utcNow.AddDays(-10))}, 'Completed', NULL),
-                                                   (2, 1, 2, {Sql(interviewProcessIds[1])}, {SqlTimestamp(utcNow.AddDays(-8))}, 'Completed', NULL),
-                                                   (3, 2, 3, {Sql(interviewProcessIds[2])}, {SqlTimestamp(utcNow.AddDays(-7))}, 'Completed', NULL),
-                                                   (4, 2, 4, {Sql(interviewProcessIds[3])}, {SqlTimestamp(utcNow.AddDays(-5))}, 'WaitingForVerdict', NULL),
-                                                   (5, 3, 5, {Sql(interviewProcessIds[4])}, {SqlTimestamp(utcNow.AddDays(-4))}, 'WaitingForVerdict', NULL),
-                                                   (6, 3, 6, {Sql(interviewProcessIds[5])}, {SqlTimestamp(utcNow.AddDays(-3))}, 'Completed', NULL),
-                                                   (7, 1, 7, {Sql(interviewProcessIds[6])}, {SqlTimestamp(utcNow.AddDays(-2))}, 'WaitingForVerdict', NULL),
-                                                   (8, 2, 8, {Sql(interviewProcessIds[7])}, {SqlTimestamp(utcNow.AddDays(-1))}, 'WaitingForVerdict', NULL),
-                                                   (9, 3, 9, {Sql(interviewProcessIds[8])}, {SqlTimestamp(utcNow)}, 'Completed', NULL),
-                                                   (10, 1, 10, {Sql(interviewProcessIds[9])}, {SqlTimestamp(utcNow)}, 'WaitingForVerdict', NULL),
+                                                   (1, 1, 1, {Sql(interviewProcessIds[0])}, {SqlTimestamp(utcNow.AddDays(-10))}, 'Completed', NULL, 2),
+                                                   (2, 1, 2, {Sql(interviewProcessIds[1])}, {SqlTimestamp(utcNow.AddDays(-8))}, 'Completed', NULL, 2),
+                                                   (3, 2, 3, {Sql(interviewProcessIds[2])}, {SqlTimestamp(utcNow.AddDays(-7))}, 'Completed', NULL, 2),
+                                                   (4, 2, 4, {Sql(interviewProcessIds[3])}, {SqlTimestamp(utcNow.AddDays(-5))}, 'WaitingForVerdict', NULL, 2),
+                                                   (5, 3, 5, {Sql(interviewProcessIds[4])}, {SqlTimestamp(utcNow.AddDays(-4))}, 'WaitingForVerdict', NULL, 2),
+                                                   (6, 3, 6, {Sql(interviewProcessIds[5])}, {SqlTimestamp(utcNow.AddDays(-3))}, 'Completed', NULL, 2),
+                                                   (7, 1, 7, {Sql(interviewProcessIds[6])}, {SqlTimestamp(utcNow.AddDays(-2))}, 'WaitingForVerdict', NULL, 2),
+                                                   (8, 2, 8, {Sql(interviewProcessIds[7])}, {SqlTimestamp(utcNow.AddDays(-1))}, 'WaitingForVerdict', NULL, 2),
+                                                   (9, 3, 9, {Sql(interviewProcessIds[8])}, {SqlTimestamp(utcNow)}, 'Completed', NULL, 2),
+                                                   (10, 1, 10, {Sql(interviewProcessIds[9])}, {SqlTimestamp(utcNow)}, 'WaitingForVerdict', NULL, 2),
                                                    -- Некоторые кандидаты на несколько вакансий
-                                                   (11, 2, 1, {Sql(interviewProcessIds[10])}, {SqlTimestamp(utcNow.AddDays(-6))}, 'WaitingForVerdict', NULL),
-                                                   (12, 3, 2, {Sql(interviewProcessIds[11])}, {SqlTimestamp(utcNow.AddDays(-4))}, 'WaitingForVerdict', NULL),
+                                                   (11, 2, 1, {Sql(interviewProcessIds[10])}, {SqlTimestamp(utcNow.AddDays(-6))}, 'WaitingForVerdict', NULL, 2),
+                                                   (12, 3, 2, {Sql(interviewProcessIds[11])}, {SqlTimestamp(utcNow.AddDays(-4))}, 'WaitingForVerdict', NULL, 2),
                                                    -- Несколько этапов
-                                                   (13, 3, 4, {Sql(interviewProcessIds[12])}, {SqlTimestamp(utcNow.AddDays(-7))}, 'Completed', NULL),
-                                                   (14, 3, 4, {Sql(interviewProcessIds[13])}, {SqlTimestamp(utcNow.AddDays(2))}, 'Scheduled', NULL),
+                                                   (13, 3, 4, {Sql(interviewProcessIds[12])}, {SqlTimestamp(utcNow.AddDays(-7))}, 'Completed', NULL, 2),
+                                                   (14, 3, 4, {Sql(interviewProcessIds[13])}, {SqlTimestamp(utcNow.AddDays(2))}, 'Scheduled', NULL, 2),
                                                    -- Запланированные интервью
-                                                   (15, 3, 3, {Sql(interviewProcessIds[14])}, {SqlTimestamp(utcNow.AddDays(1))}, 'Scheduled', NULL),
-                                                   (16, 3, 7, {Sql(interviewProcessIds[15])}, {SqlTimestamp(utcNow.AddDays(2))}, 'Scheduled', NULL);
+                                                   (15, 3, 3, {Sql(interviewProcessIds[14])}, {SqlTimestamp(utcNow.AddDays(1))}, 'Scheduled', NULL, 2),
+                                                   (16, 3, 7, {Sql(interviewProcessIds[15])}, {SqlTimestamp(utcNow.AddDays(2))}, 'Scheduled', NULL, 2);
                                                    """);
 
         // 7. Матрица компетенций (оценки кандидатов по компетенциям)

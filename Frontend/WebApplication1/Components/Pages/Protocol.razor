@@ -69,11 +69,20 @@ else
 
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                @if (State.CanEditProtocol(Interview))
+                @if (State.CanCancelInterview(Interview))
+                {
+                    <div class="protocol-decision-actions">
+                        @if (State.CanEditProtocol(Interview))
+                        {
+                            <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                        }
+                        <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
+                    </div>
+                }
+                else if (State.CanEditProtocol(Interview))
                 {
                     <div class="protocol-decision-actions">
                         <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
-                        <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
                     </div>
                 }
                 <div class="decision-options">
@@ -138,6 +147,7 @@ else
 
             await Mediator.Send(new SubmitProtocolCommand(
                 Interview.DbId,
+                State.CurrentUserId,
                 string.IsNullOrWhiteSpace(Interview.Comment) ? null : Interview.Comment.Trim(),
                 scores));
 
@@ -160,13 +170,13 @@ else
 
     private async Task CancelInterview()
     {
-        if (Interview is null || !State.CanEditProtocol(Interview))
+        if (Interview is null || !State.CanCancelInterview(Interview))
             return;
 
         IsCanceling = true;
         try
         {
-            await Mediator.Send(new CancelInterviewCommand(Interview.DbId));
+            await Mediator.Send(new CancelInterviewCommand(Interview.DbId, State.CurrentUserId));
             State.Reload();
             await ShowToast("Собеседование отменено");
         }
