@@ -11,6 +11,13 @@ public class InterviewRepository(BarsContext context) : IInterviewRepository
         await context.Interviews.AddAsync(interview, cancellationToken);
     }
 
+    public Task<Domain.Models.Interview?> GetByIdAsync(int interviewId, CancellationToken cancellationToken)
+    {
+        return context.Interviews
+            .Include(interview => interview.MatrixRows)
+            .FirstOrDefaultAsync(interview => interview.Id == interviewId, cancellationToken);
+    }
+
     public Task<bool> HasActiveAsync(int candidateId, int vacancyId, CancellationToken cancellationToken)
     {
         // Активные статусы: ещё не завершено и не отменено — параллельно второе назначать нельзя.
@@ -33,5 +40,10 @@ public class InterviewRepository(BarsContext context) : IInterviewRepository
                          && interview.CandidateId == candidateId
                          && interview.VacancyId == vacancyId,
             cancellationToken);
+    }
+
+    public Task<bool> InterviewExistsAsync(int interviewId, CancellationToken cancellationToken)
+    {
+        return context.Interviews.AnyAsync(interview => interview.Id == interviewId, cancellationToken);
     }
 }

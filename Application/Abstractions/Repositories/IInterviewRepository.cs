@@ -1,8 +1,15 @@
+using Domain.Models;
+
 namespace Application.Abstractions.Repositories;
 
 public interface IInterviewRepository
 {
     Task AddAsync(Domain.Models.Interview interview, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Загружает интервью с матрицей для доменных операций (SubmitProtocol и т.п.).
+    /// </summary>
+    Task<Domain.Models.Interview?> GetByIdAsync(int interviewId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Есть ли у кандидата на вакансию интервью в активном статусе (Scheduled / WaitingForVerdict).
@@ -17,4 +24,9 @@ public interface IInterviewRepository
         int candidateId,
         int vacancyId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Проверяет, что интервью существует.
+    /// </summary>
+    Task<bool> InterviewExistsAsync(int interviewId, CancellationToken cancellationToken);
 }
