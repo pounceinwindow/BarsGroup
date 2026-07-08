@@ -1,5 +1,8 @@
 ﻿using Application.PdfDocuments;
+using Application.Abstractions;
+using Application.Abstractions.Repositories;
 using Infrastructure.PdfDocuments;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +25,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<BarsContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddScoped<ICandidateRepository, CandidateRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         QuestPDF.Settings.License = LicenseType.Community;
         services.AddSingleton<IPdfDocumentService, PdfDocumentService>();

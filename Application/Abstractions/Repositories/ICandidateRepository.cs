@@ -4,7 +4,7 @@ namespace Application.Abstractions.Repositories;
 
 public interface ICandidateRepository
 {
-    void Add(Candidate candidate);
+    Task AddAsync(Candidate candidate, CancellationToken cancellationToken);
 
-    Task<bool> ExistsByEmailAsync(string email);
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
 }
