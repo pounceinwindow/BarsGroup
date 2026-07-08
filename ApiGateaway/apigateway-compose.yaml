@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: APIGateaway.API/Dockerfile
+    container_name: api_gateway
+    ports:
+      - "5005:5005"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5005
+      - ASPNETCORE_URLS=http://+:5005
+      - ConnectionStrings__Redis=redis-cache:6379,password=SecretRedisPass123!,defaultDatabase=0
+      - Keycloak__Authority=http://keycloak:8080/realms/hr-platform
+      - Keycloak__ClientId=api-gateway
+      - Keycloak__ClientSecret=fReUqrCjHSE49VLEceItCza8XSeOrowB
+    depends_on:
+      redis-cache:
+        condition: service_healthy
+    networks:
+      - gateway-network
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis_cache
+    command: redis-server --requirepass SecretRedisPass123!
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "SecretRedisPass123!", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gateway-network
+  test-ad:
+    image: osixia/openldap:1.5.0
+    container_name: local_ad
+    environment:
+      LDAP_ORGANISATION: "Kazan Corp"
+      LDAP_DOMAIN: "company.local"
+      LDAP_ADMIN_PASSWORD: "adminpassword"
+    ports:
+      - "389:389"
+    volumes:
+      # Прокидываем файл с seed.
+      - ./ldif_data:/container/environment/01-custom
+    networks:
+      - gateway-network
+
+  # 2. Веб-интерфейс для заполнения AD (вместо Windows-оснастки)
+  test-ad-admin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: local_ad_ui
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "test-ad"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "6480:80"
+    depends_on:
+      - test-ad
+    networks:
+      - gateway-network
+
+  # 3. База данных Keycloak
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak_db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: keycloak_password
+    ports:
+      - "5433:5432"
+    networks:
+      - gateway-network
+
+  # 4. Сам сервер Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    container_name: keycloak_server
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      LDAP_ADMIN_PASSWORD: "adminpassword"
+      API_GATEWAY_CLIENT_SECRET: "fReUqrCjHSE49VLEceItCza8XSeOrowB"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Прокидываем экспортированный JSON в специальную папку Keycloak
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+      # Монтируем нашу кастомную тему
+      - ./keycloak-theme/hr-theme:/opt/keycloak/themes/hr-theme
+    depends_on:
+      - keycloak-db
+    networks:
+      - gateway-network
+
+  hello-world-1:
+      image: mcr.microsoft.com/dotnet/samples:aspnetapp
+      container_name: hello-world-1
+      ports:
+        - "8081:8081"
+      environment:
+        - ASPNETCORE_HTTP_PORTS=8081
+        - ASPNETCORE_URLS=http://+:8081
+      restart: unless-stopped
+      networks:
+        - gateway-network
+
+  hello-world-2:
+    image: mcr.microsoft.com/dotnet/samples:aspnetapp
+    container_name: hello-world-2
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_HTTP_PORTS=8082
+      - ASPNETCORE_URLS=http://+:8082
+    restart: unless-stopped
+    networks:
+      - gateway-network
+
+  hello-world-3:
+    image: mcr.microsoft.com/dotnet/samples:aspnetapp
+    container_name: hello-world-3
+    ports:
+      - "8083:8083"
+    environment:
+      - ASPNETCORE_HTTP_PORTS=8083
+      - ASPNETCORE_URLS=http://+:8083
+    restart: unless-stopped
+    networks:
+      - gateway-network
+
+networks:
+  gateway-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  barsgroup-postgres:
