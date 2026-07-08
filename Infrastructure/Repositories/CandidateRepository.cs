@@ -17,6 +17,11 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
         return context.Candidates.AnyAsync(c => c.Email == email, cancellationToken);
     }
 
+    public Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return context.Candidates.AnyAsync(c => c.Id == id, cancellationToken);
+    }
+
     public Task<CandidateResponse?> GetByIdDetailedAsync(int id, CancellationToken cancellationToken)
     {
         return context.Candidates

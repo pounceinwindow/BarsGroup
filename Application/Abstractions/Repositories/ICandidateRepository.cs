@@ -9,5 +9,7 @@ public interface ICandidateRepository
 
     Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken);
 
+    Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken);
+
     Task<CandidateResponse?> GetByIdDetailedAsync(int id, CancellationToken cancellationToken);
 }
