@@ -1,5 +1,7 @@
 using Application.Abstractions.Repositories;
+using Application.Candidate.DTO;
 using Application.Interview.DTO;
+using Domain.Enums;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,12 +63,23 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<List<CandidateListUnit>?> GetFilteredCandidates()
+    public async Task<List<CandidateListUnit>?> GetFilteredCandidates(CandidateFilters filters)
     {
+        var candidates = context.Candidates.AsNoTracking();
 
-        return await context
-            .Candidates
-            .AsNoTracking()
+        if (filters.Status != CandidateStatus.All)
+        {
+            candidates = candidates
+                .Where(c => c.Status == filters.Status);
+        }
+
+        if (!string.IsNullOrEmpty(filters.Search))
+        {
+            candidates = candidates
+                .Where(c => c.FullName.Contains(filters.Search));
+        }
+
+        return await candidates
             .Select(c => new CandidateListUnit(
                 c.Id, 
                 c.FullName, 

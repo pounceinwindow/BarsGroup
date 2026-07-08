@@ -17,8 +17,8 @@ public class GetFilteredCandidatesHandler : IRequestHandler<GetFilteredCandidate
 
     public async Task<List<CandidateListUnit>> Handle(GetFilteredCandidatesQuery request, CancellationToken cancellationToken)
     {
-        // [TODO] - тут должна быть фильтрация
-        var candidate = await _candidates.GetFilteredCandidates();
+        var filters = request.Filters;
+        var candidate = await _candidates.GetFilteredCandidates(filters);
         return candidate;
     }
 }
