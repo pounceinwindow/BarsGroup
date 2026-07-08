@@ -61,7 +61,8 @@ public sealed class SpectrumDemoState
     };
 
     public string CurrentUserShort => ToShortName(CurrentUserName);
-    public bool CanEditProtocol => Role != DeciderRole;
+    public bool CanEditProtocol(DemoInterview interview) =>
+        Role != DeciderRole && interview.DbStatus == InterviewStatus.Scheduled;
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
     public IEnumerable<DemoInterview> RecentDecisions =>
@@ -166,14 +167,9 @@ public sealed class SpectrumDemoState
     public IEnumerable<DemoCompetency> CompetenciesForInterview(DemoInterview interview)
     {
         var vacancyCompetencyIds = Vacancies.FirstOrDefault(vacancy => vacancy.Id == interview.VacancyId)?.CompetencyIds ?? [];
-        var source = vacancyCompetencyIds.Count == 0
-            ? Competencies
-            : Competencies.Where(competency => vacancyCompetencyIds.Contains(competency.Id)).ToList();
-
-        return source
-            .Concat(Competencies.Where(competency => interview.Scores.ContainsKey(competency.Id)))
-            .DistinctBy(competency => competency.Id)
-            .Where(competency => competency.IsActive);
+        return Competencies
+            .Where(competency => vacancyCompetencyIds.Contains(competency.Id) && competency.IsActive)
+            .OrderBy(competency => competency.Id);
     }
 
     public IReadOnlyList<DemoCandidate> FilterCandidates(string search, string vacancyFilter, string statusFilter, bool onlyPending = false)
@@ -414,43 +410,10 @@ public sealed class SpectrumDemoState
 
     public void SetScore(DemoInterview interview, int competencyId, int score)
     {
-        score = Math.Clamp(score, 0, 5);
+        if (!CanEditProtocol(interview))
+            return;
 
-        _context.Database.ExecuteSqlInterpolated($"""
-            INSERT INTO "CompetencyMatrices" ("InterviewId", "CompetencyId", "Score", "Comment")
-            VALUES ({interview.DbId}, {competencyId}, {score}, NULL)
-            ON CONFLICT ("InterviewId", "CompetencyId")
-            DO UPDATE SET "Score" = EXCLUDED."Score";
-            """);
-
-        interview.Scores[competencyId] = score;
-    }
-
-    public void SaveProtocol(DemoInterview interview)
-    {
-        _context.Database.ExecuteSqlInterpolated($"""
-            UPDATE "Interviews"
-            SET "SummaryComment" = {NullIfWhiteSpace(interview.Comment)}
-            WHERE "Id" = {interview.DbId};
-            """);
-
-        var dbStatus = _context.Interviews
-            .AsNoTracking()
-            .Where(item => item.Id == interview.DbId)
-            .Select(item => item.Status)
-            .FirstOrDefault();
-
-        if (dbStatus == InterviewStatus.Scheduled && interview.Scores.Values.Any(score => score > 0))
-        {
-            var waiting = InterviewStatus.WaitingForVerdict.ToString();
-            _context.Database.ExecuteSqlInterpolated($"""
-                UPDATE "Interviews"
-                SET "Status" = {waiting}
-                WHERE "Id" = {interview.DbId};
-                """);
-        }
-
-        Reload();
+        interview.Scores[competencyId] = Math.Clamp(score, 0, 5);
     }
 
     public void SaveDecision(DemoInterview interview, string decision)
@@ -541,6 +504,7 @@ public sealed class SpectrumDemoState
     {
         Id = interview.Id.ToString(),
         DbId = interview.Id,
+        DbStatus = interview.Status,
         CandidateId = interview.CandidateId,
         VacancyId = interview.VacancyId,
         Vacancy = interview.Vacancy?.Name ?? $"Вакансия #{interview.VacancyId}",
@@ -752,6 +716,7 @@ public sealed class DemoInterview
 {
     public string Id { get; set; } = string.Empty;
     public int DbId { get; set; }
+    public InterviewStatus DbStatus { get; set; }
     public int CandidateId { get; set; }
     public int VacancyId { get; set; }
     public string Vacancy { get; set; } = string.Empty;

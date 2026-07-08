@@ -4,6 +4,12 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject IPdfDocumentService PdfService
+@inject IMediator Mediator
+
+@using Application.Exceptions
+@using Application.Interview.Commands.SubmitProtocol
+@using Application.Interview.DTO
+@using MediatR
 
 <PageTitle>Спектр — протокол собеседования</PageTitle>
 
@@ -47,8 +53,9 @@ else
                         var score = Score(competency);
                         <div class="matrix-row">
                             <span>@competency.Name</span>
-                            <DotScale Value="@score" Editable="@State.CanEditProtocol" OnChange="@(newScore => SetScore(competency, newScore))" />
+                            <DotScale Value="@score" Editable="@State.CanEditProtocol(Interview)" OnChange="@(newScore => SetScore(competency, newScore))" />
                             <strong class="mono">@(score == 0 ? "—" : score)/5</strong>
+                            @* [TODO: Артур] - форма для комментария по оценке *@
                         </div>
                     }
                 </div>
@@ -56,12 +63,12 @@ else
 
             <section class="comment-section">
                 <label for="comment">Комментарий по итогам</label>
-                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol)" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
+                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol(Interview))" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
             </section>
 
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(!State.CanEditProtocol)"><SvgIcon Name="check" Size="14" /> Сохранить протокол</button>
+                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(!State.CanEditProtocol(Interview) || IsSaving)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
                 <div class="decision-options">
                     @foreach (var option in State.DecisionOptions)
                     {
@@ -86,6 +93,7 @@ else
     [Parameter] public string InterviewId { get; set; } = string.Empty;
 
     private bool IsPdfDownloading;
+    private bool IsSaving;
     private string? ToastMessage;
 
     private DemoInterview? Interview => State.GetInterview(InterviewId);
@@ -101,17 +109,45 @@ else
 
     private void SetScore(DemoCompetency competency, int score)
     {
-        if (Interview is not null && State.CanEditProtocol)
+        if (Interview is not null && State.CanEditProtocol(Interview))
             State.SetScore(Interview, competency.Id, score);
     }
 
     private async Task SaveProtocol()
     {
-        if (Interview is null)
+        if (Interview is null || !State.CanEditProtocol(Interview))
             return;
 
-        State.SaveProtocol(Interview);
-        await ShowToast("Протокол сохранён в базе");
+        IsSaving = true;
+        try
+        {
+            var scores = State.CompetenciesForInterview(Interview)
+                .Select(competency => new CompetencyScoreInput(
+                    competency.Id,
+                    Score(competency),
+                    Interview.ScoreComments.GetValueOrDefault(competency.Id)))
+                .ToList();
+
+            await Mediator.Send(new SubmitProtocolCommand(
+                Interview.DbId,
+                string.IsNullOrWhiteSpace(Interview.Comment) ? null : Interview.Comment.Trim(),
+                scores));
+
+            State.Reload();
+            await ShowToast("Протокол сохранён");
+        }
+        catch (NotFoundException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        catch (ConflictException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
     }
 
     private async Task SetDecision(string decision)
