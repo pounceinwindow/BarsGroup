@@ -6,7 +6,7 @@ using MediatR;
 
 namespace Application.Interview.Commands.CreateCandidate;
 
-public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, Unit>
+public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, int>
 {
     private readonly ICandidateRepository _candidates;
     private readonly IUnitOfWork _unitOfWork;
@@ -17,9 +17,9 @@ public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, Un
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Unit> Handle(CreateCandidateCommand request, CancellationToken cancellationToken)
+    public async Task<int> Handle(CreateCandidateCommand request, CancellationToken cancellationToken)
     {
-        if (await _candidates.ExistsByEmailAsync(request.Email))
+        if (await _candidates.ExistsByEmailAsync(request.Email, cancellationToken))
         {
             throw new ConflictException("Candidate already exists.");
         }
@@ -34,9 +34,9 @@ public class CreateCandidateHandler : IRequestHandler<CreateCandidateCommand, Un
             request.PreviousWork,
             request.Skills);
 
-        _candidates.Add(candidate);
+        await _candidates.AddAsync(candidate, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return candidate.Id;
     }
 }

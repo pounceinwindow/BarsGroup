@@ -1,0 +1,78 @@
+@page "/dashboard"
+@layout MainLayout
+@inject SpectrumDemoState State
+@inject NavigationManager Navigation
+
+<PageTitle>Спектр — дашборд</PageTitle>
+
+<section class="page-content dashboard-page">
+    <div class="welcome-line">
+        <div>
+            <span class="eyebrow dark">Рабочий день · 08 июля 2026</span>
+            <h2>С возвращением, @State.CurrentUserName.Split(' ')[0]</h2>
+        </div>
+        <p>Вы вошли как «@State.Role»</p>
+    </div>
+
+    <div class="kpi-grid">
+        @foreach (var item in DashboardKpis)
+        {
+            <article class="kpi-card @item.Class">
+                <span>@item.Label</span>
+                <strong>@item.Value.ToString("00")</strong>
+                <i></i>
+            </article>
+        }
+    </div>
+
+    <div class="dashboard-grid">
+        <article class="panel competency-panel">
+            <div class="panel-heading">
+                <div><span class="eyebrow dark">Общий срез</span><h3>Профиль компетенций</h3></div>
+                <span class="panel-meta">по оценённым интервью</span>
+            </div>
+            <div class="competency-list">
+                @foreach (var competency in State.Competencies.Where(competency => competency.IsActive))
+                {
+                    var average = State.CompetencyAverage(competency.Name);
+                    <div class="competency-row">
+                        <span>@competency.Name</span>
+                        <div class="score-track"><i style="width: @(average / 5 * 100)%"></i></div>
+                        <strong>@(average > 0 ? average.ToString("0.0", CultureInfo.InvariantCulture) : "—")</strong>
+                    </div>
+                }
+            </div>
+        </article>
+
+        <article class="panel recent-panel">
+            <div class="panel-heading"><div><span class="eyebrow dark">Последние изменения</span><h3>Недавние решения</h3></div></div>
+            <div class="decision-list">
+                @foreach (var interview in State.RecentDecisions)
+                {
+                    var person = State.GetCandidateForInterview(interview);
+                    if (person is null)
+                    {
+                        continue;
+                    }
+
+                    <button class="decision-row" @onclick='() => Navigation.NavigateTo($"/candidates/{person.Id}")'>
+                        <Initials Name="@person.Name" Class="small" />
+                        <span><strong>@person.Name</strong><small>@interview.Vacancy</small></span>
+                        <StatusBadge Status="@interview.Status" />
+                    </button>
+                }
+            </div>
+            <button class="text-button" @onclick='() => Navigation.NavigateTo("/candidates")'>Открыть реестр <span>→</span></button>
+        </article>
+    </div>
+</section>
+
+@code {
+    private IEnumerable<(string Label, int Value, string Class)> DashboardKpis =>
+    [
+        ("Активные кандидаты", State.Candidates.Count(candidate => State.LatestStatus(candidate) is "Новый" or "Собеседование запланировано"), "accent-teal"),
+        ("На согласовании", State.PendingCount, "accent-amber"),
+        ("Принято", State.Candidates.Count(candidate => State.LatestStatus(candidate) == "Принят"), "accent-green"),
+        ("Всего в реестре", State.Candidates.Count, "accent-blue")
+    ];
+}

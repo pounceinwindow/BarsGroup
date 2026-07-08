@@ -1,7 +1,13 @@
 ﻿@page "/database"
 @rendermode InteractiveServer
+@using System.Text.Json
+@using Application.Exceptions
+@using Application.Interview.DTO
+@using Application.Interview.Queries.GetCandidate
 @using Infrastructure
+@using MediatR
 @inject BarsContext Db
+@inject ISender Sender
 
 <h3>DbPage</h3>
 
@@ -10,9 +16,39 @@
     <button @onclick="ClearAndSeed">Применить</button>
 </div>
 
+<hr />
+
+<div>
+    <p>GetCandidate</p>
+    <input type="number" @bind="CandidateId" />
+    <button @onclick="GetCandidate">Вызвать</button>
+    <p style="color:red">@Error</p>
+    <pre>@ResultJson</pre>
+</div>
+
 @code {
+    private int CandidateId = 1;
+    private string? ResultJson;
+    private string? Error;
+
     private async Task ClearAndSeed(MouseEventArgs args)
     {
         await Db.ClearAndSeed();
+    }
+
+    private async Task GetCandidate()
+    {
+        Error = null;
+        ResultJson = null;
+
+        try
+        {
+            CandidateResponse result = await Sender.Send(new GetCandidateQuery(CandidateId));
+            ResultJson = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch (NotFoundException ex)
+        {
+            Error = ex.Message;
+        }
     }
 }
