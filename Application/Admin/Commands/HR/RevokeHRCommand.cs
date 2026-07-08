@@ -41,7 +41,10 @@ namespace Application.Admin.Commands.HR
                 if (!(user.RevokedAt == null))
                     return Result.Failure(new DomainError("The user is already revoked"));
 
+                //Опять вопрос с уникальностью пары имя фамилия
                 await _userManager.RevokeHR($"{user.FirstName} {user.LastName}");
+
+                //Если тут или дальше упадет то несогласованность будет
 
                 await _repo.MarkRevokedAsync(user.Id);
 
