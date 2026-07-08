@@ -2,6 +2,7 @@ using Domain.Enums;
 using Domain.Models;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication1.Services;
 
@@ -763,14 +764,16 @@ public sealed class DemoUser
 
 public sealed class CandidateForm
 {
-    public string FullName { get; set; } = string.Empty;
-    public string City { get; set; } = "Казань";
-    public string Phone { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+    [Required] public string FullName { get; set; } = string.Empty;
+    [Required] public string City { get; set; } = "Казань";
+    [Required] public string Phone { get; set; } = string.Empty;
+    [Required] public string Email { get; set; } = string.Empty;
     public string Telegram { get; set; } = string.Empty;
     public string Education { get; set; } = string.Empty;
     public string Experience { get; set; } = string.Empty;
     public string Skills { get; set; } = string.Empty;
+
+    //[TODO:] - убрать вакансию
     public string Vacancy { get; set; } = string.Empty;
 }
 
