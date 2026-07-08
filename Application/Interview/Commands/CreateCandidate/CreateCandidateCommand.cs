@@ -10,4 +10,4 @@ public record CreateCandidateCommand(
     string City,
     string[] Education,
     string[] PreviousWork,
-    string[] Skills) : IRequest<Unit>;
+    string[] Skills) : IRequest<int>;
