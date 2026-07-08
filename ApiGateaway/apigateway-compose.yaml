@@ -7,11 +7,11 @@ services:
       dockerfile: APIGateaway.API/Dockerfile
     container_name: api_gateway
     ports:
-      - "5000:5000"
+      - "5005:5005"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=5000
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_HTTP_PORTS=5005
+      - ASPNETCORE_URLS=http://+:5005
       - ConnectionStrings__Redis=redis-cache:6379,password=SecretRedisPass123!,defaultDatabase=0
       - Keycloak__Authority=http://keycloak:8080/realms/hr-platform
       - Keycloak__ClientId=api-gateway

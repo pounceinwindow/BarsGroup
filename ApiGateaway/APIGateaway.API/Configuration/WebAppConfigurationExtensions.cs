@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +35,8 @@ namespace APIGateaway.API.Configuration
 
         private static IHostApplicationBuilder ConfigureAuthentication(this IHostApplicationBuilder app)
         {
+            app.Services.AddAuthorization();
+
             app.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -45,10 +47,16 @@ namespace APIGateaway.API.Configuration
                 options.Cookie.Name = "Gateway.Auth";
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 options.SlidingExpiration = true;
+
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
             })
             .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
@@ -94,8 +102,6 @@ namespace APIGateaway.API.Configuration
 
                     OnRedirectToIdentityProvider = context =>
                     {
-                        context.ProtocolMessage.RedirectUri =
-                            $"{context.Request.Scheme}://{context.Request.Host}{context.ProtocolMessage.RedirectUri}";
                         return Task.CompletedTask;
                     }
                 };

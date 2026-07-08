@@ -26,7 +26,7 @@
   "oauth2DeviceCodeLifespan": 600,
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "rememberMe": false,
@@ -655,10 +655,10 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "${API_GATEWAY_CLIENT_SECRET}",
       "redirectUris": [
-        "http://localhost:5000/signin-oidc"
+        "http://localhost:5005/signin-oidc"
       ],
       "webOrigins": [
-        "http://localhost:5000"
+        "http://localhost:5005"
       ],
       "notBefore": 0,
       "bearerOnly": false,
