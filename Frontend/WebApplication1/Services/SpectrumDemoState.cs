@@ -1,3 +1,4 @@
+using Application.Interview.DTO;
 using Domain.Enums;
 using Domain.Models;
 using Infrastructure;
@@ -62,7 +63,8 @@ public sealed class SpectrumDemoState
     };
 
     public string CurrentUserShort => ToShortName(CurrentUserName);
-    public bool CanEditProtocol => Role != DeciderRole;
+    public bool CanEditProtocol(DemoInterview interview) =>
+        Role != DeciderRole && interview.DbStatus == InterviewStatus.Scheduled;
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
     public IEnumerable<DemoInterview> RecentDecisions =>
@@ -167,14 +169,9 @@ public sealed class SpectrumDemoState
     public IEnumerable<DemoCompetency> CompetenciesForInterview(DemoInterview interview)
     {
         var vacancyCompetencyIds = Vacancies.FirstOrDefault(vacancy => vacancy.Id == interview.VacancyId)?.CompetencyIds ?? [];
-        var source = vacancyCompetencyIds.Count == 0
-            ? Competencies
-            : Competencies.Where(competency => vacancyCompetencyIds.Contains(competency.Id)).ToList();
-
-        return source
-            .Concat(Competencies.Where(competency => interview.Scores.ContainsKey(competency.Id)))
-            .DistinctBy(competency => competency.Id)
-            .Where(competency => competency.IsActive);
+        return Competencies
+            .Where(competency => vacancyCompetencyIds.Contains(competency.Id) && competency.IsActive)
+            .OrderBy(competency => competency.Id);
     }
 
     public IReadOnlyList<DemoCandidate> FilterCandidates(string search, string vacancyFilter, string statusFilter, bool onlyPending = false)
@@ -415,43 +412,10 @@ public sealed class SpectrumDemoState
 
     public void SetScore(DemoInterview interview, int competencyId, int score)
     {
-        score = Math.Clamp(score, 0, 5);
+        if (!CanEditProtocol(interview))
+            return;
 
-        _context.Database.ExecuteSqlInterpolated($"""
-            INSERT INTO "CompetencyMatrices" ("InterviewId", "CompetencyId", "Score", "Comment")
-            VALUES ({interview.DbId}, {competencyId}, {score}, NULL)
-            ON CONFLICT ("InterviewId", "CompetencyId")
-            DO UPDATE SET "Score" = EXCLUDED."Score";
-            """);
-
-        interview.Scores[competencyId] = score;
-    }
-
-    public void SaveProtocol(DemoInterview interview)
-    {
-        _context.Database.ExecuteSqlInterpolated($"""
-            UPDATE "Interviews"
-            SET "SummaryComment" = {NullIfWhiteSpace(interview.Comment)}
-            WHERE "Id" = {interview.DbId};
-            """);
-
-        var dbStatus = _context.Interviews
-            .AsNoTracking()
-            .Where(item => item.Id == interview.DbId)
-            .Select(item => item.Status)
-            .FirstOrDefault();
-
-        if (dbStatus == InterviewStatus.Scheduled && interview.Scores.Values.Any(score => score > 0))
-        {
-            var waiting = InterviewStatus.WaitingForVerdict.ToString();
-            _context.Database.ExecuteSqlInterpolated($"""
-                UPDATE "Interviews"
-                SET "Status" = {waiting}
-                WHERE "Id" = {interview.DbId};
-                """);
-        }
-
-        Reload();
+        interview.Scores[competencyId] = Math.Clamp(score, 0, 5);
     }
 
     public void SaveDecision(DemoInterview interview, string decision)
@@ -522,6 +486,46 @@ public sealed class SpectrumDemoState
 
     public static string DisplayDate(DateTime date) => date.ToString("dd.MM.yyyy");
 
+    public static string CandidateDisplayStatus(CandidateStatus status) => status switch
+    {
+        CandidateStatus.Hired => "Принят",
+        CandidateStatus.Archived => "Отклонён",
+        _ => "В поиске"
+    };
+
+    public static string InterviewDisplayStatus(InterviewResponse interview) =>
+        interview.Status switch
+        {
+            InterviewStatus.Scheduled => "Собеседование запланировано",
+            InterviewStatus.WaitingForVerdict => "На согласовании",
+            InterviewStatus.Canceled => "Отменён",
+            InterviewStatus.Completed => interview.Decision switch
+            {
+                DeciderVerdict.Hired => "Принять",
+                DeciderVerdict.NextStage => "Следующий этап",
+                DeciderVerdict.Rejected => "Отказать",
+                _ => "Согласовано"
+            },
+            _ => "Новый"
+        };
+
+    public static bool CanScheduleInterviewInProcess(
+        ApplicationProcessResponse process,
+        InterviewResponse interview)
+    {
+        if (process.Interviews.Count == 0)
+            return false;
+
+        var latest = process.Interviews.MaxBy(item => item.Date);
+        if (latest is null || interview.Id != latest.Id)
+            return false;
+
+        if (interview.Status == InterviewStatus.Canceled)
+            return true;
+
+        return interview.Decision == DeciderVerdict.NextStage;
+    }
+
     public static string MonthName(DateTime date) => date.Month switch
     {
         1 => "янв",
@@ -542,12 +546,13 @@ public sealed class SpectrumDemoState
     {
         Id = interview.Id.ToString(),
         DbId = interview.Id,
+        DbStatus = interview.Status,
         CandidateId = interview.CandidateId,
         VacancyId = interview.VacancyId,
         Vacancy = interview.Vacancy?.Name ?? $"Вакансия #{interview.VacancyId}",
         Date = interview.Date.Date,
         Time = interview.Date.ToString("HH:mm"),
-        Format = interview.Date > DateTime.Now ? "Онлайн" : "Очно",
+        Format = string.Empty,
         Hr = Users.FirstOrDefault(user => user.Role == HrRole)?.ShortName ?? "Елена П.",
         Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),
@@ -624,7 +629,7 @@ public sealed class SpectrumDemoState
         {
             InterviewStatus.Scheduled => "Собеседование запланировано",
             InterviewStatus.WaitingForVerdict => "На согласовании",
-            InterviewStatus.Canceled => "Отклонён",
+            InterviewStatus.Canceled => "Отменён",
             InterviewStatus.Completed => "На согласовании",
             _ => "Новый"
         }
@@ -753,6 +758,7 @@ public sealed class DemoInterview
 {
     public string Id { get; set; } = string.Empty;
     public int DbId { get; set; }
+    public InterviewStatus DbStatus { get; set; }
     public int CandidateId { get; set; }
     public int VacancyId { get; set; }
     public string Vacancy { get; set; } = string.Empty;
