@@ -15,7 +15,7 @@ public record CandidateResponse(
     CandidateStatus Status,
     IReadOnlyList<ApplicationProcessResponse> ApplicationProcesses);
 
-public record CandidateListUnit(
+public record CandidateDto(
     int Id,
     string FullName,
     string City,

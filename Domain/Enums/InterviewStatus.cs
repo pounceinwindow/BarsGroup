@@ -2,8 +2,9 @@ namespace Domain.Enums;
 
 public enum InterviewStatus
 {
-    Scheduled,
-    WaitingForVerdict,
-    Canceled,
-    Completed
+    All, // для фильтров
+    Scheduled, // Запланированный
+    WaitingForVerdict, // Ожидает решения
+    Canceled, // Отклонен
+    Completed // Завершен
 }

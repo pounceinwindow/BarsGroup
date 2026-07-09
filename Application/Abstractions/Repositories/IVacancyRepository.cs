@@ -1,3 +1,4 @@
+using Application.Vacancy;
 using Domain.Models;
 
 namespace Application.Abstractions.Repositories;
@@ -32,4 +33,6 @@ public interface IVacancyRepository
     /// Id компетенций из шаблона вакансии (VacancyCompetency).
     /// </summary>
     Task<IReadOnlyList<int>> GetCompetencyIdsAsync(int vacancyId, CancellationToken cancellationToken);
+
+    Task<List<VacancyDto>> GetAll();
 }

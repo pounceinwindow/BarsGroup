@@ -1,3 +1,4 @@
+using Application.Interview.DTO;
 using Domain.Models;
 
 namespace Application.Abstractions.Repositories;
@@ -30,5 +31,14 @@ public interface IInterviewRepository
     /// </summary>
     Task<bool> InterviewExistsAsync(int interviewId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Возрат всех интервью по фильтру
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>(Список, Количество элементов)</returns>
+    Task<(List<InterviewDto>, int)> GetFilteredInterviews(
+        InterviewFilters filters,
+        CancellationToken cancellationToken);
     Task AddVerdictAsync(Verdict verdict, CancellationToken cancellationToken);
 }
