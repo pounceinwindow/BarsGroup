@@ -67,7 +67,7 @@
         {
             <button class="registry-row" @onclick='() => Navigation.NavigateTo($"/candidates/{candidate.Id}")'>
                 <span class="candidate-cell"><Initials Name="@candidate.FullName" /><span><strong>@candidate.FullName</strong><small>@candidate.City · @candidate.Email</small></span></span>
-                <span data-label="Статус"><StatusBadge Status="@candidate.CandidateStatus.ToString()" /></span>
+                <span data-label="Статус"><StatusBadge Status="@SpectrumDemoState.CandidateDisplayStatus(candidate.CandidateStatus)" /></span>
                 <span data-label="Город">@candidate.City</span>
                 <span data-label="Почта">@candidate.Email</span>
             </button>
