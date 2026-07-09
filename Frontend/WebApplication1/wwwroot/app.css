@@ -83,7 +83,9 @@ h1, h2, h3, h4, p { margin: 0; }
 .nav-item.is-active, .nav-item.active { color: white; background: var(--ink-2); box-shadow: inset 2px 0 var(--teal-bright); }
 .nav-divider { margin: 18px 11px 8px; color: #5f7d99; font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
 .nav-counter { min-width: 20px; margin-left: auto; padding: 2px 6px; border-radius: 99px; color: var(--ink); background: var(--teal-bright); font-family: "IBM Plex Mono", monospace; font-size: 10px; text-align: center; }
-.sidebar-user { padding-top: 14px; border-top: 1px solid var(--ink-2); }
+.sidebar-user { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--ink-2); padding-right: 10px; }
+.logout-link { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 5px; color: #9db1c5; transition: color .15s, background .15s; }
+.logout-link:hover { color: white; background: rgba(255,255,255,.05); }
 .user-summary { display: flex; align-items: center; gap: 10px; padding: 0 10px 13px; }
 .user-summary strong, .user-summary span { display: block; }
 .user-summary strong { font-family: "Manrope", sans-serif; font-size: 12px; }

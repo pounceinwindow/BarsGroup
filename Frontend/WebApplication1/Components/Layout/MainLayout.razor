@@ -45,6 +45,9 @@
                             <span>@(context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Без роли")</span>
                         </div>
                     </div>
+                    <a href="/logout" class="logout-link" title="Выйти из системы">
+                        <SvgIcon Name="exit" Size="16" /> 
+                    </a>
                 </div>
             </aside>
 
@@ -69,9 +72,20 @@
     <NotAuthorized>
         <main class="login-panel auth-required-page">
             <section class="login-card panel">
-                <span class="eyebrow dark">Доступ закрыт</span>
-                <h2>Нет прав доступа</h2>
-                <p class="form-intro">Вы успешно авторизовались, но у вас нет ролей для работы в системе Спектр (требуется роль <b>hr</b>, <b>decider</b> или <b>hr_platform_admin</b>). Обратитесь к администратору.</p>
+                @if (context.User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="eyebrow dark">Доступ закрыт</span>
+                    <h2>Нет прав доступа</h2>
+                    <p class="form-intro">Вы успешно авторизовались, но у вас нет нужных ролей (требуется <b>hr</b>, <b>decider</b> или <b>hr_platform_admin</b>).</p>
+                    <a href="/logout" class="primary-button" style="text-decoration: none; text-align: center; display: block; margin-top: 1rem;">Сменить аккаунт</a>
+                }
+                else
+                {
+                    <span class="eyebrow dark">Авторизация</span>
+                    <h2>Требуется вход</h2>
+                    <p class="form-intro">Пожалуйста, войдите в систему.</p>
+                    <a href="/login" class="primary-button" style="text-decoration: none; text-align: center; display: block; margin-top: 1rem;">Войти</a>
+                }
             </section>
         </main>
     </NotAuthorized>

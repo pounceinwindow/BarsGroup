@@ -146,5 +146,29 @@ namespace APIGateaway.API.Configuration
 
             return app;
         }
+
+        public static WebApplication MapGatewayEndpoints(this WebApplication app)
+        {
+            app.MapGet("/login", () =>
+            {
+                return Results.Challenge(
+                    properties: new AuthenticationProperties { RedirectUri = "/" },
+                    authenticationSchemes: new[] { OpenIdConnectDefaults.AuthenticationScheme }
+                );
+            });
+
+            app.MapGet("/logout", () =>
+            {
+                return Results.SignOut(
+                    authenticationSchemes: new[] { 
+                        CookieAuthenticationDefaults.AuthenticationScheme, 
+                        OpenIdConnectDefaults.AuthenticationScheme 
+                    },
+                    properties: new AuthenticationProperties { RedirectUri = "/" }
+                );
+            });
+
+            return app;
+        }
     }
 }
