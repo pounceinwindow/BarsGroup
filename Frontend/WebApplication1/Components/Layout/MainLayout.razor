@@ -41,12 +41,12 @@
                     <div class="user-summary">
                         <Initials Name="@(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name)" Class="small inverse" />
                         <div>
-                            <strong>@(context.User.FindFirst(ClaimTypes.GivenName)?.Value) @(context.User.FindFirst(ClaimTypes.Surname)?.Value)</strong>
-                            <span>@(context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Без роли")</span>
+                            <strong>@(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name ?? "Пользователь") @(context.User.FindFirst(ClaimTypes.Surname)?.Value)</strong>
+                            <span>@GetDisplayRole(context.User)</span>
                         </div>
                     </div>
                     <a href="/logout" class="logout-link" title="Выйти из системы">
-                        <SvgIcon Name="exit" Size="16" /> 
+                        <SvgIcon Name="logout" Size="16" /> 
                     </a>
                 </div>
             </aside>
@@ -76,7 +76,7 @@
                 {
                     <span class="eyebrow dark">Доступ закрыт</span>
                     <h2>Нет прав доступа</h2>
-                    <p class="form-intro">Вы успешно авторизовались, но у вас нет нужных ролей (требуется <b>hr</b>, <b>decider</b> или <b>hr_platform_admin</b>).</p>
+                    <p class="form-intro">Вы успешно авторизовались, но у вас нет нужных ролей.</p>
                     <a href="/logout" class="primary-button" style="text-decoration: none; text-align: center; display: block; margin-top: 1rem;">Сменить аккаунт</a>
                 }
                 else
@@ -110,4 +110,15 @@
     };
 
     private void CloseMobileMenu() => MobileMenuOpen = false;
+
+    private string GetDisplayRole(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var roles = user.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+        
+        if (roles.Contains("hr_platform_admin")) return "Админ";
+        if (roles.Contains("decider")) return "Решала";
+        if (roles.Contains("hr")) return "Отдел кадров";
+            
+        return "Без роли";
+    }
 }

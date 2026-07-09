@@ -1752,7 +1752,7 @@
           "providerId" : "user-attribute-ldap-mapper",
           "subComponents" : { },
           "config" : {
-            "ldap.attribute" : [ "cn" ],
+            "ldap.attribute" : [ "givenName" ],
             "is.mandatory.in.ldap" : [ "true" ],
             "always.read.value.from.ldap" : [ "true" ],
             "read.only" : [ "true" ],

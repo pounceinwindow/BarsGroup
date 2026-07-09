@@ -16,7 +16,6 @@
                     <span class="eyebrow dark">Рабочий день · 08 июля 2026</span>
                     <h2>С возвращением, @(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name)</h2>
                 </div>
-                <p>Вы вошли как «@(context.User.FindFirst(ClaimTypes.Role)?.Value)»</p>
             </div>
 
     <div class="kpi-grid">
