@@ -11,6 +11,7 @@
 @using Application.Interview.Commands.SubmitProtocol
 @using Application.Interview.Commands.SubmitVerdict
 @using Application.Interview.DTO
+@using Application.PdfDocuments
 @using MediatR
 
 <PageTitle>Спектр — протокол собеседования</PageTitle>
@@ -28,7 +29,11 @@ else
             <button class="back-button" @onclick='() => Navigation.NavigateTo($"/candidates/{Candidate.Id}")'><SvgIcon Name="back" Size="16" /> К карточке кандидата</button>
             <div class="protocol-action-buttons">
                 <button class="secondary-button" @onclick="Print"><SvgIcon Name="print" Size="15" /> Печать</button>
-                <button class="secondary-button" @onclick="DownloadPdf" disabled="@IsPdfDownloading"><SvgIcon Name="download" Size="15" /> @(IsPdfDownloading ? "Формирование…" : "Скачать PDF")</button>
+                <button class="secondary-button" @onclick="DownloadPdf" disabled="@(IsPdfDownloading || IsLetterDownloading)"><SvgIcon Name="download" Size="15" /> @(IsPdfDownloading ? "Формирование…" : "Скачать PDF")</button>
+                @if (Interview.Decision == "Принять")
+                {
+                    <button class="secondary-button" @onclick="DownloadLetter" disabled="@(IsPdfDownloading || IsLetterDownloading)"><SvgIcon Name="download" Size="15" /> @(IsLetterDownloading ? "Формирование…" : "Скачать письмо")</button>
+                }
             </div>
         </div>
 
@@ -169,6 +174,7 @@ else
     [Parameter] public string InterviewId { get; set; } = string.Empty;
 
     private bool IsPdfDownloading;
+    private bool IsLetterDownloading;
     private bool IsSaving;
     private bool IsCanceling;
     private bool IsSubmittingVerdict;
@@ -309,27 +315,24 @@ else
         IsPdfDownloading = true;
         try
         {
-            var date = Interview.Date.Date;
+            var dateUtc = SpectrumDemoState.AsUtc(Interview.Date);
             if (TimeSpan.TryParse(Interview.Time, CultureInfo.InvariantCulture, out var time))
-                date = date.Add(time);
+                dateUtc = dateUtc.Date.Add(time);
 
             var model = new InterviewProtocolModel(
-                Candidate.Id,
                 Candidate.Name,
                 Interview.Vacancy,
-                date,
-                string.Empty,
+                dateUtc,
                 Interview.Hr,
-                Interview.Approver,
-                ToDocumentStatus(Interview.Status),
-                Interview.Comment,
-                ToDocumentDecision(Interview.Decision),
-                null,
+                string.IsNullOrWhiteSpace(Interview.Approver) ? null : Interview.Approver,
+                Interview.Status,
+                string.IsNullOrWhiteSpace(Interview.Comment) ? null : Interview.Comment.Trim(),
+                Interview.Decision,
+                string.IsNullOrWhiteSpace(Interview.VerdictComment) ? null : Interview.VerdictComment.Trim(),
                 State.CompetenciesForInterview(Interview).Select(competency => new CompetencyScoreModel(
                     competency.Name,
-                    null,
                     Score(competency),
-                    null)).ToList());
+                    Interview.ScoreComments.GetValueOrDefault(competency.Id))).ToList());
 
             var pdf = PdfService.CreateInterviewProtocol(model);
             await using var stream = new MemoryStream(pdf, writable: false);
@@ -350,6 +353,35 @@ else
         }
     }
 
+    private async Task DownloadLetter()
+    {
+        if (Candidate is null || Interview is null || Interview.Decision != "Принять" || IsLetterDownloading)
+            return;
+
+        IsLetterDownloading = true;
+        try
+        {
+            var pdf = PdfService.CreateApplicationLetter(
+                new ApplicationLetterModel(Candidate.Name, Interview.Vacancy),
+                LetterType.Invitation);
+            await using var stream = new MemoryStream(pdf, writable: false);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"letter-{Candidate.Id:0000}-{Interview.Id}.pdf",
+                streamReference);
+            await ShowToast("Письмо сформировано");
+        }
+        catch
+        {
+            await ShowToast("Не удалось сформировать письмо");
+        }
+        finally
+        {
+            IsLetterDownloading = false;
+        }
+    }
+
     private async Task ShowToast(string message)
     {
         ToastMessage = message;
@@ -364,25 +396,5 @@ else
         "Следующий этап" => "next",
         "Резерв" => "reserve",
         _ => "reject"
-    };
-
-    private static string ToDocumentStatus(string status) => status switch
-    {
-        "Новый" => DocumentStatuses.New,
-        "Собеседование запланировано" => DocumentStatuses.InterviewScheduled,
-        "На согласовании" => DocumentStatuses.PendingDecision,
-        "Принят" => DocumentStatuses.Accepted,
-        "Резерв" => DocumentStatuses.TalentPool,
-        "Отклонён" => DocumentStatuses.Rejected,
-        _ => status
-    };
-
-    private static string? ToDocumentDecision(string? decision) => decision switch
-    {
-        "Принять" => DocumentStatuses.Accepted,
-        "Следующий этап" => DocumentStatuses.NextStage,
-        "Резерв" => DocumentStatuses.TalentPool,
-        "Отказать" => DocumentStatuses.Rejected,
-        _ => decision
     };
 }
