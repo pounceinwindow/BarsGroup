@@ -1,9 +1,10 @@
-﻿using Application.Abstractions.Repositories;
-using DoctorSite.Application.Common;
+using Application.Abstractions.Repositories;
+using Application.Common;
+using Domain.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Application.Admin.Commands.Vacancy
+namespace Application.Admin.Command.Vacancy
 {
     public record DeleteVacancyCommand(
         int VacancyId) : IRequest<Result>;

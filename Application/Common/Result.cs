@@ -1,6 +1,6 @@
-﻿using Application.Common;
+using Application.Common;
 
-namespace DoctorSite.Application.Common
+namespace Application.Common
 {
     public class Result
     {

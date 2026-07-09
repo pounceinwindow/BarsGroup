@@ -1,4 +1,5 @@
 namespace Application.Abstractions.Repositories;
+using Domain.Models;
 
 public interface ICompetencyRepository
 {
@@ -8,4 +9,10 @@ public interface ICompetencyRepository
     Task<bool> AllCompetenciesExists(
         IReadOnlyCollection<int> competencyIds,
         CancellationToken cancellationToken);
+
+    Task AddAsync(Competency competence, CancellationToken cancellationToken);
+
+    Task DeleteByIdAsync(int id, CancellationToken cancellationToken);
+
+    Task<bool> ExistsAsync(string name, CancellationToken cancellationToken);
 }

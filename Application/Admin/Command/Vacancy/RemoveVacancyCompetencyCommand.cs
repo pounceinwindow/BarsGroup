@@ -1,28 +1,28 @@
-﻿using Application.Abstractions.Repositories;
-using DoctorSite.Application.Common;
+using Application.Abstractions.Repositories;
+using Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Application.Admin.Commands.Vacancy
+namespace Application.Admin.Command.Vacancy
 {
-    public record RemoveVacancyCompetentionCommand(
+    public record RemoveVacancyCompetencyCommand(
         int VacancyId,
         int CompetenceId) : IRequest<Result>;
 
-    internal class RemoveVacancyCompetentionCommandHandler : IRequestHandler<RemoveVacancyCompetentionCommand, Result>
+    internal class RemoveVacancyCompetencyCommandHandler : IRequestHandler<RemoveVacancyCompetencyCommand, Result>
     {
         private readonly IVacancyRepository _repo;
-        private readonly ILogger<RemoveVacancyCompetentionCommandHandler> _logger;
+        private readonly ILogger<RemoveVacancyCompetencyCommandHandler> _logger;
 
-        public RemoveVacancyCompetentionCommandHandler(
+        public RemoveVacancyCompetencyCommandHandler(
             IVacancyRepository repo,
-            ILogger<RemoveVacancyCompetentionCommandHandler> logger)
+            ILogger<RemoveVacancyCompetencyCommandHandler> logger)
         {
             _repo = repo;
             _logger = logger;
         }
 
-        public async Task<Result> Handle(RemoveVacancyCompetentionCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(RemoveVacancyCompetencyCommand request, CancellationToken cancellationToken)
         {
             try
             {

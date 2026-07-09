@@ -1,10 +1,10 @@
-﻿using Application.Abstractions.Repositories;
-using DoctorSite.Application.Common;
+using Application.Abstractions.Repositories;
+using Application.Common;
 using Domain.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Application.Admin.Commands.Competence
+namespace Application.Admin.Command.Competence
 {
     public record CreateCompetenceCommand(
         string CompetenceName,
@@ -12,26 +12,29 @@ namespace Application.Admin.Commands.Competence
 
     internal class CreateCompetenceCommandHandler : IRequestHandler<CreateCompetenceCommand, Result>
     {
-        private readonly ICompetentionRepository _repo;
+        private readonly ICompetencyRepository _repo;
         private readonly ILogger<CreateCompetenceCommandHandler> _logger;
 
         public CreateCompetenceCommandHandler(
-            ICompetentionRepository repo,
+            ICompetencyRepository repo,
             ILogger<CreateCompetenceCommandHandler> logger)
         {
-            _logger = logger;
             _repo = repo;
+            _logger = logger;
         }
 
         public async Task<Result> Handle(CreateCompetenceCommand request, CancellationToken cancellationToken)
         {
             try
             {
+                if (await _repo.ExistsAsync(request.CompetenceName, cancellationToken))
+                    return Result.Failure("The competence is already exist");
+
                 _logger.LogInformation("Trying to create competence {CompetenceName}", request.CompetenceName);
 
                 var competence = Competency.Create(request.CompetenceName, request.Description);
 
-                await _repo.AddAsync(competence);
+                await _repo.AddAsync(competence, cancellationToken);
 
                 return Result.Success();
             }

@@ -1,20 +1,20 @@
-﻿using Application.Abstractions.Repositories;
-using DoctorSite.Application.Common;
+using Application.Abstractions.Repositories;
+using Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Application.Admin.Commands.Competence
+namespace Application.Admin.Command.Competence
 {
     public record DeleteCompetenceCommand(
         int CompetenceId) : IRequest<Result>;
 
     internal class DeleteCompetenceCommandHandler : IRequestHandler<DeleteCompetenceCommand, Result>
     {
-        private readonly ICompetentionRepository _repo;
+        private readonly ICompetencyRepository _repo;
         private readonly ILogger<DeleteCompetenceCommandHandler> _logger;
 
         public DeleteCompetenceCommandHandler(
-            ICompetentionRepository repo,
+            ICompetencyRepository repo,
             ILogger<DeleteCompetenceCommandHandler> logger)
         {
             _repo = repo;
@@ -27,7 +27,7 @@ namespace Application.Admin.Commands.Competence
             {
                 _logger.LogInformation("Trying to delete competence {CompetenceId}", request.CompetenceId);
 
-                await _repo.DeleteByIdAsync(request.CompetenceId);
+                await _repo.DeleteByIdAsync(request.CompetenceId, cancellationToken);
 
                 return Result.Success();
             }
