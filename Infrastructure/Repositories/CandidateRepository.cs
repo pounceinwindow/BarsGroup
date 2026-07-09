@@ -63,30 +63,37 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<List<CandidateListUnit>?> GetFilteredCandidates(CandidateFilters filters)
+    public async Task<(List<CandidateListUnit> Items, int TotalCount)> GetFilteredCandidates(CandidateFilters filters)
     {
         var candidates = context.Candidates.AsNoTracking();
 
         if (filters.Status != CandidateStatus.All)
         {
-            candidates = candidates
-                .Where(c => c.Status == filters.Status);
+            candidates = candidates.Where(c => c.Status == filters.Status);
         }
 
         if (!string.IsNullOrEmpty(filters.Search))
         {
-            candidates = candidates
-                .Where(c => c.FullName.Contains(filters.Search));
+            candidates = candidates.Where(c => c.FullName.Contains(filters.Search));
         }
 
-        return await candidates
+        // Считаем общее количество отфильтрованных кандидатов
+        var totalCount = await candidates.CountAsync();
+
+        // Применяем пагинацию
+        var items = await candidates
+            .OrderBy(c => c.Id) // Сортировка обязательна для корректной работы Skip/Take
+            .Skip((filters.Page - 1) * filters.PageSize)
+            .Take(filters.PageSize)
             .Select(c => new CandidateListUnit(
-                c.Id, 
-                c.FullName, 
+                c.Id,
+                c.FullName,
                 c.City,
                 c.Email,
                 c.Status)
             )
             .ToListAsync();
+
+        return (items, totalCount);
     }
 }

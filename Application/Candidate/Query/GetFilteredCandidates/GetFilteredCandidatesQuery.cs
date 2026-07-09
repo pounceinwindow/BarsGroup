@@ -8,6 +8,5 @@ using System.Text;
 namespace Application.Candidate.Query.GetFilteredCandidates;
 
 public record GetFilteredCandidatesQuery(
-    CandidateFilters Filters) 
-    : IRequest<List<CandidateListUnit>>;
-
+    CandidateFilters Filters)
+    : IRequest<(List<CandidateListUnit> Items, int TotalCount)>;
