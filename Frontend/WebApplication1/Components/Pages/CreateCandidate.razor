@@ -23,17 +23,17 @@
             <div class="panel-heading"><div><span class="eyebrow dark">Новая карточка</span><h3>Создание кандидата</h3></div></div>
 
             <DataAnnotationsValidator/>
-            <ValidationSummary class="validation-summary"/>
+            <WebApplication1.Components.Shared.CustomValidation @ref="_customValidation" />
 
             <div class="form-grid">
-                <label class="span-2">ФИО<input @bind="Form.FullName" @bind:event="oninput" placeholder="Иванов Иван Иванович" /></label>
-                <label>Город<input @bind="Form.City" @bind:event="oninput" /></label>
-                <label>Телефон<input @bind="Form.Phone" @bind:event="oninput" placeholder="+7 900 000-00-00" /></label>
-                <label>Email<input @bind="Form.Email" @bind:event="oninput" placeholder="candidate@mail.ru" /></label>
-                <label>Telegram<input @bind="Form.Telegram" @bind:event="oninput" placeholder="@@candidate" /></label>
-                <label class="span-2">Образование<textarea @bind="Form.Education" @bind:event="oninput" placeholder="Вуз, направление, год"></textarea></label>
-                <label class="span-2">Предыдущий опыт<textarea @bind="Form.Experience" @bind:event="oninput" placeholder="Опишите релевантный опыт"></textarea></label>
-                <label class="span-2">Навыки<textarea @bind="Form.Skills" @bind:event="oninput" placeholder="C#, ASP.NET Core, SQL" /></label>
+                <label class="span-2">ФИО <ValidationMessage For="() => Form.FullName" /><input @bind="Form.FullName" @bind:event="oninput" placeholder="Иванов Иван Иванович" /></label>
+                <label>Город <ValidationMessage For="() => Form.City" /><input @bind="Form.City" @bind:event="oninput" /></label>
+                <label>Телефон <ValidationMessage For="() => Form.Phone" /><input @bind="Form.Phone" @bind:event="oninput" placeholder="+7 900 000-00-00" /></label>
+                <label>Email <ValidationMessage For="() => Form.Email" /><input @bind="Form.Email" @bind:event="oninput" placeholder="candidate@mail.ru" /></label>
+                <label>Telegram <ValidationMessage For="() => Form.Telegram" /><input @bind="Form.Telegram" @bind:event="oninput" placeholder="@@candidate" /></label>
+                <label class="span-2">Образование <ValidationMessage For="() => Form.Education" /><textarea @bind="Form.Education" @bind:event="oninput" placeholder="Вуз, направление, год"></textarea></label>
+                <label class="span-2">Предыдущий опыт <ValidationMessage For="() => Form.Experience" /><textarea @bind="Form.Experience" @bind:event="oninput" placeholder="Опишите релевантный опыт"></textarea></label>
+                <label class="span-2">Навыки <ValidationMessage For="() => Form.Skills" /><textarea @bind="Form.Skills" @bind:event="oninput" placeholder="C#, ASP.NET Core, SQL" /></label>
             </div>
 
             <div class="form-actions">
@@ -53,6 +53,8 @@
 @code {
     private CandidateForm Form { get; } = new();
 
+    private WebApplication1.Components.Shared.CustomValidation? _customValidation;
+
     protected override void OnInitialized()
     {
         Form.Vacancy = State.VacancyTitles.FirstOrDefault() ?? string.Empty;
@@ -60,20 +62,44 @@
 
     private async Task Create()
     {
-        var command = new CreateCandidateCommand
-        (
-            Form.FullName,
-            Form.Phone,
-            Form.Email,
-            string.IsNullOrWhiteSpace(Form.Telegram) ? null : Form.Telegram,
-            Form.City,
-            Form.Education.Split('\n'),
-            Form.Experience.Split('\n'),
-            Form.Skills.Split('\n')
-        );
+        _customValidation?.ClearErrors();
 
-        var candidateId = await _mediator.Send(command);
+        try
+        {
+            var command = new CreateCandidateCommand
+            (
+                Form.FullName,
+                Form.Phone,
+                Form.Email,
+                string.IsNullOrWhiteSpace(Form.Telegram) ? null : Form.Telegram,
+                Form.City,
+                Form.Education.Split('\n', StringSplitOptions.RemoveEmptyEntries),
+                Form.Experience.Split('\n', StringSplitOptions.RemoveEmptyEntries),
+                Form.Skills.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            );
 
-        Navigation.NavigateTo($"/candidates/{candidateId}");
+            var candidateId = await _mediator.Send(command);
+
+            Navigation.NavigateTo($"/candidates/{candidateId}");
+        }
+        catch (FluentValidation.ValidationException ex)
+        {
+            var errors = new Dictionary<string, IEnumerable<string>>();
+            foreach (var error in ex.Errors)
+            {
+                var propName = error.PropertyName;
+                // Map FluentValidation collection names to UI properties
+                if (propName.StartsWith("PreviousWork")) propName = "Experience";
+                else if (propName.StartsWith("Education")) propName = "Education";
+                else if (propName.StartsWith("Skills")) propName = "Skills";
+
+                if (!errors.ContainsKey(propName))
+                {
+                    errors[propName] = new List<string>();
+                }
+                ((List<string>)errors[propName]).Add(error.ErrorMessage);
+            }
+            _customValidation?.DisplayErrors(errors);
+        }
     }
 }

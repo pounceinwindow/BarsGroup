@@ -106,7 +106,12 @@
                     }
                     else if (FoundUsers.Any())
                     {
-                        <article class="panel admin-table">
+                        <style>
+                            .users-search-table .admin-head, .users-search-table .admin-row {
+                                grid-template-columns: minmax(0, 1fr) 130px 340px !important;
+                            }
+                        </style>
+                        <article class="panel admin-table users-search-table">
                             <div class="admin-head"><span>Найденный сотрудник</span><span>Логин</span><span>Действие</span></div>
                             @foreach (var user in FoundUsers)
                             {

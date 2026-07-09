@@ -1,0 +1,50 @@
+@using FluentValidation
+@inherits ErrorBoundary
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else if (CurrentException is ValidationException ve)
+{
+    <div class="page-content" style="padding: 2rem;">
+        <div class="panel form-card" style="border: 1px solid var(--red-300); max-width: 600px; margin: 0 auto;">
+            <div class="panel-heading">
+                <span class="eyebrow dark" style="color: var(--red-500);">Внимание</span>
+                <h3 style="color: var(--red-500);">Ошибка валидации данных</h3>
+            </div>
+            
+            <p>Вы ввели некорректные данные. Пожалуйста, исправьте следующие ошибки:</p>
+            
+            <ul style="color: var(--red-500); margin: 1.5rem 0; padding-left: 1.5rem; line-height: 1.6;">
+                @foreach (var error in ve.Errors)
+                {
+                    <li><b>@error.PropertyName</b>: @error.ErrorMessage</li>
+                }
+            </ul>
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                <button class="primary-button action-button" style="background: var(--red-500); border-color: var(--red-500);" @onclick="Recover">Понятно, вернуться</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="page-content" style="padding: 2rem;">
+        <div class="panel form-card" style="border: 1px solid var(--red-300); max-width: 600px; margin: 0 auto;">
+            <div class="panel-heading">
+                <span class="eyebrow dark" style="color: var(--red-500);">Системная ошибка</span>
+                <h3 style="color: var(--red-500);">Произошла непредвиденная ошибка</h3>
+            </div>
+            
+            <p class="muted" style="margin: 1rem 0; font-family: monospace; white-space: pre-wrap; font-size: 12px; max-height: 200px; overflow-y: auto; background: var(--gray-50); padding: 1rem; border-radius: 4px;">
+                @CurrentException.Message
+            </p>
+
+            <div class="form-actions" style="margin-top: 2rem;">
+                <button class="primary-button action-button" style="background: var(--red-500); border-color: var(--red-500);" @onclick="Recover">Попробовать снова</button>
+            </div>
+        </div>
+    </div>
+}

@@ -374,3 +374,10 @@ h1, h2, h3, h4, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+label .validation-message {
+    color: var(--red-500);
+    display: inline;
+    margin-left: 8px;
+    font-weight: normal;
+}
