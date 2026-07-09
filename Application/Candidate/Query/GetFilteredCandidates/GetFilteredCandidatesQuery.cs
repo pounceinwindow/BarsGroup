@@ -9,4 +9,4 @@ namespace Application.Candidate.Query.GetFilteredCandidates;
 
 public record GetFilteredCandidatesQuery(
     CandidateFilters Filters)
-    : IRequest<(List<CandidateListUnit> Items, int TotalCount)>;
+    : IRequest<(List<CandidateDto> Items, int TotalCount)>;

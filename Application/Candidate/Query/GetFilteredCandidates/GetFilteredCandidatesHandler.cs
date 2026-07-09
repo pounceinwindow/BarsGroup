@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Application.Candidate.Query.GetFilteredCandidates;
 
-public class GetFilteredCandidatesHandler : IRequestHandler<GetFilteredCandidatesQuery, (List<CandidateListUnit> Items, int TotalCount)>
+public class GetFilteredCandidatesHandler : IRequestHandler<GetFilteredCandidatesQuery, (List<CandidateDto> Items, int TotalCount)>
 {
     private readonly ICandidateRepository _candidates;
 
@@ -16,7 +16,7 @@ public class GetFilteredCandidatesHandler : IRequestHandler<GetFilteredCandidate
         _candidates = candidates;
     }
 
-    public async Task<(List<CandidateListUnit> Items, int TotalCount)> Handle(GetFilteredCandidatesQuery request, CancellationToken cancellationToken)
+    public async Task<(List<CandidateDto> Items, int TotalCount)> Handle(GetFilteredCandidatesQuery request, CancellationToken cancellationToken)
     {
         return await _candidates.GetFilteredCandidates(request.Filters);
     }

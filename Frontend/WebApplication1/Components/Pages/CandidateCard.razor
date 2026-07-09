@@ -3,10 +3,13 @@
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
 @inject IMediator Mediator
+@inject IPdfDocumentService PdfService
+@inject IJSRuntime JS
 
 @using Application.Exceptions
 @using Application.Interview.DTO
 @using Application.Interview.Queries.GetCandidate
+@using Application.PdfDocuments
 @using MediatR
 
 <PageTitle>Спектр — карточка кандидата</PageTitle>
@@ -26,7 +29,12 @@ else if (Candidate is null)
 else
 {
     <section class="page-content candidate-page">
-        <button class="back-button" @onclick='() => Navigation.NavigateTo("/candidates")'><SvgIcon Name="back" Size="16" /> К реестру</button>
+        <div class="protocol-actions">
+            <button class="back-button" @onclick='() => Navigation.NavigateTo("/candidates")'><SvgIcon Name="back" Size="16" /> К реестру</button>
+            <div class="protocol-action-buttons">
+                <button class="secondary-button" @onclick="DownloadPdf" disabled="@IsPdfDownloading"><SvgIcon Name="download" Size="15" /> @(IsPdfDownloading ? "Формирование…" : "Скачать PDF")</button>
+            </div>
+        </div>
 
         <article class="candidate-hero panel">
             <div class="candidate-heading">
@@ -94,6 +102,7 @@ else
 
     private CandidateResponse? Candidate;
     private bool _loaded;
+    private bool IsPdfDownloading;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -120,4 +129,47 @@ else
 
     private void ScheduleNextStage(ApplicationProcessResponse process) =>
         Navigation.NavigateTo($"/candidates/{CandidateId}/interviews/new?processId={process.ProcessId}&vacancyId={process.VacancyId}");
+
+    private async Task DownloadPdf()
+    {
+        if (Candidate is null || IsPdfDownloading)
+            return;
+
+        IsPdfDownloading = true;
+        try
+        {
+            var model = new CandidateCardModel(
+                Candidate.Id,
+                Candidate.FullName,
+                Candidate.Phone,
+                Candidate.Email,
+                Candidate.City,
+                Candidate.Telegram,
+                JoinItems(Candidate.Education),
+                JoinItems(Candidate.PreviousWork),
+                Candidate.Skills,
+                SpectrumDemoState.CandidateDisplayStatus(Candidate.Status),
+                Candidate.ApplicationProcesses
+                    .Select(process => new ApplicationProcessPdfModel(
+                        process.VacancyName,
+                        process.Interviews
+                            .Select(interview => new ProcessInterviewPdfModel(
+                                SpectrumDemoState.AsUtc(interview.Date),
+                                SpectrumDemoState.InterviewDisplayStatus(interview)))
+                            .ToList()))
+                    .ToList());
+
+            var pdf = PdfService.CreateCandidateCard(model);
+            await using var stream = new MemoryStream(pdf, writable: false);
+            using var streamReference = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync(
+                "downloadFileFromStream",
+                $"candidate-{Candidate.Id:0000}.pdf",
+                streamReference);
+        }
+        finally
+        {
+            IsPdfDownloading = false;
+        }
+    }
 }

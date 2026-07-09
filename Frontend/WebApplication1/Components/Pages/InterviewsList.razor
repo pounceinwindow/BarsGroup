@@ -1,40 +1,52 @@
-@page "/candidates"
-@page "/decisions"
+@page "/interviews"
 @layout MainLayout
 
 @using Application.Interview.DTO
-@using MediatR
-@using Application.Candidate.Query.GetFilteredCandidates
+@using Application.Vacancy
 @using Domain.Enums
-@using Application.Candidate.DTO
+@using MediatR
+@using Application.Interview.Queries.GetFIlteredInterviws
+@using Application.Vacancy.Query.GetAllVacancy
 
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
 @inject IMediator _mediator
 
+<PageTitle>Спектр — реестр собеседований</PageTitle>
+
 <section class="page-content registry-page">
     <div class="page-heading-row">
-        <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/candidates/new")'>
-            <SvgIcon Name="plus" Size="15" /> Новый кандидат
-        </button>
+        <div>
+            <span class="eyebrow dark">Собеседования</span>
+            <h2>Реестр собесов</h2>
+        </div>
     </div>
 
     <div class="registry-toolbar">
         <div class="filter-group">
             <label>
                 Поиск
-                <input class="filter-input" @bind="Filters.Search"
-                       @bind:after="ApplyFilters" placeholder="ФИО" />
+                <input class="filter-input" @bind="Filters.Search" @bind:after="ApplyFilters" placeholder="Кандидат" />
             </label>
             <label>
                 Статус
                 <select @bind="Filters.Status" @bind:after="ApplyFilters">
-                    @foreach (var status in Enum.GetValues<CandidateStatus>())
-                    {
+                    @foreach (var status in Enum.GetValues<InterviewStatus>()) 
+                    { 
                         <option value="@status">@status</option>
                     }
                 </select>
             </label>
+            <label>
+                Вакансия
+                <select @bind="Filters.Vacancy" @bind:after="ApplyFilters">
+                    <option value="">Все</option>
+                    @foreach (var vacancy in Vacancies)
+                    {
+                        <option value="@vacancy.Name">@vacancy.Name</option>
+                    }
+                </select>
+             </label>
 
             <button class="secondary-button" @onclick="ResetFilters">Сбросить фильтры</button>
         </div>
@@ -43,21 +55,21 @@
     </div>
 
     <div class="registry-table panel">
-        <div class="registry-head"><span>Кандидат</span><span>Статус</span><span>Город</span> <span>Почта</span></div>
-        @if (Candidates.Count == 0)
+        <div class="registry-head interview-head"><span>Кандидат</span><span>Вакансия</span><span>Статус</span><span>Дата/время</span></div>
+        @if (Interviews.Count == 0)
         {
             <div class="empty-state">
                 <strong>Кандидаты не найдены</strong>
                 <span>Измените запрос или сбросьте фильтры.</span>
             </div>
         }
-        @foreach (var candidate in Candidates)
+        @foreach (var interview in Interviews)
         {
-            <button class="registry-row" @onclick='() => Navigation.NavigateTo($"/candidates/{candidate.Id}")'>
-                <span class="candidate-cell"><Initials Name="@candidate.FullName" /><span><strong>@candidate.FullName</strong><small>@candidate.City · @candidate.Email</small></span></span>
-                <span data-label="Статус"><StatusBadge Status="@SpectrumDemoState.CandidateDisplayStatus(candidate.CandidateStatus)" /></span>
-                <span data-label="Город">@candidate.City</span>
-                <span data-label="Почта">@candidate.Email</span>
+            <button class="registry-row interview-row" @onclick='() => Navigation.NavigateTo($"/interviews/{interview.Id}/protocol")'>
+                <span class="candidate-cell"><Initials Name="@(interview.Candidate ?? "Кандидат")" /><span><strong>@(interview.Candidate ?? "Кандидат удалён")</strong><small>@interview.Status.ToString()</small></span></span>
+                <span data-label="Вакансия">@interview.Vacancy</span>
+                <span data-label="Статус"><StatusTitle Status="@interview.Status.ToString()"/></span>
+                <span data-label="Дата" class="mono">@interview.Date</span>
             </button>
         }
     </div>
@@ -74,45 +86,47 @@
 </section>
 
 @code {
-    private List<CandidateDto> Candidates = new();
+    private List<InterviewDto> Interviews = new();
     private int TotalCount = 0;
+    private List<VacancyDto> Vacancies = new();
 
     // Вычисляемое свойство для общего количества страниц
     private int TotalPages => TotalCount == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)Filters.PageSize);
 
     // Инициализируем фильтры с дефолтными значениями страницы
-    private readonly CandidateFilters Filters = new() { Page = 1, PageSize = 10 };
+    private readonly InterviewFilters Filters = new() { Page = 1, PageSize = 10 };
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCandidates();
+        await LoadInrerviews();
+        Vacancies = await _mediator.Send(new GetAllVacancyQuery());
     }
 
-    private async Task LoadCandidates()
+    private async Task LoadInrerviews()
     {
-        var result = await _mediator.Send(new GetFilteredCandidatesQuery(Filters));
-        Candidates = result.Items;
-        TotalCount = result.TotalCount;
+        var (items, count) = await _mediator.Send(new GetFilteredInterviewsQuery(Filters));
+        Interviews = items;
+        TotalCount = count;
     }
 
     private async Task ApplyFilters()
     {
         Filters.Page = 1; // При изменении фильтров всегда возвращаемся на первую страницу
-        await LoadCandidates();
+        await LoadInrerviews();
     }
 
     private async Task ResetFilters()
     {
         Filters.Search = string.Empty;
-        Filters.Status = CandidateStatus.All;
+        Filters.Status = InterviewStatus.All;
         Filters.Page = 1;
-        await LoadCandidates();
+        await LoadInrerviews();
     }
 
     private async Task GoToPage(int page)
     {
         if (page < 1 || page > TotalPages) return;
         Filters.Page = page;
-        await LoadCandidates();
+        await LoadInrerviews();
     }
 }

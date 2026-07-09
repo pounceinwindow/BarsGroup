@@ -20,15 +20,19 @@ internal sealed class PdfDocumentService : IPdfDocumentService
             page.Content().PaddingVertical(18).Column(column =>
             {
                 column.Spacing(14);
-                column.Item().Element(container => Metadata(container,
-                [
+
+                var metadata = new List<(string Label, string Value)>
+                {
                     ("Кандидат", interview.CandidateName),
-                    ("Дата и время", interview.Date.ToString("dd.MM.yyyy HH:mm")),
-                    ("Формат", interview.Format),
+                    ("Дата и время (UTC)", interview.DateUtc.ToString("dd.MM.yyyy HH:mm")),
                     ("HR", interview.Hr),
-                    ("Согласующий", interview.DecisionMaker),
-                    ("Статус", StatusLabel(interview.Status))
-                ]));
+                    ("Статус", interview.Status)
+                };
+
+                if (!string.IsNullOrWhiteSpace(interview.Approver))
+                    metadata.Add(("Согласующий", interview.Approver));
+
+                column.Item().Element(container => Metadata(container, metadata));
 
                 column.Item().Text("Матрица компетенций").FontSize(15).SemiBold().FontColor(Ink);
                 column.Item().Table(table =>
@@ -47,21 +51,14 @@ internal sealed class PdfDocumentService : IPdfDocumentService
                     });
                     foreach (var competency in interview.Competencies)
                     {
-                        Cell(table.Cell()).Column(c =>
-                        {
-                            c.Item().Text(competency.Name).SemiBold();
-                            if (!string.IsNullOrWhiteSpace(competency.Description))
-                                c.Item().Text(competency.Description).FontSize(8).FontColor(Colors.Grey.Darken1);
-                        });
-                        Cell(table.Cell()).AlignCenter().Text($"{competency.Score}/5").FontColor(Teal).SemiBold();
-                        Cell(table.Cell()).Text(competency.Comment ?? "—");
+                        Cell(table.Cell()).Text(competency.Name).SemiBold();
+                        Cell(table.Cell()).AlignCenter().Text(competency.Score == 0 ? "—" : $"{competency.Score}/5").FontColor(Teal).SemiBold();
+                        Cell(table.Cell()).Text(string.IsNullOrWhiteSpace(competency.Comment) ? "—" : competency.Comment);
                     }
                 });
 
                 column.Item().Element(container => Note(container, "Комментарий HR", interview.HrComment));
-                column.Item().Element(container => Note(container, "Решение", interview.Decision is null
-                    ? "Решение не принято"
-                    : $"{DecisionLabel(interview.Decision)}. {interview.DecisionComment}"));
+                column.Item().Element(container => Note(container, "Решение", FormatDecision(interview.Decision, interview.VerdictComment)));
             });
             page.Footer().Element(Footer);
         })).GeneratePdf();
@@ -77,40 +74,53 @@ internal sealed class PdfDocumentService : IPdfDocumentService
                 column.Item().Element(container => Metadata(container,
                 [
                     ("Телефон", candidate.Phone),
-                    ("Email", candidate.Email ?? "—"),
+                    ("Email", candidate.Email),
                     ("Город", candidate.City),
                     ("Telegram", candidate.Telegram ?? "—"),
-                    ("Образование", candidate.Education ?? "—"),
-                    ("Дата создания", candidate.CreatedAt.ToString("dd.MM.yyyy"))
+                    ("Статус", candidate.Status),
+                    ("№", candidate.Id.ToString("0000"))
                 ]));
+                column.Item().Element(container => Note(container, "Образование", candidate.Education));
                 column.Item().Element(container => Note(container, "Опыт работы", candidate.PreviousWork));
+
+                if (candidate.Skills.Count > 0)
+                {
+                    column.Item().Text("Навыки").FontSize(15).SemiBold().FontColor(Ink);
+                    column.Item().Text(string.Join(" · ", candidate.Skills)).FontSize(9).LineHeight(1.4f);
+                }
+
                 column.Item().Text("Отклики и собеседования").FontSize(15).SemiBold().FontColor(Ink);
-                foreach (var application in candidate.Applications)
+                if (candidate.Processes.Count == 0)
+                {
+                    column.Item().Text("Откликов пока нет").FontSize(9).FontColor(Colors.Grey.Darken1);
+                }
+
+                foreach (var process in candidate.Processes)
                 {
                     column.Item().Border(1).BorderColor(Line).Padding(12).Column(card =>
                     {
-                        card.Item().Row(row =>
+                        card.Item().Text(process.VacancyName).SemiBold().FontColor(Ink);
+                        foreach (var item in process.Interviews)
                         {
-                            row.RelativeItem().Text(application.Vacancy).SemiBold().FontColor(Ink);
-                            row.AutoItem().Text(StatusLabel(application.Status)).FontColor(Teal).SemiBold();
-                        });
-                        card.Item().PaddingTop(5).Text($"Дата отклика: {application.AppliedAt:dd.MM.yyyy}").FontSize(9);
-                        card.Item().Text($"Собеседований: {application.Interviews.Count}").FontSize(9);
-                        if (!string.IsNullOrWhiteSpace(application.HrComment))
-                            card.Item().PaddingTop(5).Text(application.HrComment).FontSize(9);
+                            card.Item().PaddingTop(6).Row(row =>
+                            {
+                                row.RelativeItem().Text($"{item.DateUtc:dd.MM.yyyy HH:mm} (UTC)").FontSize(9);
+                                row.AutoItem().Text(item.Status).FontColor(Teal).SemiBold().FontSize(9);
+                            });
+                        }
                     });
                 }
             });
             page.Footer().Element(Footer);
         })).GeneratePdf();
 
-    public byte[] CreateApplicationLetter(CandidateCardModel candidate, CandidateApplicationModel application, LetterType type)
+    public byte[] CreateApplicationLetter(ApplicationLetterModel letter, LetterType type)
     {
         var invitation = type == LetterType.Invitation;
         var title = invitation ? "Приглашение" : "Уведомление по отклику";
         var body = invitation
-            ? $"Приглашаем вас продолжить процесс отбора на вакансию «{application.Vacancy}». Представитель отдела кадров свяжется с вами для согласования даты и формата следующего этапа."
-            : $"Благодарим за интерес к вакансии «{application.Vacancy}». По результатам рассмотрения мы не готовы продолжить процесс отбора по этому отклику.";
+            ? $"Приглашаем вас продолжить процесс отбора на вакансию «{letter.Vacancy}». Представитель отдела кадров свяжется с вами для согласования даты и формата следующего этапа."
+            : $"Благодарим за интерес к вакансии «{letter.Vacancy}». По результатам рассмотрения мы не готовы продолжить процесс отбора по этому отклику.";
 
         return Document.Create(document => document.Page(page =>
         {
@@ -119,12 +129,22 @@ internal sealed class PdfDocumentService : IPdfDocumentService
             page.Content().PaddingVertical(28).Column(column =>
             {
                 column.Spacing(18);
-                column.Item().Text($"Здравствуйте, {candidate.FullName}!").FontSize(16).SemiBold().FontColor(Ink);
+                column.Item().Text($"Здравствуйте, {letter.CandidateName}!").FontSize(16).SemiBold().FontColor(Ink);
                 column.Item().Text(body).FontSize(11).LineHeight(1.5f);
                 column.Item().PaddingTop(18).Text("С уважением,\nкоманда по подбору персонала").FontSize(10);
             });
             page.Footer().Element(Footer);
         })).GeneratePdf();
+    }
+
+    private static string FormatDecision(string? decision, string? verdictComment)
+    {
+        if (string.IsNullOrWhiteSpace(decision))
+            return "Решение не принято";
+
+        return string.IsNullOrWhiteSpace(verdictComment)
+            ? decision
+            : $"{decision}. {verdictComment}";
     }
 
     private static void ConfigurePage(PageDescriptor page)
@@ -181,28 +201,4 @@ internal sealed class PdfDocumentService : IPdfDocumentService
         text.Span(" / ");
         text.TotalPages();
     });
-
-    private static string StatusLabel(string status) => status switch
-    {
-        DocumentStatuses.New => "Новый",
-        DocumentStatuses.Reviewed => "Рассмотрен",
-        DocumentStatuses.InterviewScheduled => "Собеседование запланировано",
-        DocumentStatuses.InterviewCompleted => "Собеседование завершено",
-        DocumentStatuses.PendingDecision => "На согласовании",
-        DocumentStatuses.Accepted => "Принят",
-        DocumentStatuses.NextStage => "Следующий этап",
-        DocumentStatuses.TalentPool => "Кадровый резерв",
-        DocumentStatuses.Rejected => "Отклонён",
-        DocumentStatuses.Archived => "Архив",
-        _ => status
-    };
-
-    private static string DecisionLabel(string decision) => decision switch
-    {
-        DocumentStatuses.Accepted => "Принять",
-        DocumentStatuses.NextStage => "Следующий этап",
-        DocumentStatuses.TalentPool => "Кадровый резерв",
-        DocumentStatuses.Rejected => "Отказать",
-        _ => decision
-    };
 }
