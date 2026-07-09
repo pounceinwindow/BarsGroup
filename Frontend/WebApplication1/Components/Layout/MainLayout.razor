@@ -23,11 +23,6 @@
                         <NavLink class="nav-item" href="/candidates/new" @onclick="CloseMobileMenu">
                             <SvgIcon Name="plus" /> <span>Создать кандидата</span>
                         </NavLink>
-                        <AuthorizeView Roles="decider" Context="deciderContext">
-                            <NavLink class="nav-item" href="/decisions" @onclick="CloseMobileMenu">
-                                <SvgIcon Name="checklist" /> <span>На согласовании</span><span class="nav-counter">@State.PendingCount</span>
-                            </NavLink>
-                        </AuthorizeView>
                         <AuthorizeView Roles="hr_platform_admin" Context="adminContext">
                             <div class="nav-divider">Админ</div>
                             <NavLink class="nav-item" href="/admin" @onclick="CloseMobileMenu">
