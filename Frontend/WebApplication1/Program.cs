@@ -8,6 +8,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Components;
 using WebApplication1.Services;
+using WebApplication1.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,41 +22,8 @@ builder.Services.AddScoped<SpectrumDemoState>();
 // База данных
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = builder.Configuration["Keycloak:Authority"] ?? "http://keycloak:8080/realms/hr-platform";
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateAudience = false,
-            NameClaimType = "preferred_username"
-        };
-        options.Events = new JwtBearerEvents
-        {
-            OnTokenValidated = async context =>
-            {
-                var db = context.HttpContext.RequestServices.GetRequiredService<BarsContext>();
-                var username = context.Principal?.Identity?.Name;
-                if (!string.IsNullOrEmpty(username))
-                {
-                    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
-                    if (user == null)
-                    {
-                        var firstName = context.Principal?.FindFirstValue(ClaimTypes.GivenName) ?? username;
-                        var lastName = context.Principal?.FindFirstValue(ClaimTypes.Surname) ?? "Сотрудник";
-                        
-                        var role = UserRole.HR; // Дефолтная роль
-                        var newUser = User.Create(username, firstName, lastName, null, role, DateOnly.FromDateTime(DateTime.UtcNow));
-                        db.Users.Add(newUser);
-                        await db.SaveChangesAsync();
-                    }
-                }
-            }
-        };
-    });
-builder.Services.AddAuthorization();
-builder.Services.AddCascadingAuthenticationState();
+// Аутентификация
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
 
 var app = builder.Build();
 

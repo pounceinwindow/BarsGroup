@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Application.Abstractions;
+using Application.Admin.DTO;
 using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Identity;

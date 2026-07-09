@@ -2,7 +2,11 @@
 @layout MainLayout
 @using Application.Abstractions
 @using Microsoft.AspNetCore.Authorization
-@inject IIdentityService IdentityService
+@using MediatR
+@using Application.Admin.Query.SearchUsers
+@using Application.Admin.Command.AssignRole
+@using Application.Admin.DTO
+@inject IMediator _mediator
 
 <PageTitle>Спектр — Управление пользователями</PageTitle>
 
@@ -89,7 +93,7 @@
 
         try
         {
-            FoundUsers = await IdentityService.SearchUsersAsync(SearchQuery);
+            FoundUsers = await _mediator.Send(new SearchUsersQuery(SearchQuery));
             foreach (var u in FoundUsers)
             {
                 SelectedRoles.TryAdd(u.Username, "");
@@ -114,7 +118,7 @@
 
         try
         {
-            await IdentityService.AssignRoleAsync(username, role);
+            await _mediator.Send(new AssignRoleCommand(username, role));
             Message = $"Успех! Сотруднику {username} выдана роль '{role}'.";
             IsError = false;
         }
