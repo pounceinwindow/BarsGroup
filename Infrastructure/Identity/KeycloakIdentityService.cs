@@ -92,7 +92,55 @@ public class KeycloakIdentityService : IIdentityService
         var assignResponse = await _httpClient.SendAsync(assignRequest);
         assignResponse.EnsureSuccessStatusCode();
     }
+    public async Task<IdentityUserDto?> GetUserAsync(string username)
+    {
+        var token = await GetAdminTokenAsync();
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/admin/realms/{_realm}/users?username={username}&exact=true");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var users = await response.Content.ReadFromJsonAsync<List<KeycloakUserDto>>();
+        var user = users?.FirstOrDefault();
+
+        if (user == null) return null;
+
+        return new IdentityUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            FirstName = user.FirstName ?? "",
+            LastName = user.LastName ?? ""
+        };
+    }
+
+    public async Task RevokeRolesAsync(string username)
+    {
+        var token = await GetAdminTokenAsync();
+
+        var userRequest = new HttpRequestMessage(HttpMethod.Get, $"/admin/realms/{_realm}/users?username={username}&exact=true");
+        userRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var userResponse = await _httpClient.SendAsync(userRequest);
+        userResponse.EnsureSuccessStatusCode();
+        var users = await userResponse.Content.ReadFromJsonAsync<List<KeycloakUserDto>>();
+        var user = users?.FirstOrDefault();
+        if (user == null) return;
+
+        // Get assigned realm roles
+        var rolesRequest = new HttpRequestMessage(HttpMethod.Get, $"/admin/realms/{_realm}/users/{user.Id}/role-mappings/realm");
+        rolesRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var rolesResponse = await _httpClient.SendAsync(rolesRequest);
+        rolesResponse.EnsureSuccessStatusCode();
+        var roles = await rolesResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Remove them
+        var removeRequest = new HttpRequestMessage(HttpMethod.Delete, $"/admin/realms/{_realm}/users/{user.Id}/role-mappings/realm");
+        removeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        removeRequest.Content = JsonContent.Create(roles);
+        var removeResponse = await _httpClient.SendAsync(removeRequest);
+        removeResponse.EnsureSuccessStatusCode();
+    }
     private class KeycloakUserDto
     {
         [JsonPropertyName("id")] public string Id { get; set; } = null!;

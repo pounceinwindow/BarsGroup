@@ -56,20 +56,31 @@ public static class AuthenticationExtensions
                                 }
                             }
 
+                            var dbRole = UserRole.HR;
+                            if (identity != null && identity.HasClaim(ClaimTypes.Role, "hr_platform_admin")) dbRole = UserRole.Admin;
+                            else if (identity != null && identity.HasClaim(ClaimTypes.Role, "decider")) dbRole = UserRole.Decider;
+
                             var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
-                            if (user == null)
+                            if (user == null && dbRole == UserRole.Admin)
                             {
                                 var firstName = context.Principal?.FindFirstValue(ClaimTypes.GivenName) ?? username;
                                 var lastName = context.Principal?.FindFirstValue(ClaimTypes.Surname) ?? "Сотрудник";
                                 
-                                var role = UserRole.HR; // Дефолтная роль
-                                user = User.Create(username, firstName, lastName, null, role, DateOnly.FromDateTime(DateTime.UtcNow));
+                                user = User.Create(username, firstName, lastName, null, dbRole, DateOnly.FromDateTime(DateTime.UtcNow));
                                 db.Users.Add(user);
                                 await db.SaveChangesAsync();
                             }
+                            else if (user != null && user.Role != dbRole)
+                            {
+                                user.UpdateRole(dbRole);
+                                await db.SaveChangesAsync();
+                            }
 
-                            // Добавляем ID из базы как клейм, чтобы Blazor мог его использовать
-                            identity?.AddClaim(new Claim("UserId", user.Id.ToString()));
+                            if (user != null)
+                            {
+                                // Добавляем ID из базы как клейм, чтобы Blazor мог его использовать
+                                identity?.AddClaim(new Claim("UserId", user.Id.ToString()));
+                            }
                         }
                     }
                 };

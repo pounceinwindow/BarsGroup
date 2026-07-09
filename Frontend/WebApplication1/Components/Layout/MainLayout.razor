@@ -94,6 +94,18 @@
 @code {
     private bool MobileMenuOpen;
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var authState = await AuthState;
+            State.SetUser(authState.User);
+        }
+    }
+
     private string Title => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] switch
     {
         "" => "Спектр",

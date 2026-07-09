@@ -11,8 +11,9 @@ public class User
     public string? PasswordHash { get; private set; }
     public UserRole Role { get; private set; }
     public DateOnly CreatedAt { get; private set; }
+    public int? AssignedBy { get; private set; }
     public DateOnly? RevokedAt { get; private set; }
-    public string? RevokedBy { get; private set; }
+    public int? RevokedBy { get; private set; }
 
     private User()
     {
@@ -27,7 +28,8 @@ public class User
         string lastName,
         string? passwordHash,
         UserRole role,
-        DateOnly createdAt)
+        DateOnly createdAt,
+        int? assignedBy = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
         ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
@@ -40,17 +42,29 @@ public class User
             LastName = lastName,
             PasswordHash = passwordHash,
             Role = role,
-            CreatedAt = createdAt
+            CreatedAt = createdAt,
+            AssignedBy = assignedBy
         };
     }
 
     /// <summary>
     /// Отзывает доступ пользователя к системе.
     /// </summary>
-    public void Revoke(DateOnly revokedAt, string revokedBy)
+    public void Revoke(DateOnly revokedAt, int revokedBy)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(revokedBy);
         RevokedAt = revokedAt;
         RevokedBy = revokedBy;
+    }
+
+    /// <summary>
+    /// Обновляет роль пользователя.
+    /// </summary>
+    public void UpdateRole(UserRole role, int? assignedBy = null)
+    {
+        Role = role;
+        if (assignedBy != null)
+        {
+            AssignedBy = assignedBy;
+        }
     }
 }

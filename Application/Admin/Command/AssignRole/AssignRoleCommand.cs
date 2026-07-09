@@ -2,4 +2,4 @@ using MediatR;
 
 namespace Application.Admin.Command.AssignRole;
 
-public record AssignRoleCommand(string Username, string RoleName) : IRequest;
+public record AssignRoleCommand(string Username, string RoleName, int? AssignedBy) : IRequest;

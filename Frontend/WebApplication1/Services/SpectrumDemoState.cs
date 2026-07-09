@@ -11,10 +11,11 @@ public sealed class SpectrumDemoState
 {
     public const string HrRole = "Отдел кадров";
     public const string DeciderRole = "Решала";
-    public const string AdminRole = "Администратор";
+    public const string AdminRole = "Админ";
 
     private readonly BarsContext _context;
     private readonly string[] _roles = [HrRole, DeciderRole, AdminRole];
+    private System.Security.Claims.ClaimsPrincipal? _principal;
 
     public SpectrumDemoState(BarsContext context)
     {
@@ -22,8 +23,25 @@ public sealed class SpectrumDemoState
         Reload();
     }
 
-    public bool IsAuthenticated { get; private set; }
-    public string Role { get; private set; } = HrRole;
+    public void SetUser(System.Security.Claims.ClaimsPrincipal principal)
+    {
+        _principal = principal;
+    }
+
+    public bool IsAuthenticated => _principal?.Identity?.IsAuthenticated ?? false;
+
+    public string Role 
+    {
+        get 
+        {
+            if (_principal == null) return string.Empty;
+            if (_principal.IsInRole("hr_platform_admin")) return AdminRole;
+            if (_principal.IsInRole("decider")) return DeciderRole;
+            if (_principal.IsInRole("hr")) return HrRole;
+            return string.Empty;
+        }
+    }
+    
     public IReadOnlyList<string> Roles => _roles;
 
     public List<DemoCandidate> Candidates { get; } = [];
@@ -54,21 +72,29 @@ public sealed class SpectrumDemoState
 
     public IReadOnlyList<string> DecisionOptions => ["Принять", "Следующий этап", "Отказать"];
 
-    public string CurrentUserName => Role switch
+    public string CurrentUserName 
     {
-        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Name ?? "Админ Системы",
-        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Name ?? "Иван Решалов",
-        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Name ?? "Елена Петрова"
-    };
+        get 
+        {
+            if (_principal == null) return "Неизвестный";
+            var givenName = _principal.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? _principal.Identity?.Name;
+            var surname = _principal.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value;
+            return string.IsNullOrWhiteSpace(surname) ? givenName ?? "Неизвестный Пользователь" : $"{givenName} {surname}";
+        }
+    }
 
     public string CurrentUserShort => ToShortName(CurrentUserName);
-    // TODO: убрать заглушку на релизе
-    public int CurrentUserId => Role switch
+    
+    public int CurrentUserId 
     {
-        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Id ?? 1,
-        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Id ?? 3,
-        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Id ?? 2
-    };
+        get 
+        {
+            var username = _principal?.FindFirst("preferred_username")?.Value;
+            if (string.IsNullOrEmpty(username)) return 0;
+            var user = Users.FirstOrDefault(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
+            return user?.Id ?? 0;
+        }
+    }
 
     public bool CanEditProtocol(DemoInterview interview) =>
         interview.DbStatus == InterviewStatus.Scheduled && CurrentUserId == interview.HrId;
@@ -158,18 +184,6 @@ public sealed class SpectrumDemoState
 
         Candidates.Clear();
         Candidates.AddRange(dbCandidates.Select(candidate => MapCandidate(candidate, dbInterviews)));
-    }
-
-    public void Login(string role)
-    {
-        Role = _roles.Contains(role) ? role : HrRole;
-        IsAuthenticated = true;
-    }
-
-    public void Logout()
-    {
-        IsAuthenticated = false;
-        Role = HrRole;
     }
 
     public DemoCandidate? GetCandidate(int id) => Candidates.FirstOrDefault(candidate => candidate.Id == id);
@@ -591,6 +605,7 @@ public sealed class SpectrumDemoState
         return new DemoUser
         {
             Id = user.Id,
+            Username = user.Username,
             Name = name,
             ShortName = ToShortName(name),
             Role = ToUiRole(user.Role),
@@ -780,6 +795,7 @@ public sealed class DemoCompetency
 public sealed class DemoUser
 {
     public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string ShortName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;

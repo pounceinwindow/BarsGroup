@@ -142,9 +142,19 @@
                     @foreach (var user in State.Users)
                     {
                         <div class="admin-row">
-                            <span><strong>@user.Name</strong><small>@user.Email</small></span>
+                            <span><strong>@user.Name</strong><small>@user.Username</small></span>
                             <span>@user.Role</span>
-                            <span class="online-dot">@(user.IsActive ? "Активен" : "Скрыт")</span>
+                            <span style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
+                                @if (user.IsActive)
+                                {
+                                    <span class="online-dot">Активен</span>
+                                    <button class="text-button" @onclick="() => RevokeUserRole(user.Username)" style="color: var(--danger);">Удалить</button>
+                                }
+                                else
+                                {
+                                    <span class="online-dot" style="color: var(--gray);">Скрыт</span>
+                                }
+                            </span>
                         </div>
                     }
                 </article>
@@ -249,12 +259,30 @@
 
         try
         {
-            await _mediator.Send(new AssignRoleCommand(username, role));
+            int? assignedBy = State.CurrentUserId == 0 ? null : State.CurrentUserId;
+            await _mediator.Send(new Application.Admin.Command.AssignRole.AssignRoleCommand(username, role, assignedBy));
             await ShowToast($"Роль '{role}' назначена пользователю {username}");
+            State.Reload();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
             await ShowToast("Ошибка назначения: " + ex.Message);
+        }
+    }
+
+    private async Task RevokeUserRole(string username)
+    {
+        try
+        {
+            await _mediator.Send(new Application.Admin.Command.RevokeRole.RevokeRoleCommand(username, State.CurrentUserId));
+            await ShowToast($"Доступ сотрудника {username} отозван");
+            State.Reload();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("Ошибка удаления: " + ex.Message);
         }
     }
 

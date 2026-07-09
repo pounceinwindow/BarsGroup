@@ -19,12 +19,12 @@ public class UserRepository(BarsContext context) : IUserRepository
                ?? throw new NotFoundException($"User with id {id} was not found.");
     }
 
-    public async Task MarkRevokedAsync(int id, CancellationToken cancellationToken)
+    public async Task MarkRevokedAsync(int id, int revokedBy, CancellationToken cancellationToken)
     {
         var user = await context.Users.FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
                    ?? throw new NotFoundException($"User with id {id} was not found.");
 
-        user.Revoke(DateOnly.FromDateTime(DateTime.UtcNow), "Admin");
+        user.Revoke(DateOnly.FromDateTime(DateTime.UtcNow), revokedBy);
     }
 
     public Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken)
@@ -39,10 +39,18 @@ public class UserRepository(BarsContext context) : IUserRepository
             cancellationToken);
     }
 
-    public Task<bool> IsDeciderAsync(int id, CancellationToken cancellationToken)
+    public async Task<bool> IsDeciderAsync(int id, CancellationToken cancellationToken)
     {
-        return context.Users.AnyAsync(
-            user => user.Id == id && user.Role == UserRole.Decider,
-            cancellationToken);
+        var userRole = await context.Users
+            .Where(x => x.Id == id)
+            .Select(x => x.Role)
+            .FirstOrDefaultAsync(cancellationToken);
+        
+        return userRole == UserRole.Decider;
+    }
+
+    public async Task<User?> GetUserByUsernameAsync(string username, CancellationToken cancellationToken)
+    {
+        return await context.Users.FirstOrDefaultAsync(u => u.Username == username, cancellationToken);
     }
 }

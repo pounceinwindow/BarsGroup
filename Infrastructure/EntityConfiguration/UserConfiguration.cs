@@ -44,5 +44,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder // null (по той же причине)
             .Property(x => x.RevokedBy)
             .IsRequired(false);
+        builder
+            .Property(x => x.AssignedBy)
+            .IsRequired(false);
     }
 }
