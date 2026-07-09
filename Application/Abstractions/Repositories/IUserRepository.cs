@@ -9,8 +9,10 @@ public interface IUserRepository
     Task<User> GetUserAsync(int id, CancellationToken cancellationToken);
 
     Task MarkRevokedAsync(int id, CancellationToken cancellationToken);
-    
+
     Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<bool> IsAdminAsync(int id, CancellationToken cancellationToken);
+
+    Task<bool> IsDeciderAsync(int id, CancellationToken cancellationToken);
 }

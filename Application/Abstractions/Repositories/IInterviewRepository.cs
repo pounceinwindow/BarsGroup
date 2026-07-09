@@ -29,4 +29,6 @@ public interface IInterviewRepository
     /// Проверяет, что интервью существует.
     /// </summary>
     Task<bool> InterviewExistsAsync(int interviewId, CancellationToken cancellationToken);
+
+    Task AddVerdictAsync(Verdict verdict, CancellationToken cancellationToken);
 }

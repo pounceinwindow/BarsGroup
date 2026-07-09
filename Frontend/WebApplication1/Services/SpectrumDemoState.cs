@@ -9,13 +9,22 @@ namespace WebApplication1.Services;
 
 public sealed class SpectrumDemoState
 {
+    public const string HrRole = "Отдел кадров";
+    public const string DeciderRole = "Решала";
+    public const string AdminRole = "Администратор";
+
     private readonly BarsContext _context;
+    private readonly string[] _roles = [HrRole, DeciderRole, AdminRole];
 
     public SpectrumDemoState(BarsContext context)
     {
         _context = context;
         Reload();
     }
+
+    public bool IsAuthenticated { get; private set; }
+    public string Role { get; private set; } = HrRole;
+    public IReadOnlyList<string> Roles => _roles;
 
     public List<DemoCandidate> Candidates { get; } = [];
     public List<DemoInterview> Interviews { get; } = [];
@@ -44,6 +53,32 @@ public sealed class SpectrumDemoState
     ];
 
     public IReadOnlyList<string> DecisionOptions => ["Принять", "Следующий этап", "Отказать"];
+
+    public string CurrentUserName => Role switch
+    {
+        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Name ?? "Админ Системы",
+        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Name ?? "Иван Решалов",
+        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Name ?? "Елена Петрова"
+    };
+
+    public string CurrentUserShort => ToShortName(CurrentUserName);
+    // TODO: убрать заглушку на релизе
+    public int CurrentUserId => Role switch
+    {
+        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Id ?? 1,
+        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Id ?? 3,
+        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Id ?? 2
+    };
+
+    public bool CanEditProtocol(DemoInterview interview) =>
+        interview.DbStatus == InterviewStatus.Scheduled && CurrentUserId == interview.HrId;
+
+    public bool CanCancelInterview(DemoInterview interview) =>
+        interview.DbStatus == InterviewStatus.Scheduled
+        && (CurrentUserId == interview.HrId || Role == AdminRole);
+
+    public bool CanRecordVerdict(DemoInterview interview) =>
+        Role == DeciderRole && interview.DbStatus == InterviewStatus.WaitingForVerdict;
 
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
@@ -85,6 +120,7 @@ public sealed class SpectrumDemoState
             .Include(interview => interview.Vacancy)
             .Include(interview => interview.Hr)
             .Include(interview => interview.Verdict)
+                .ThenInclude(verdict => verdict!.User)
             .Include(interview => interview.MatrixRows)
                 .ThenInclude(row => row.Competency)
             .OrderByDescending(interview => interview.Date)
@@ -122,6 +158,18 @@ public sealed class SpectrumDemoState
 
         Candidates.Clear();
         Candidates.AddRange(dbCandidates.Select(candidate => MapCandidate(candidate, dbInterviews)));
+    }
+
+    public void Login(string role)
+    {
+        Role = _roles.Contains(role) ? role : HrRole;
+        IsAuthenticated = true;
+    }
+
+    public void Logout()
+    {
+        IsAuthenticated = false;
+        Role = HrRole;
     }
 
     public DemoCandidate? GetCandidate(int id) => Candidates.FirstOrDefault(candidate => candidate.Id == id);
@@ -216,7 +264,7 @@ public sealed class SpectrumDemoState
 
         var vacancyId = FindVacancyId(response.Vacancy);
         var date = EnsureFutureUtc(response.Date);
-        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, 1, date);
+        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, CurrentUserId, date);
 
         _context.Interviews.Add(interview);
         _context.SaveChanges();
@@ -245,7 +293,7 @@ public sealed class SpectrumDemoState
             var interview = Interview.ScheduleNewProcess(
                 candidate.Id,
                 FindVacancyId(form.Vacancy),
-                1,
+                CurrentUserId,
                 DateTime.UtcNow.AddDays(1));
             _context.Interviews.Add(interview);
             _context.SaveChanges();
@@ -348,15 +396,16 @@ public sealed class SpectrumDemoState
         {
             var roleValue = role.ToString();
             DateOnly? revokedAt = form.IsActive ? null : DateOnly.FromDateTime(DateTime.Today);
-            string? revokedBy = form.IsActive ? null : "Елена П.";
+            string? revokedBy = form.IsActive ? null : CurrentUserShort;
 
             _context.Database.ExecuteSqlInterpolated($"""
                 UPDATE "Users"
-                SET "FirstName" = {form.Name},
+                SET "FirstName" = {firstName},
+                    "LastName" = {lastName},
                     "Role" = {roleValue},
                     "RevokedAt" = {revokedAt},
                     "RevokedBy" = {revokedBy}
-                WHERE "Id" = {id}
+                WHERE "Id" = {id.Value};
                 """);
         }
 
@@ -366,40 +415,18 @@ public sealed class SpectrumDemoState
 
     public void SetScore(DemoInterview interview, int competencyId, int score)
     {
-        if (interview == null)
+        if (!CanEditProtocol(interview))
             return;
 
         interview.Scores[competencyId] = Math.Clamp(score, 0, 5);
     }
 
-    public void SaveDecision(DemoInterview interview, string decision)
+    public static DeciderVerdict ToDeciderVerdict(string decision) => decision switch
     {
-        var dbDecision = ToDbDecision(decision);
-        var deciderId = _context.Users
-            .AsNoTracking()
-            .Where(user => user.Role == UserRole.Decider)
-            .Select(user => user.Id)
-            .FirstOrDefault();
-
-        if (deciderId == 0)
-            deciderId = _context.Users.AsNoTracking().Select(user => user.Id).First();
-
-        _context.Database.ExecuteSqlInterpolated($"""
-            INSERT INTO "Verdicts" ("InterviewId", "UserId", "Decision", "Comment")
-            VALUES ({interview.DbId}, {deciderId}, {dbDecision}, NULL)
-            ON CONFLICT ("InterviewId", "UserId")
-            DO UPDATE SET "Decision" = EXCLUDED."Decision";
-            """);
-
-        var completed = InterviewStatus.Completed.ToString();
-        _context.Database.ExecuteSqlInterpolated($"""
-            UPDATE "Interviews"
-            SET "Status" = {completed}
-            WHERE "Id" = {interview.DbId};
-            """);
-
-        Reload();
-    }
+        "Принять" => DeciderVerdict.Hired,
+        "Следующий этап" => DeciderVerdict.NextStage,
+        _ => DeciderVerdict.Rejected
+    };
 
     public static CandidateForm ToForm(DemoCandidate candidate) => new()
     {
@@ -518,10 +545,13 @@ public sealed class SpectrumDemoState
         Time = FormatTimeUtc(interview.Date),
         Format = string.Empty,
         Hr = ToShortName($"{interview.Hr.FirstName} {interview.Hr.LastName}"),
-        Approver = Users.FirstOrDefault(user => user.Role == "Решала")?.ShortName ?? "Иван Р.",
+        Approver = interview.Verdict?.User is not null
+            ? ToShortName($"{interview.Verdict.User.FirstName} {interview.Verdict.User.LastName}")
+            : string.Empty,
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),
         ScoreComments = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Comment),
         Comment = interview.SummaryComment ?? string.Empty,
+        VerdictComment = interview.Verdict?.Comment,
         Decision = ToUiDecision(interview.Verdict?.Decision),
         Status = ToUiStatus(interview.Status, interview.Verdict?.Decision)
     };
@@ -587,7 +617,7 @@ public sealed class SpectrumDemoState
     private static string ToUiStatus(InterviewStatus status, DeciderVerdict? decision) => decision switch
     {
         DeciderVerdict.Hired => "Принят",
-        DeciderVerdict.NextStage => "Собеседование запланировано",
+        DeciderVerdict.NextStage => "Следующий этап",
         DeciderVerdict.Rejected => "Отклонён",
         _ => status switch
         {
@@ -607,25 +637,18 @@ public sealed class SpectrumDemoState
         _ => null
     };
 
-    private static string ToDbDecision(string decision) => decision switch
-    {
-        "Принять" => DeciderVerdict.Hired.ToString(),
-        "Следующий этап" => DeciderVerdict.NextStage.ToString(),
-        _ => DeciderVerdict.Rejected.ToString()
-    };
-
     private static UserRole ParseRole(string role) => role switch
     {
-        "Администратор" => UserRole.Admin,
-        "Решала" => UserRole.Decider,
+        AdminRole => UserRole.Admin,
+        DeciderRole => UserRole.Decider,
         _ => UserRole.HR
     };
 
     private static string ToUiRole(UserRole role) => role switch
     {
-        UserRole.Admin => "Администратор",
-        UserRole.Decider => "Решала",
-        _ => "Отдел кадров"
+        UserRole.Admin => AdminRole,
+        UserRole.Decider => DeciderRole,
+        _ => HrRole
     };
 
     private static string RequiredOrDefault(string value, string fallback) =>
@@ -730,6 +753,7 @@ public sealed class DemoInterview
     public Dictionary<int, int> Scores { get; set; } = [];
     public Dictionary<int, string?> ScoreComments { get; set; } = [];
     public string Comment { get; set; } = string.Empty;
+    public string? VerdictComment { get; set; }
     public string? Decision { get; set; }
     public string Status { get; set; } = "Новый";
 }
@@ -804,7 +828,7 @@ public sealed class CompetencyForm
 public sealed class UserForm
 {
     public string Name { get; set; } = string.Empty;
-    public string Role { get; set; } = "Отдел кадров";
+    public string Role { get; set; } = SpectrumDemoState.HrRole;
     public string Email { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 }

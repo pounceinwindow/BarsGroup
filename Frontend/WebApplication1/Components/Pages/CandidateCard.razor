@@ -49,7 +49,7 @@ else
                 <div class="section-heading"><span class="eyebrow dark">Отклики</span><h3>Отклики и собеседования</h3></div>
                 @if (Candidate.ApplicationProcesses.Count == 0)
                 {
-                    <div class="empty-state panel"><strong>Откликов пока нет</strong><span>Назначьте собеседование для кандидата.</span><button class="secondary-button" type="button" @onclick="ScheduleNewProcess">Назначить собес</button></div>
+                    <div class="empty-state panel"><strong>Откликов пока нет</strong><span>Назначьте собеседование для кандидата.</span></div>
                 }
                 @foreach (var process in Candidate.ApplicationProcesses)
                 {

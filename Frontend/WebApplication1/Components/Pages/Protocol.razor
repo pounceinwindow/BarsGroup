@@ -5,11 +5,11 @@
 @inject IJSRuntime JS
 @inject IPdfDocumentService PdfService
 @inject IMediator Mediator
-@inject AuthenticationStateProvider AuthStateProvider
 
 @using Application.Exceptions
 @using Application.Interview.Commands.CancelInterview
 @using Application.Interview.Commands.SubmitProtocol
+@using Application.Interview.Commands.SubmitVerdict
 @using Application.Interview.DTO
 @using MediatR
 
@@ -43,7 +43,10 @@ else
                 <div><small>Кандидат</small><strong>@Candidate.Name</strong></div>
                 <div><small>Дата и время (UTC)</small><strong class="mono">@SpectrumDemoState.DisplayDate(Interview.Date) · @Interview.Time</strong></div>
                 <div><small>HR</small><strong>@Interview.Hr</strong></div>
-                <div><small>Согласующий</small><strong>@Interview.Approver</strong></div>
+                @if (Interview.Decision is not null)
+                {
+                    <div><small>Согласующий</small><strong>@Interview.Approver</strong></div>
+                }
             </div>
 
             <section class="matrix-section">
@@ -54,7 +57,7 @@ else
                         var score = Score(competency);
                         <div class="matrix-row">
                             <span>@competency.Name</span>
-                            <DotScale Value="@score" Editable="@CanEdit" OnChange="@(newScore => SetScore(competency, newScore))" />
+                            <DotScale Value="@score" Editable="@State.CanEditProtocol(Interview)" OnChange="@(newScore => SetScore(competency, newScore))" />
                             <strong class="mono">@(score == 0 ? "—" : score)/5</strong>
                             @* [TODO: Артур] - форма для комментария по оценке *@
                         </div>
@@ -64,38 +67,95 @@ else
 
             <section class="comment-section">
                 <label for="comment">Комментарий по итогам</label>
-                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!CanEdit)" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
+                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol(Interview))" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
             </section>
 
-            <section class="decision-section">
-                <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                @if (CanCancel)
-                {
-                    <div class="protocol-decision-actions">
-                        @if (CanEdit)
-                        {
-                            <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
-                        }
-                        <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
-                    </div>
-                }
-                else if (CanEdit)
-                {
-                    <div class="protocol-decision-actions">
-                        <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
-                    </div>
-                }
-                <div class="decision-options">
-                    @foreach (var option in State.DecisionOptions)
+            @if (State.CanRecordVerdict(Interview) || Interview.Decision is not null)
+            {
+                <section class="decision-section">
+                    <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
+                    @if (State.CanCancelInterview(Interview))
                     {
-                        <button class="decision-button @DecisionClass(option) @(Interview.Decision == option ? "is-active" : null)" @onclick="() => SetDecision(option)">
-                            @if (Interview.Decision == option) { <SvgIcon Name="check" Size="14" /> } @option
-                        </button>
+                        <div class="protocol-decision-actions">
+                            @if (State.CanEditProtocol(Interview))
+                            {
+                                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                            }
+                            <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
+                        </div>
                     }
-                </div>
-            </section>
+                    else if (State.CanEditProtocol(Interview))
+                    {
+                        <div class="protocol-decision-actions">
+                            <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                        </div>
+                    }
+                    <div class="decision-options">
+                        @foreach (var option in State.DecisionOptions)
+                        {
+                            var isActive = State.CanRecordVerdict(Interview)
+                                ? SelectedDecision == option
+                                : Interview.Decision == option;
+                            <button class="decision-button @DecisionClass(option) @(isActive ? "is-active" : null)"
+                                    disabled="@(!State.CanRecordVerdict(Interview))"
+                                    @onclick="() => SelectDecision(option)">
+                                @if (isActive) { <SvgIcon Name="check" Size="14" /> } @option
+                            </button>
+                        }
+                    </div>
+                    @if (!State.CanRecordVerdict(Interview) && !string.IsNullOrWhiteSpace(Interview.VerdictComment))
+                    {
+                        <div class="comment-section verdict-comment">
+                            <label for="verdict-comment-readonly">Комментарий решалы</label>
+                            <textarea id="verdict-comment-readonly" readonly disabled>@Interview.VerdictComment</textarea>
+                        </div>
+                    }
+                    @if (State.CanRecordVerdict(Interview))
+                    {
+                        <div class="comment-section verdict-comment">
+                            <label for="verdict-comment">Комментарий решалы</label>
+                            <textarea id="verdict-comment" @bind="VerdictComment" @bind:event="oninput" placeholder="Необязательный комментарий к решению"></textarea>
+                        </div>
+                        <div class="protocol-decision-actions">
+                            <button class="secondary-button save-protocol-button"
+                                    @onclick="SubmitVerdict"
+                                    disabled="@(IsSubmittingVerdict || string.IsNullOrEmpty(SelectedDecision))">
+                                <SvgIcon Name="check" Size="14" /> @(IsSubmittingVerdict ? "Сохранение…" : "Подтвердить решение")
+                            </button>
+                        </div>
+                    }
+                </section>
+            }
+            else if (State.CanCancelInterview(Interview) || State.CanEditProtocol(Interview))
+            {
+                <section class="decision-section">
+                    <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
+                    @if (State.CanCancelInterview(Interview))
+                    {
+                        <div class="protocol-decision-actions">
+                            @if (State.CanEditProtocol(Interview))
+                            {
+                                <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                            }
+                            <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="protocol-decision-actions">
+                            <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
+                        </div>
+                    }
+                </section>
+            }
 
-            <footer class="signature-grid"><span>HR: @Interview.Hr <i></i></span><span>Согласующий: @Interview.Approver <i></i></span></footer>
+            <footer class="signature-grid">
+                <span>HR: @Interview.Hr <i></i></span>
+                @if (Interview.Decision is not null)
+                {
+                    <span>Согласующий: @Interview.Approver <i></i></span>
+                }
+            </footer>
         </article>
     </section>
 
@@ -111,34 +171,10 @@ else
     private bool IsPdfDownloading;
     private bool IsSaving;
     private bool IsCanceling;
+    private bool IsSubmittingVerdict;
     private string? ToastMessage;
-
-    private int CurrentUserId;
-    private string CurrentRole = string.Empty;
-
-    private bool CanEdit => Interview is not null 
-                            && Interview.DbStatus == Domain.Enums.InterviewStatus.Scheduled 
-                            && CurrentUserId == Interview.HrId;
-                            
-    private bool CanCancel => Interview is not null 
-                              && Interview.DbStatus == Domain.Enums.InterviewStatus.Scheduled 
-                              && (CurrentUserId == Interview.HrId || CurrentRole == "hr_platform_admin" || CurrentRole == "admin");
-
-    protected override async Task OnParametersSetAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userIdStr = user.FindFirst("UserId")?.Value;
-        if (int.TryParse(userIdStr, out var id))
-        {
-            CurrentUserId = id;
-        }
-        else
-        {
-            CurrentUserId = 1; // Fallback
-        }
-        CurrentRole = user.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
-    }
+    private string? SelectedDecision;
+    private string VerdictComment = string.Empty;
 
     private DemoInterview? Interview => State.GetInterview(InterviewId);
     private DemoCandidate? Candidate => Interview is null ? null : State.GetCandidateForInterview(Interview);
@@ -153,13 +189,13 @@ else
 
     private void SetScore(DemoCompetency competency, int score)
     {
-        if (Interview is not null && CanEdit)
+        if (Interview is not null && State.CanEditProtocol(Interview))
             State.SetScore(Interview, competency.Id, score);
     }
 
     private async Task SaveProtocol()
     {
-        if (Interview is null || !CanEdit)
+        if (Interview is null || !State.CanEditProtocol(Interview))
             return;
 
         IsSaving = true;
@@ -174,7 +210,7 @@ else
 
             await Mediator.Send(new SubmitProtocolCommand(
                 Interview.DbId,
-                CurrentUserId,
+                State.CurrentUserId,
                 string.IsNullOrWhiteSpace(Interview.Comment) ? null : Interview.Comment.Trim(),
                 scores));
 
@@ -197,13 +233,13 @@ else
 
     private async Task CancelInterview()
     {
-        if (Interview is null || !CanCancel)
+        if (Interview is null || !State.CanCancelInterview(Interview))
             return;
 
         IsCanceling = true;
         try
         {
-            await Mediator.Send(new CancelInterviewCommand(Interview.DbId, CurrentUserId));
+            await Mediator.Send(new CancelInterviewCommand(Interview.DbId, State.CurrentUserId));
             State.Reload();
             await ShowToast("Собеседование отменено");
         }
@@ -221,13 +257,46 @@ else
         }
     }
 
-    private async Task SetDecision(string decision)
+    private void SelectDecision(string decision)
     {
-        if (Interview is null)
+        if (Interview is null || !State.CanRecordVerdict(Interview))
             return;
 
-        State.SaveDecision(Interview, decision);
-        await ShowToast($"Решение «{decision}» сохранено");
+        SelectedDecision = decision;
+    }
+
+    private async Task SubmitVerdict()
+    {
+        if (Interview is null || !State.CanRecordVerdict(Interview) || string.IsNullOrEmpty(SelectedDecision))
+            return;
+
+        IsSubmittingVerdict = true;
+        try
+        {
+            var decisionLabel = SelectedDecision;
+            await Mediator.Send(new SubmitVerdictCommand(
+                Interview.DbId,
+                State.CurrentUserId,
+                SpectrumDemoState.ToDeciderVerdict(SelectedDecision),
+                string.IsNullOrWhiteSpace(VerdictComment) ? null : VerdictComment.Trim()));
+
+            State.Reload();
+            SelectedDecision = null;
+            VerdictComment = string.Empty;
+            await ShowToast($"Решение «{decisionLabel}» сохранено");
+        }
+        catch (NotFoundException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        catch (ConflictException ex)
+        {
+            await ShowToast(ex.Message);
+        }
+        finally
+        {
+            IsSubmittingVerdict = false;
+        }
     }
 
     private async Task Print() => await JS.InvokeVoidAsync("print");
