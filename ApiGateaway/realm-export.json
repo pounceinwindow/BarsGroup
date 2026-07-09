@@ -401,7 +401,7 @@
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
-    "id" : "4d052a7d-6b84-4413-a5f9-439339218d75",
+    "id" : "f38ae2a7-d5f3-44ca-acda-a577c7bf13a8",
     "username" : "alex.s",
     "firstName" : "alex_smirnov",
     "lastName" : "Смирнов",
@@ -409,11 +409,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=alex.s,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd45a12-0faa-1041-8609-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cae3aa6-0fcc-1041-8b9e-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413031,
+    "createdTimestamp" : 1783593834091,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -424,7 +424,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "cb5408c9-2ea7-4dae-9acd-9d349f16bb19",
+    "id" : "aec5b2c6-ea43-462e-a097-2c2fa0566b51",
     "username" : "andrey.p",
     "firstName" : "andrey_popov",
     "lastName" : "Попов",
@@ -432,11 +432,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=andrey.p,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd4a8a0-0faa-1041-860b-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cae6ac6-0fcc-1041-8ba0-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413036,
+    "createdTimestamp" : 1783593834100,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -447,7 +447,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "9b269955-a507-43aa-a0ac-97986d952b94",
+    "id" : "c6dfaa05-d75f-455c-9cad-a26831686d3c",
     "username" : "anna.s",
     "firstName" : "anna_sokolova",
     "lastName" : "Соколова",
@@ -455,11 +455,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=anna.s,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd4fe54-0faa-1041-860e-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caec5de-0fcc-1041-8ba3-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413044,
+    "createdTimestamp" : 1783593834110,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -470,7 +470,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "b8fa18d0-cec6-4f74-96f6-401498288c88",
+    "id" : "3a61bf31-5881-497f-aef6-2dd92d260d83",
     "username" : "anton.o",
     "firstName" : "anton_orlov",
     "lastName" : "Орлов",
@@ -478,11 +478,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=anton.o,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd5a7fa-0faa-1041-8619-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf8802-0fcc-1041-8bae-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413084,
+    "createdTimestamp" : 1783593834144,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -493,7 +493,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "7c772ffa-29d3-4769-99c8-7541ae8f91e1",
+    "id" : "ff43f14c-1071-400b-af8e-65563bf47aeb",
     "username" : "artem.k",
     "firstName" : "artem_kozlov",
     "lastName" : "Козлов",
@@ -501,11 +501,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=artem.k,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd57528-0faa-1041-8615-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf43d8-0fcc-1041-8baa-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413072,
+    "createdTimestamp" : 1783593834131,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -516,7 +516,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "e4c06808-1042-4092-84a5-6d6f90f94c19",
+    "id" : "d0c0dc07-89f9-4310-8ccc-dd0e855ed94d",
     "username" : "dmitry.v",
     "firstName" : "dmitry_vasiliev",
     "lastName" : "Васильев",
@@ -524,11 +524,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=dmitry.v,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd4b2e6-0faa-1041-860c-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cae784a-0fcc-1041-8ba1-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413039,
+    "createdTimestamp" : 1783593834103,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -539,7 +539,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "9f00de79-c7ab-4e6c-a9b5-f9a2dbf10edb",
+    "id" : "bda0f332-a426-4561-a7da-164d7642d763",
     "username" : "ekaterina.s",
     "firstName" : "ekaterina_stepanova",
     "lastName" : "Степанова",
@@ -547,11 +547,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=ekaterina.s,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd59e0e-0faa-1041-8618-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf77cc-0fcc-1041-8bad-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413081,
+    "createdTimestamp" : 1783593834141,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -562,7 +562,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "271c05cb-424f-4ff0-a5d9-78327f0a05a5",
+    "id" : "b5f1d8fe-dadd-4393-bc9b-c0fe5ff66f1f",
     "username" : "elena.p",
     "firstName" : "elena_petrova",
     "lastName" : "Петрова",
@@ -570,11 +570,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=elena.p,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd4d708-0faa-1041-860d-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cae9d70-0fcc-1041-8ba2-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413042,
+    "createdTimestamp" : 1783593834106,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -585,7 +585,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "1384c33e-4651-475c-87cd-e82e4018d171",
+    "id" : "800a7e4a-0438-48f2-a48a-54c23028665d",
     "username" : "elizaveta.b",
     "firstName" : "elizaveta_borisova",
     "lastName" : "Борисова",
@@ -593,11 +593,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=elizaveta.b,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd57faa-0faa-1041-8616-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf4fc2-0fcc-1041-8bab-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413075,
+    "createdTimestamp" : 1783593834134,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -608,7 +608,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "68f0d734-0856-47a4-af87-f5bbfeb0272c",
+    "id" : "f92b0f6e-d340-4949-a9c9-807be7bafbad",
     "username" : "fedor.f",
     "firstName" : "fedor_fedorov",
     "lastName" : "Федоров",
@@ -616,11 +616,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=fedor.f,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd52a0a-0faa-1041-8611-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caefa22-0fcc-1041-8ba6-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413051,
+    "createdTimestamp" : 1783593834119,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -631,7 +631,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "f2a31b9f-1fea-4066-b078-a58b282357c8",
+    "id" : "372769ed-54ea-4e08-b342-081728d69e96",
     "username" : "igor.v",
     "firstName" : "igor_volkov",
     "lastName" : "Волков",
@@ -639,11 +639,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=igor.v,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd55fe8-0faa-1041-8613-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf27cc-0fcc-1041-8ba8-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413062,
+    "createdTimestamp" : 1783593834125,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -654,7 +654,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "3de3c1ae-5023-448d-bf07-cae4156608c4",
+    "id" : "f128ebe4-86c3-49d7-9f75-246db969b322",
     "username" : "ivan.p",
     "firstName" : "ivan_petrov",
     "lastName" : "Петров",
@@ -662,22 +662,22 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=ivan.p,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd3a3e2-0faa-1041-8607-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cad6be4-0fcc-1041-8b9c-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413020,
+    "createdTimestamp" : 1783592682201,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-hr-platform", "hr" ],
+    "realmRoles" : [ "default-roles-hr-platform" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "77be6cbe-1d04-45df-b5fd-988eb71e2549",
+    "id" : "90a48de4-f5a5-4329-b59d-4488cac5701e",
     "username" : "mariya.g",
     "firstName" : "mariya_gavrilova",
     "lastName" : "Гаврилова",
@@ -685,11 +685,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=mariya.g,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd5b1e6-0faa-1041-861a-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf963a-0fcc-1041-8baf-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413087,
+    "createdTimestamp" : 1783593834147,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -700,7 +700,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "87dee3ed-1405-44f3-816c-48d7e51bdea0",
+    "id" : "2a89dd37-05f9-4b32-b48d-f142ff9ab589",
     "username" : "mikhail.l",
     "firstName" : "mikhail_lazarev",
     "lastName" : "Лазарев",
@@ -708,11 +708,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=mikhail.l,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd51448-0faa-1041-860f-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caedfc4-0fcc-1041-8ba4-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413047,
+    "createdTimestamp" : 1783593834113,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -723,7 +723,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "e181c1a5-7b67-4cb2-a37c-2a8b7a0a14db",
+    "id" : "9aff3b59-efec-48ec-a589-288ba94abc12",
     "username" : "nataliya.a",
     "firstName" : "nataliya_alekseeva",
     "lastName" : "Алексеева",
@@ -731,11 +731,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=nataliya.a,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd56aec-0faa-1041-8614-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf3528-0fcc-1041-8ba9-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413069,
+    "createdTimestamp" : 1783593834128,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -746,7 +746,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "7b81047c-78dc-4921-813c-0ef61ab66b4b",
+    "id" : "c654ae6c-5b4e-4436-86f1-8ed86b955040",
     "username" : "olga.n",
     "firstName" : "olga_novikova",
     "lastName" : "Новикова",
@@ -754,11 +754,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=olga.n,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd51fce-0faa-1041-8610-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caeec94-0fcc-1041-8ba5-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413049,
+    "createdTimestamp" : 1783593834116,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -769,7 +769,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "72603417-c656-432e-818d-f4e943bbec27",
+    "id" : "660d4186-403b-48ad-a3de-2577560f4c8a",
     "username" : "petr.i",
     "firstName" : "petr_ivanov",
     "lastName" : "Иванов",
@@ -777,11 +777,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=petr.i,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd426aa-0faa-1041-8608-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cadf7c6-0fcc-1041-8b9d-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413028,
+    "createdTimestamp" : 1783593834086,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -792,7 +792,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "eb323184-553f-4e3d-a395-abfe38e1100c",
+    "id" : "190cc64d-62a4-483b-a897-313e394a8487",
     "username" : "sergey.k",
     "firstName" : "sergey_kuznetsov",
     "lastName" : "Кузнецов",
@@ -800,11 +800,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=sergey.k,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd49cf2-0faa-1041-860a-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1cae5e96-0fcc-1041-8b9f-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413033,
+    "createdTimestamp" : 1783593834096,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -815,7 +815,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "1e127ede-231e-4a03-b9b2-62de17547a0f",
+    "id" : "5692de6f-a0ea-4566-bfa6-427e797f0841",
     "username" : "tatyana.m",
     "firstName" : "tatyana_morozova",
     "lastName" : "Морозова",
@@ -823,11 +823,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=tatyana.m,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd533c4-0faa-1041-8612-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf0652-0fcc-1041-8ba7-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413054,
+    "createdTimestamp" : 1783593834122,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -838,7 +838,7 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "f20ffc6c-20c9-49bd-a79c-dab8cbb2eff0",
+    "id" : "0cb21644-ff36-40ae-b4db-9d40ecfcc380",
     "username" : "vladimir.m",
     "firstName" : "vladimir_makarov",
     "lastName" : "Макаров",
@@ -846,11 +846,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=vladimir.m,dc=company,dc=local" ],
-      "createTimestamp" : [ "20260709062603Z" ],
-      "modifyTimestamp" : [ "20260709062603Z" ],
-      "LDAP_ID" : [ "cdd58838-0faa-1041-8617-8533d8157ec5" ]
+      "createTimestamp" : [ "20260709102429Z" ],
+      "modifyTimestamp" : [ "20260709102429Z" ],
+      "LDAP_ID" : [ "1caf5aee-0fcc-1041-8bac-ed78fc446d22" ]
     },
-    "createdTimestamp" : 1783578413079,
+    "createdTimestamp" : 1783593834138,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "11febd2a-8096-4c14-a4ac-1bd9af848e6f",
@@ -1010,7 +1010,7 @@
       "token.response.type.bearer.lower-case" : "false"
     },
     "authenticationFlowBindingOverrides" : {
-      "browser" : "e199c02e-2de2-4e02-90db-44c3d26c476f"
+      "browser" : "f778a993-2602-40ef-8451-f7c3ebd89c51"
     },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
@@ -1658,7 +1658,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper" ]
       }
     }, {
       "id" : "b901fe16-4172-4b83-b95a-224a4f483b59",
@@ -1667,7 +1667,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "saml-user-property-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "saml-user-property-mapper" ]
       }
     }, {
       "id" : "530d0acb-81a4-44b7-9e0b-28568077df59",
@@ -1718,8 +1718,8 @@
           "config" : {
             "ldap.attribute" : [ "sn" ],
             "is.mandatory.in.ldap" : [ "true" ],
-            "always.read.value.from.ldap" : [ "true" ],
             "read.only" : [ "true" ],
+            "always.read.value.from.ldap" : [ "true" ],
             "user.model.attribute" : [ "lastName" ]
           }
         }, {
@@ -1742,8 +1742,8 @@
           "config" : {
             "ldap.attribute" : [ "createTimestamp" ],
             "is.mandatory.in.ldap" : [ "false" ],
-            "always.read.value.from.ldap" : [ "true" ],
             "read.only" : [ "true" ],
+            "always.read.value.from.ldap" : [ "true" ],
             "user.model.attribute" : [ "createTimestamp" ]
           }
         }, {
@@ -1766,8 +1766,8 @@
           "config" : {
             "ldap.attribute" : [ "modifyTimestamp" ],
             "is.mandatory.in.ldap" : [ "false" ],
-            "read.only" : [ "true" ],
             "always.read.value.from.ldap" : [ "true" ],
+            "read.only" : [ "true" ],
             "user.model.attribute" : [ "modifyTimestamp" ]
           }
         }, {
@@ -1794,9 +1794,9 @@
         "useKerberosForPasswordAuthentication" : [ "false" ],
         "importEnabled" : [ "true" ],
         "enabled" : [ "true" ],
-        "changedSyncPeriod" : [ "-1" ],
         "usernameLDAPAttribute" : [ "uid" ],
         "bindCredential" : [ "adminpassword" ],
+        "changedSyncPeriod" : [ "-1" ],
         "bindDn" : [ "cn=admin,dc=company,dc=local" ],
         "lastSync" : [ "1783269938" ],
         "vendor" : [ "other" ],

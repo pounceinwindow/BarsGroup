@@ -5,6 +5,10 @@ namespace Application.Abstractions.Repositories;
 public interface IVacancyRepository
 {
     Task AddAsync(Vacancy vacancy, CancellationToken cancellationToken);
+    
+    Task<Vacancy?> GetByIdAsync(int id, CancellationToken cancellationToken);
+
+    Task UpdateAsync(Vacancy vacancy, CancellationToken cancellationToken);
 
     //Аккуратно, зависимости с Interview
     Task DeleteByIdAsync(int id, CancellationToken cancellationToken);

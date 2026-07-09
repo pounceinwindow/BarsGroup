@@ -34,6 +34,28 @@ public static class AuthenticationExtensions
                         var username = context.Principal?.Identity?.Name;
                         if (!string.IsNullOrEmpty(username))
                         {
+                            var identity = context.Principal?.Identity as ClaimsIdentity;
+                            if (identity != null)
+                            {
+                                // Извлекаем роли из realm_access и добавляем как ClaimTypes.Role
+                                var realmAccessClaim = context.Principal?.FindFirst("realm_access")?.Value;
+                                if (!string.IsNullOrEmpty(realmAccessClaim))
+                                {
+                                    try
+                                    {
+                                        using var doc = System.Text.Json.JsonDocument.Parse(realmAccessClaim);
+                                        if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
+                                        {
+                                            foreach (var roleItem in rolesElement.EnumerateArray())
+                                            {
+                                                identity.AddClaim(new Claim(ClaimTypes.Role, roleItem.GetString() ?? string.Empty));
+                                            }
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+
                             var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
                             if (user == null)
                             {
@@ -41,10 +63,13 @@ public static class AuthenticationExtensions
                                 var lastName = context.Principal?.FindFirstValue(ClaimTypes.Surname) ?? "Сотрудник";
                                 
                                 var role = UserRole.HR; // Дефолтная роль
-                                var newUser = User.Create(username, firstName, lastName, null, role, DateOnly.FromDateTime(DateTime.UtcNow));
-                                db.Users.Add(newUser);
+                                user = User.Create(username, firstName, lastName, null, role, DateOnly.FromDateTime(DateTime.UtcNow));
+                                db.Users.Add(user);
                                 await db.SaveChangesAsync();
                             }
+
+                            // Добавляем ID из базы как клейм, чтобы Blazor мог его использовать
+                            identity?.AddClaim(new Claim("UserId", user.Id.ToString()));
                         }
                     }
                 };

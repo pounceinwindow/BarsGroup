@@ -12,6 +12,10 @@ public interface ICompetencyRepository
 
     Task AddAsync(Competency competence, CancellationToken cancellationToken);
 
+    Task<Competency?> GetByIdAsync(int id, CancellationToken cancellationToken);
+
+    Task UpdateAsync(Competency competence, CancellationToken cancellationToken);
+
     Task DeleteByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<bool> ExistsAsync(string name, CancellationToken cancellationToken);

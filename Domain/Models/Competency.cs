@@ -1,4 +1,4 @@
-﻿namespace Domain.Models;
+namespace Domain.Models;
 
 public class Competency
 {
@@ -17,5 +17,15 @@ public class Competency
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         return new Competency { Name = name, Description = description };
+    }
+
+    /// <summary>
+    /// Обновляет данные компетенции.
+    /// </summary>
+    public void Update(string name, string? description)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name;
+        Description = description;
     }
 }

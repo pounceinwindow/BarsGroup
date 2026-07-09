@@ -1,24 +1,21 @@
 @page "/admin"
 @layout MainLayout
+@using MediatR
+@using Application.Admin.Command.Vacancy
+@using Application.Admin.Command.Competence
+@using Application.Admin.Command.AssignRole
+@using Application.Admin.Query.SearchUsers
+@using Application.Admin.DTO
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "hr_platform_admin")]
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
 @inject Infrastructure.BarsContext Db
+@inject IMediator _mediator
 
 <PageTitle>Спектр — администрирование</PageTitle>
 
-@if (State.Role != SpectrumDemoState.AdminRole)
-{
-    <section class="page-content">
-        <div class="empty-state panel">
-            <strong>Раздел доступен только администратору</strong>
-            <span>Перезайдите с ролью «Администратор», чтобы управлять справочниками.</span>
-            <button class="text-button" @onclick='() => Navigation.NavigateTo("/dashboard")'>На дашборд</button>
-        </div>
-    </section>
-}
-else
-{
-    <section class="page-content admin-page">
+<section class="page-content admin-page">
         <div class="page-heading-row">
             <div>
                 <span class="eyebrow dark">Администрирование</span>
@@ -93,28 +90,56 @@ else
         else if (Tab == "users")
         {
             <div class="admin-grid">
-                <article class="panel form-card">
-                    <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedUserId is null ? "Создание" : "Редактирование")</span><h3>Пользователь</h3></div></div>
-                    <div class="form-grid">
-                        <label class="span-2">ФИО<input @bind="UserForm.Name" @bind:event="oninput" /></label>
-                        <label>Роль<select @bind="UserForm.Role">@foreach (var role in State.Roles) { <option value="@role">@role</option> }</select></label>
-                        <label class="check-label span-2"><input type="checkbox" @bind="UserForm.IsActive" /> Активен</label>
-                        <p class="form-note span-2">В текущей Domain-модели пользователя нет email, сохраняются ФИО, роль и активность.</p>
-                    </div>
-                    <div class="form-actions">
-                        <button class="secondary-button" @onclick="ResetUserForm">Очистить</button>
-                        <button class="primary-button action-button" @onclick="SaveUser">Сохранить</button>
-                    </div>
-                </article>
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <article class="panel form-card">
+                        <div class="panel-heading">
+                            <div><span class="eyebrow dark">Назначение ролей</span><h3>Поиск сотрудника (LDAP)</h3></div>
+                        </div>
+                        <div class="form-grid">
+                            <label class="span-2">Логин или имя<input @bind="SearchQuery" @bind:event="oninput" placeholder="Начните вводить логин..." @onkeyup="SearchUsers" /></label>
+                        </div>
+                    </article>
+
+                    @if (IsSearching)
+                    {
+                        <p style="color: var(--gray);">Поиск в LDAP (Keycloak)...</p>
+                    }
+                    else if (FoundUsers.Any())
+                    {
+                        <article class="panel admin-table">
+                            <div class="admin-head"><span>Найденный сотрудник</span><span>Логин</span><span>Действие</span></div>
+                            @foreach (var user in FoundUsers)
+                            {
+                                <div class="admin-row">
+                                    <span><strong>@($"{user.FirstName} {user.LastName}".Trim())</strong></span>
+                                    <span>@user.Username</span>
+                                    <span style="display: flex; gap: 10px; align-items: center;">
+                                        <select @bind="SelectedRoles[user.Username]">
+                                            <option value="">Выберите роль</option>
+                                            <option value="hr">HR</option>
+                                            <option value="decider">Нанимающий менеджер (Decider)</option>
+                                            <option value="hr_platform_admin">Администратор платформы</option>
+                                        </select>
+                                        <button class="primary-button action-button" @onclick="() => AssignUserRole(user.Username)" disabled="@(string.IsNullOrEmpty(SelectedRoles.GetValueOrDefault(user.Username)))">Назначить</button>
+                                    </span>
+                                </div>
+                            }
+                        </article>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(SearchQuery))
+                    {
+                        <p style="color: var(--gray);">По вашему запросу сотрудники не найдены.</p>
+                    }
+                </div>
 
                 <article class="panel admin-table">
-                    <div class="admin-head"><span>Пользователь</span><span>Роль</span><span></span></div>
+                    <div class="admin-head"><span>Сотрудник в локальной БД</span><span>Роль</span><span></span></div>
                     @foreach (var user in State.Users)
                     {
                         <div class="admin-row">
                             <span><strong>@user.Name</strong><small>@user.Email</small></span>
                             <span>@user.Role</span>
-                            <button class="text-button" @onclick="() => EditUser(user)">Править</button>
+                            <span class="online-dot">@(user.IsActive ? "Активен" : "Скрыт")</span>
                         </div>
                     }
                 </article>
@@ -164,7 +189,6 @@ else
             <div class="toast" role="status"><SvgIcon Name="check" Size="16" /> @ToastMessage</div>
         }
     </section>
-}
 
 @code {
     private string Tab = "vacancies";
@@ -172,13 +196,62 @@ else
 
     private int? SelectedVacancyId;
     private int? SelectedCompetencyId;
-    private int? SelectedUserId;
     private int? SelectedCandidateId;
 
     private VacancyForm VacancyForm { get; set; } = new();
     private CompetencyForm CompetencyForm { get; set; } = new();
-    private UserForm UserForm { get; set; } = new();
     private CandidateForm CandidateForm { get; set; } = new();
+
+    private string SearchQuery = string.Empty;
+    private bool IsSearching = false;
+    private List<IdentityUserDto> FoundUsers = new();
+    private Dictionary<string, string> SelectedRoles = new();
+
+    private async Task SearchUsers(KeyboardEventArgs e)
+    {
+        if (SearchQuery.Length < 3) 
+        {
+            FoundUsers.Clear();
+            return;
+        }
+
+        IsSearching = true;
+        StateHasChanged();
+
+        try
+        {
+            FoundUsers = await _mediator.Send(new SearchUsersQuery(SearchQuery));
+            foreach (var u in FoundUsers)
+            {
+                SelectedRoles.TryAdd(u.Username, "");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("Ошибка поиска: " + ex.Message);
+        }
+        finally
+        {
+            IsSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AssignUserRole(string username)
+    {
+        var role = SelectedRoles.GetValueOrDefault(username);
+        if (string.IsNullOrEmpty(role)) return;
+
+        try
+        {
+            await _mediator.Send(new AssignRoleCommand(username, role));
+            await ShowToast($"Роль '{role}' назначена пользователю {username}");
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("Ошибка назначения: " + ex.Message);
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -193,23 +266,32 @@ else
 
     private async Task SaveVacancy()
     {
-        State.SaveVacancy(VacancyForm, SelectedVacancyId);
+        if (SelectedVacancyId is null)
+        {
+            await _mediator.Send(new CreateVacancyCommand(VacancyForm.Title));
+        }
+        else
+        {
+            await _mediator.Send(new UpdateVacancyCommand(SelectedVacancyId.Value, VacancyForm.Title));
+        }
+        State.Reload();
         ResetVacancyForm();
         await ShowToast("Вакансия сохранена");
     }
 
     private async Task SaveCompetency()
     {
-        State.SaveCompetency(CompetencyForm, SelectedCompetencyId);
+        if (SelectedCompetencyId is null)
+        {
+            await _mediator.Send(new CreateCompetenceCommand(CompetencyForm.Name, CompetencyForm.Description));
+        }
+        else
+        {
+            await _mediator.Send(new UpdateCompetenceCommand(SelectedCompetencyId.Value, CompetencyForm.Name, CompetencyForm.Description));
+        }
+        State.Reload();
         ResetCompetencyForm();
         await ShowToast("Компетенция сохранена");
-    }
-
-    private async Task SaveUser()
-    {
-        State.SaveUser(UserForm, SelectedUserId);
-        ResetUserForm();
-        await ShowToast("Пользователь сохранён");
     }
 
     private async Task SaveCandidate()
@@ -235,12 +317,6 @@ else
         CompetencyForm = SpectrumDemoState.ToForm(competency);
     }
 
-    private void EditUser(DemoUser user)
-    {
-        SelectedUserId = user.Id;
-        UserForm = SpectrumDemoState.ToForm(user);
-    }
-
     private void EditCandidate(DemoCandidate candidate)
     {
         SelectedCandidateId = candidate.Id;
@@ -257,12 +333,6 @@ else
     {
         SelectedCompetencyId = null;
         CompetencyForm = new CompetencyForm();
-    }
-
-    private void ResetUserForm()
-    {
-        SelectedUserId = null;
-        UserForm = new UserForm();
     }
 
     private void ResetCandidateForm()

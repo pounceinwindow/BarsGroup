@@ -5,6 +5,7 @@
 @inject IJSRuntime JS
 @inject IPdfDocumentService PdfService
 @inject IMediator Mediator
+@inject AuthenticationStateProvider AuthStateProvider
 
 @using Application.Exceptions
 @using Application.Interview.Commands.CancelInterview
@@ -53,7 +54,7 @@ else
                         var score = Score(competency);
                         <div class="matrix-row">
                             <span>@competency.Name</span>
-                            <DotScale Value="@score" Editable="@State.CanEditProtocol(Interview)" OnChange="@(newScore => SetScore(competency, newScore))" />
+                            <DotScale Value="@score" Editable="@CanEdit" OnChange="@(newScore => SetScore(competency, newScore))" />
                             <strong class="mono">@(score == 0 ? "—" : score)/5</strong>
                             @* [TODO: Артур] - форма для комментария по оценке *@
                         </div>
@@ -63,22 +64,22 @@ else
 
             <section class="comment-section">
                 <label for="comment">Комментарий по итогам</label>
-                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!State.CanEditProtocol(Interview))" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
+                <textarea id="comment" @bind="Interview.Comment" @bind:event="oninput" disabled="@(!CanEdit)" placeholder="Ключевые наблюдения по итогам собеседования"></textarea>
             </section>
 
             <section class="decision-section">
                 <div class="section-heading compact"><span class="eyebrow dark">Итог интервью</span><h3>Решение</h3></div>
-                @if (State.CanCancelInterview(Interview))
+                @if (CanCancel)
                 {
                     <div class="protocol-decision-actions">
-                        @if (State.CanEditProtocol(Interview))
+                        @if (CanEdit)
                         {
                             <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
                         }
                         <button class="secondary-button reject cancel-interview-button" type="button" @onclick="CancelInterview" disabled="@(IsSaving || IsCanceling)">@(IsCanceling ? "Отмена…" : "Отменить собеседование")</button>
                     </div>
                 }
-                else if (State.CanEditProtocol(Interview))
+                else if (CanEdit)
                 {
                     <div class="protocol-decision-actions">
                         <button class="secondary-button save-protocol-button" @onclick="SaveProtocol" disabled="@(IsSaving || IsCanceling)"><SvgIcon Name="check" Size="14" /> @(IsSaving ? "Сохранение…" : "Сохранить протокол")</button>
@@ -112,6 +113,33 @@ else
     private bool IsCanceling;
     private string? ToastMessage;
 
+    private int CurrentUserId;
+    private string CurrentRole = string.Empty;
+
+    private bool CanEdit => Interview is not null 
+                            && Interview.DbStatus == Domain.Enums.InterviewStatus.Scheduled 
+                            && CurrentUserId == Interview.HrId;
+                            
+    private bool CanCancel => Interview is not null 
+                              && Interview.DbStatus == Domain.Enums.InterviewStatus.Scheduled 
+                              && (CurrentUserId == Interview.HrId || CurrentRole == "hr_platform_admin" || CurrentRole == "admin");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdStr = user.FindFirst("UserId")?.Value;
+        if (int.TryParse(userIdStr, out var id))
+        {
+            CurrentUserId = id;
+        }
+        else
+        {
+            CurrentUserId = 1; // Fallback
+        }
+        CurrentRole = user.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+    }
+
     private DemoInterview? Interview => State.GetInterview(InterviewId);
     private DemoCandidate? Candidate => Interview is null ? null : State.GetCandidateForInterview(Interview);
 
@@ -125,13 +153,13 @@ else
 
     private void SetScore(DemoCompetency competency, int score)
     {
-        if (Interview is not null && State.CanEditProtocol(Interview))
+        if (Interview is not null && CanEdit)
             State.SetScore(Interview, competency.Id, score);
     }
 
     private async Task SaveProtocol()
     {
-        if (Interview is null || !State.CanEditProtocol(Interview))
+        if (Interview is null || !CanEdit)
             return;
 
         IsSaving = true;
@@ -146,7 +174,7 @@ else
 
             await Mediator.Send(new SubmitProtocolCommand(
                 Interview.DbId,
-                State.CurrentUserId,
+                CurrentUserId,
                 string.IsNullOrWhiteSpace(Interview.Comment) ? null : Interview.Comment.Trim(),
                 scores));
 
@@ -169,13 +197,13 @@ else
 
     private async Task CancelInterview()
     {
-        if (Interview is null || !State.CanCancelInterview(Interview))
+        if (Interview is null || !CanCancel)
             return;
 
         IsCanceling = true;
         try
         {
-            await Mediator.Send(new CancelInterviewCommand(Interview.DbId, State.CurrentUserId));
+            await Mediator.Send(new CancelInterviewCommand(Interview.DbId, CurrentUserId));
             State.Reload();
             await ShowToast("Собеседование отменено");
         }

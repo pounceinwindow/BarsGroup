@@ -9,22 +9,13 @@ namespace WebApplication1.Services;
 
 public sealed class SpectrumDemoState
 {
-    public const string HrRole = "Отдел кадров";
-    public const string DeciderRole = "Решала";
-    public const string AdminRole = "Администратор";
-
     private readonly BarsContext _context;
-    private readonly string[] _roles = [HrRole, DeciderRole, AdminRole];
 
     public SpectrumDemoState(BarsContext context)
     {
         _context = context;
         Reload();
     }
-
-    public bool IsAuthenticated { get; private set; }
-    public string Role { get; private set; } = HrRole;
-    public IReadOnlyList<string> Roles => _roles;
 
     public List<DemoCandidate> Candidates { get; } = [];
     public List<DemoInterview> Interviews { get; } = [];
@@ -54,28 +45,6 @@ public sealed class SpectrumDemoState
 
     public IReadOnlyList<string> DecisionOptions => ["Принять", "Следующий этап", "Отказать"];
 
-    public string CurrentUserName => Role switch
-    {
-        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Name ?? "Админ Системы",
-        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Name ?? "Иван Решалов",
-        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Name ?? "Елена Петрова"
-    };
-
-    public string CurrentUserShort => ToShortName(CurrentUserName);
-    // TODO: убрать заглушку на релизе
-    public int CurrentUserId => Role switch
-    {
-        AdminRole => Users.FirstOrDefault(user => user.Role == AdminRole)?.Id ?? 1,
-        DeciderRole => Users.FirstOrDefault(user => user.Role == DeciderRole)?.Id ?? 3,
-        _ => Users.FirstOrDefault(user => user.Role == HrRole)?.Id ?? 2
-    };
-
-    public bool CanEditProtocol(DemoInterview interview) =>
-        interview.DbStatus == InterviewStatus.Scheduled && CurrentUserId == interview.HrId;
-
-    public bool CanCancelInterview(DemoInterview interview) =>
-        interview.DbStatus == InterviewStatus.Scheduled
-        && (CurrentUserId == interview.HrId || Role == AdminRole);
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
     public IEnumerable<DemoInterview> RecentDecisions =>
@@ -153,18 +122,6 @@ public sealed class SpectrumDemoState
 
         Candidates.Clear();
         Candidates.AddRange(dbCandidates.Select(candidate => MapCandidate(candidate, dbInterviews)));
-    }
-
-    public void Login(string role)
-    {
-        Role = _roles.Contains(role) ? role : HrRole;
-        IsAuthenticated = true;
-    }
-
-    public void Logout()
-    {
-        IsAuthenticated = false;
-        Role = HrRole;
     }
 
     public DemoCandidate? GetCandidate(int id) => Candidates.FirstOrDefault(candidate => candidate.Id == id);
@@ -259,7 +216,7 @@ public sealed class SpectrumDemoState
 
         var vacancyId = FindVacancyId(response.Vacancy);
         var date = EnsureFutureUtc(response.Date);
-        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, CurrentUserId, date);
+        var interview = Interview.ScheduleNewProcess(candidate.Id, vacancyId, 1, date);
 
         _context.Interviews.Add(interview);
         _context.SaveChanges();
@@ -288,7 +245,7 @@ public sealed class SpectrumDemoState
             var interview = Interview.ScheduleNewProcess(
                 candidate.Id,
                 FindVacancyId(form.Vacancy),
-                CurrentUserId,
+                1,
                 DateTime.UtcNow.AddDays(1));
             _context.Interviews.Add(interview);
             _context.SaveChanges();
@@ -391,16 +348,15 @@ public sealed class SpectrumDemoState
         {
             var roleValue = role.ToString();
             DateOnly? revokedAt = form.IsActive ? null : DateOnly.FromDateTime(DateTime.Today);
-            string? revokedBy = form.IsActive ? null : CurrentUserShort;
+            string? revokedBy = form.IsActive ? null : "Елена П.";
 
             _context.Database.ExecuteSqlInterpolated($"""
                 UPDATE "Users"
-                SET "FirstName" = {firstName},
-                    "LastName" = {lastName},
+                SET "FirstName" = {form.Name},
                     "Role" = {roleValue},
                     "RevokedAt" = {revokedAt},
                     "RevokedBy" = {revokedBy}
-                WHERE "Id" = {id.Value};
+                WHERE "Id" = {id}
                 """);
         }
 
@@ -410,7 +366,7 @@ public sealed class SpectrumDemoState
 
     public void SetScore(DemoInterview interview, int competencyId, int score)
     {
-        if (!CanEditProtocol(interview))
+        if (interview == null)
             return;
 
         interview.Scores[competencyId] = Math.Clamp(score, 0, 5);
@@ -562,7 +518,7 @@ public sealed class SpectrumDemoState
         Time = FormatTimeUtc(interview.Date),
         Format = string.Empty,
         Hr = ToShortName($"{interview.Hr.FirstName} {interview.Hr.LastName}"),
-        Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
+        Approver = Users.FirstOrDefault(user => user.Role == "Решала")?.ShortName ?? "Иван Р.",
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),
         ScoreComments = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Comment),
         Comment = interview.SummaryComment ?? string.Empty,
@@ -660,16 +616,16 @@ public sealed class SpectrumDemoState
 
     private static UserRole ParseRole(string role) => role switch
     {
-        AdminRole => UserRole.Admin,
-        DeciderRole => UserRole.Decider,
+        "Администратор" => UserRole.Admin,
+        "Решала" => UserRole.Decider,
         _ => UserRole.HR
     };
 
     private static string ToUiRole(UserRole role) => role switch
     {
-        UserRole.Admin => AdminRole,
-        UserRole.Decider => DeciderRole,
-        _ => HrRole
+        UserRole.Admin => "Администратор",
+        UserRole.Decider => "Решала",
+        _ => "Отдел кадров"
     };
 
     private static string RequiredOrDefault(string value, string fallback) =>
@@ -848,7 +804,7 @@ public sealed class CompetencyForm
 public sealed class UserForm
 {
     public string Name { get; set; } = string.Empty;
-    public string Role { get; set; } = SpectrumDemoState.HrRole;
+    public string Role { get; set; } = "Отдел кадров";
     public string Email { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 }
