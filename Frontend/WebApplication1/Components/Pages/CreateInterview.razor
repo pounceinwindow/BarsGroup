@@ -12,6 +12,10 @@
 @using Application.Interview.Queries.GetCandidate
 @using MediatR
 @using System.Globalization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Спектр — создание собеседования</PageTitle>
 
@@ -71,7 +75,7 @@ else
                     }
                     <label>Дата<input @bind="Form.Date" @bind:event="oninput" placeholder="2026-07-09" /></label>
                     <label>Время (UTC)<input @bind="Form.Time" @bind:event="oninput" placeholder="10:00" /></label>
-                    <label class="span-2">HR<input value="@State.CurrentUserName" readonly /></label>
+                    <label class="span-2">HR<input value="@CurrentUserName" readonly /></label>
                 </div>
 
                 <div class="form-actions">
@@ -105,6 +109,9 @@ else
 
     private bool IsNewProcess => ProcessId is null;
 
+    private int CurrentUserId;
+    private string CurrentUserName = "HR";
+
     private string VacancyName =>
         VacancyId is null
             ? string.Empty
@@ -114,6 +121,19 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdStr = user.FindFirst("UserId")?.Value;
+        if (int.TryParse(userIdStr, out var id))
+        {
+            CurrentUserId = id;
+        }
+        else
+        {
+            CurrentUserId = 1; // Fallback
+        }
+        CurrentUserName = user.FindFirst(ClaimTypes.GivenName)?.Value ?? user.Identity?.Name ?? "HR";
+
         _loaded = false;
         Error = null;
         State.Reload();
@@ -169,7 +189,7 @@ else
             var interviewId = await Mediator.Send(new ScheduleInterviewCommand(
                 CandidateId,
                 vacancyId.Value,
-                State.CurrentUserId,
+                CurrentUserId,
                 dateUtc,
                 ProcessId));
 

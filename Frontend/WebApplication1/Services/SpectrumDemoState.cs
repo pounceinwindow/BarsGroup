@@ -76,6 +76,10 @@ public sealed class SpectrumDemoState
     public bool CanCancelInterview(DemoInterview interview) =>
         interview.DbStatus == InterviewStatus.Scheduled
         && (CurrentUserId == interview.HrId || Role == AdminRole);
+
+    public bool CanRecordVerdict(DemoInterview interview) =>
+        Role == DeciderRole && interview.DbStatus == InterviewStatus.WaitingForVerdict;
+
     public int PendingCount => Candidates.Count(candidate => LatestStatus(candidate) == "На согласовании");
 
     public IEnumerable<DemoInterview> RecentDecisions =>
@@ -116,6 +120,7 @@ public sealed class SpectrumDemoState
             .Include(interview => interview.Vacancy)
             .Include(interview => interview.Hr)
             .Include(interview => interview.Verdict)
+                .ThenInclude(verdict => verdict!.User)
             .Include(interview => interview.MatrixRows)
                 .ThenInclude(row => row.Competency)
             .OrderByDescending(interview => interview.Date)
@@ -416,34 +421,12 @@ public sealed class SpectrumDemoState
         interview.Scores[competencyId] = Math.Clamp(score, 0, 5);
     }
 
-    public void SaveDecision(DemoInterview interview, string decision)
+    public static DeciderVerdict ToDeciderVerdict(string decision) => decision switch
     {
-        var dbDecision = ToDbDecision(decision);
-        var deciderId = _context.Users
-            .AsNoTracking()
-            .Where(user => user.Role == UserRole.Decider)
-            .Select(user => user.Id)
-            .FirstOrDefault();
-
-        if (deciderId == 0)
-            deciderId = _context.Users.AsNoTracking().Select(user => user.Id).First();
-
-        _context.Database.ExecuteSqlInterpolated($"""
-            INSERT INTO "Verdicts" ("InterviewId", "UserId", "Decision", "Comment")
-            VALUES ({interview.DbId}, {deciderId}, {dbDecision}, NULL)
-            ON CONFLICT ("InterviewId", "UserId")
-            DO UPDATE SET "Decision" = EXCLUDED."Decision";
-            """);
-
-        var completed = InterviewStatus.Completed.ToString();
-        _context.Database.ExecuteSqlInterpolated($"""
-            UPDATE "Interviews"
-            SET "Status" = {completed}
-            WHERE "Id" = {interview.DbId};
-            """);
-
-        Reload();
-    }
+        "Принять" => DeciderVerdict.Hired,
+        "Следующий этап" => DeciderVerdict.NextStage,
+        _ => DeciderVerdict.Rejected
+    };
 
     public static CandidateForm ToForm(DemoCandidate candidate) => new()
     {
@@ -562,10 +545,13 @@ public sealed class SpectrumDemoState
         Time = FormatTimeUtc(interview.Date),
         Format = string.Empty,
         Hr = ToShortName($"{interview.Hr.FirstName} {interview.Hr.LastName}"),
-        Approver = Users.FirstOrDefault(user => user.Role == DeciderRole)?.ShortName ?? "Иван Р.",
+        Approver = interview.Verdict?.User is not null
+            ? ToShortName($"{interview.Verdict.User.FirstName} {interview.Verdict.User.LastName}")
+            : string.Empty,
         Scores = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Score),
         ScoreComments = interview.MatrixRows.ToDictionary(row => row.CompetencyId, row => row.Comment),
         Comment = interview.SummaryComment ?? string.Empty,
+        VerdictComment = interview.Verdict?.Comment,
         Decision = ToUiDecision(interview.Verdict?.Decision),
         Status = ToUiStatus(interview.Status, interview.Verdict?.Decision)
     };
@@ -631,7 +617,7 @@ public sealed class SpectrumDemoState
     private static string ToUiStatus(InterviewStatus status, DeciderVerdict? decision) => decision switch
     {
         DeciderVerdict.Hired => "Принят",
-        DeciderVerdict.NextStage => "Собеседование запланировано",
+        DeciderVerdict.NextStage => "Следующий этап",
         DeciderVerdict.Rejected => "Отклонён",
         _ => status switch
         {
@@ -649,13 +635,6 @@ public sealed class SpectrumDemoState
         DeciderVerdict.NextStage => "Следующий этап",
         DeciderVerdict.Rejected => "Отказать",
         _ => null
-    };
-
-    private static string ToDbDecision(string decision) => decision switch
-    {
-        "Принять" => DeciderVerdict.Hired.ToString(),
-        "Следующий этап" => DeciderVerdict.NextStage.ToString(),
-        _ => DeciderVerdict.Rejected.ToString()
     };
 
     private static UserRole ParseRole(string role) => role switch
@@ -774,6 +753,7 @@ public sealed class DemoInterview
     public Dictionary<int, int> Scores { get; set; } = [];
     public Dictionary<int, string?> ScoreComments { get; set; } = [];
     public string Comment { get; set; } = string.Empty;
+    public string? VerdictComment { get; set; }
     public string? Decision { get; set; }
     public string Status { get; set; } = "Новый";
 }

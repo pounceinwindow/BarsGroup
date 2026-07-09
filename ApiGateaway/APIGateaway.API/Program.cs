@@ -9,6 +9,7 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGatewayEndpoints();
 app.MapReverseProxy();
 
 app.Run();

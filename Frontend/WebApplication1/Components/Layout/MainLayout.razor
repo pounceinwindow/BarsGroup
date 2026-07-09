@@ -2,106 +2,97 @@
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
 
-@if (!State.IsAuthenticated)
-{
-    <main class="login-panel auth-required-page">
-        <section class="login-card panel">
-            <span class="eyebrow dark">Нужен вход</span>
-            <h2>Сначала авторизуйтесь</h2>
-            <p class="form-intro">Рабочие страницы доступны после выбора роли на демо-экране входа.</p>
-            <button class="primary-button login-button" @onclick='() => Navigation.NavigateTo("/")'>
-                На страницу входа <span>→</span>
-            </button>
-        </section>
-    </main>
-}
-else
-{
-    <div class="app-shell">
-        <aside class="sidebar @(MobileMenuOpen ? "is-open" : null)">
-            <div>
-                <div class="brand brand-light sidebar-brand"><span class="brand-mark"></span><span>Спектр</span></div>
-                <nav aria-label="Основная навигация">
-                    <NavLink class="nav-item" href="/dashboard" Match="NavLinkMatch.All" @onclick="CloseMobileMenu">
-                        <SvgIcon Name="dashboard" /> <span>Дашборд</span>
-                    </NavLink>
-                    <NavLink class="nav-item" href="/candidates" @onclick="CloseMobileMenu">
-                        <SvgIcon Name="users" /> <span>Реестр кандидатов</span>
-                    </NavLink>
-                    <NavLink class="nav-item" href="/interviews" @onclick="CloseMobileMenu">
-                        <SvgIcon Name="calendar" /> <span>Реестр собесов</span>
-                    </NavLink>
-                    <NavLink class="nav-item" href="/candidates/new" @onclick="CloseMobileMenu">
-                        <SvgIcon Name="plus" /> <span>Создать кандидата</span>
-                    </NavLink>
-                    @if (State.Role == SpectrumDemoState.DeciderRole)
-                    {
-                        <NavLink class="nav-item" href="/decisions" @onclick="CloseMobileMenu">
-                            <SvgIcon Name="checklist" /> <span>На согласовании</span><span class="nav-counter">@State.PendingCount</span>
+<AuthorizeView Roles="hr_platform_admin, admin, decider, hr">
+    <Authorized>
+        <div class="app-shell">
+            <aside class="sidebar @(MobileMenuOpen ? "is-open" : null)">
+                <div>
+                    <div class="brand brand-light sidebar-brand"><span class="brand-mark"></span><span>Спектр</span></div>
+                    <nav aria-label="Основная навигация">
+                        <NavLink class="nav-item" href="/dashboard" Match="NavLinkMatch.All" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="dashboard" /> <span>Дашборд</span>
                         </NavLink>
-                    }
-                    @if (State.Role == SpectrumDemoState.AdminRole)
-                    {
-                        <div class="nav-divider">Админ</div>
-                        <NavLink class="nav-item" href="/admin" @onclick="CloseMobileMenu">
-                            <SvgIcon Name="shield" /> <span>Справочники</span>
+                        <NavLink class="nav-item" href="/candidates" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="users" /> <span>Реестр кандидатов</span>
                         </NavLink>
-                    }
-                </nav>
-            </div>
-
-            <div class="sidebar-user">
-                <div class="user-summary">
-                    <Initials Name="@State.CurrentUserName" Class="small inverse" />
-                    <div><strong>@State.CurrentUserShort</strong><span>@State.Role</span></div>
+                        <NavLink class="nav-item" href="/interviews" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="calendar" /> <span>Реестр собесов</span>
+                        </NavLink>
+                        <NavLink class="nav-item" href="/candidates/new" @onclick="CloseMobileMenu">
+                            <SvgIcon Name="plus" /> <span>Создать кандидата</span>
+                        </NavLink>
+                        <AuthorizeView Roles="decider" Context="deciderContext">
+                            <NavLink class="nav-item" href="/decisions" @onclick="CloseMobileMenu">
+                                <SvgIcon Name="checklist" /> <span>На согласовании</span><span class="nav-counter">@State.PendingCount</span>
+                            </NavLink>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="hr_platform_admin" Context="adminContext">
+                            <div class="nav-divider">Админ</div>
+                            <NavLink class="nav-item" href="/admin" @onclick="CloseMobileMenu">
+                                <SvgIcon Name="shield" /> <span>Справочники</span>
+                            </NavLink>
+                        </AuthorizeView>
+                    </nav>
                 </div>
-                <button class="nav-item" @onclick="Logout"><SvgIcon Name="logout" /><span>Выйти</span></button>
-            </div>
-        </aside>
 
-        @if (MobileMenuOpen)
-        {
-            <button class="menu-scrim" aria-label="Закрыть меню" @onclick="CloseMobileMenu"></button>
-        }
-
-        <main class="workspace">
-            <header class="topbar">
-                <button class="menu-button" aria-label="Открыть меню" @onclick="() => MobileMenuOpen = !MobileMenuOpen"><SvgIcon Name="menu" /></button>
-                <div class="topbar-title">
-                    <span class="eyebrow dark">Подбор и оценка</span>
-                    <h1>@Title</h1>
+                <div class="sidebar-user">
+                    <div class="user-summary">
+                        <Initials Name="@(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name)" Class="small inverse" />
+                        <div>
+                            <strong>@(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name ?? "Пользователь") @(context.User.FindFirst(ClaimTypes.Surname)?.Value)</strong>
+                            <span>@GetDisplayRole(context.User)</span>
+                        </div>
+                    </div>
+                    <a href="/logout" class="logout-link" title="Выйти из системы">
+                        <SvgIcon Name="logout" Size="16" /> 
+                    </a>
                 </div>
-            </header>
+            </aside>
 
-            @Body
+            @if (MobileMenuOpen)
+            {
+                <button class="menu-scrim" aria-label="Закрыть меню" @onclick="CloseMobileMenu"></button>
+            }
+
+            <main class="workspace">
+                <header class="topbar">
+                    <button class="menu-button" aria-label="Открыть меню" @onclick="() => MobileMenuOpen = !MobileMenuOpen"><SvgIcon Name="menu" /></button>
+                    <div class="topbar-title">
+                        <span class="eyebrow dark">Подбор и оценка</span>
+                        <h1>@Title</h1>
+                    </div>
+                </header>
+
+                @Body
+            </main>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <main class="login-panel auth-required-page">
+            <section class="login-card panel">
+                @if (context.User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="eyebrow dark">Доступ закрыт</span>
+                    <h2>Нет прав доступа</h2>
+                    <p class="form-intro">Вы успешно авторизовались, но у вас нет нужных ролей.</p>
+                    <a href="/logout" class="primary-button" style="text-decoration: none; text-align: center; display: block; margin-top: 1rem;">Сменить аккаунт</a>
+                }
+                else
+                {
+                    <span class="eyebrow dark">Авторизация</span>
+                    <h2>Требуется вход</h2>
+                    <p class="form-intro">Пожалуйста, войдите в систему.</p>
+                    <a href="/login" class="primary-button" style="text-decoration: none; text-align: center; display: block; margin-top: 1rem;">Войти</a>
+                }
+            </section>
         </main>
-    </div>
-}
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private bool MobileMenuOpen;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated == true && !State.IsAuthenticated)
-        {
-            var role = SpectrumDemoState.HrRole;
-            // Попробуем прочитать роли из JWT, если они есть
-            if (authState.User.HasClaim(c => c.Value == "hr_platform_admin" || c.Value == "admin"))
-            {
-                role = SpectrumDemoState.AdminRole;
-            }
-            else if (authState.User.HasClaim(c => c.Value == "decider"))
-            {
-                role = SpectrumDemoState.DeciderRole;
-            }
-            
-            State.Login(role);
-        }
-    }
 
     private string Title => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] switch
     {
@@ -120,10 +111,14 @@ else
 
     private void CloseMobileMenu() => MobileMenuOpen = false;
 
-    private void Logout()
+    private string GetDisplayRole(System.Security.Claims.ClaimsPrincipal user)
     {
-        State.Logout();
-        CloseMobileMenu();
-        Navigation.NavigateTo("/");
+        var roles = user.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+        
+        if (roles.Contains("hr_platform_admin")) return "Админ";
+        if (roles.Contains("decider")) return "Решала";
+        if (roles.Contains("hr")) return "Отдел кадров";
+            
+        return "Без роли";
     }
 }

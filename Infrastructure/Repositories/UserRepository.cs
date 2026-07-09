@@ -38,4 +38,11 @@ public class UserRepository(BarsContext context) : IUserRepository
             user => user.Id == id && user.Role == UserRole.Admin,
             cancellationToken);
     }
+
+    public Task<bool> IsDeciderAsync(int id, CancellationToken cancellationToken)
+    {
+        return context.Users.AnyAsync(
+            user => user.Id == id && user.Role == UserRole.Decider,
+            cancellationToken);
+    }
 }

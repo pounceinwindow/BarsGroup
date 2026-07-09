@@ -1,4 +1,4 @@
-﻿namespace Domain.Models;
+namespace Domain.Models;
 
 public class Vacancy
 {
@@ -16,5 +16,14 @@ public class Vacancy
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         return new Vacancy { Name = name };
+    }
+
+    /// <summary>
+    /// Обновляет название вакансии.
+    /// </summary>
+    public void UpdateName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name;
     }
 }

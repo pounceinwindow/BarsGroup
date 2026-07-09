@@ -25,6 +25,17 @@ public class CompetencyRepository(BarsContext context) : ICompetencyRepository
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<Domain.Models.Competency?> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await context.Competencies.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
+    public async Task UpdateAsync(Domain.Models.Competency competence, CancellationToken cancellationToken)
+    {
+        context.Competencies.Update(competence);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task DeleteByIdAsync(int id, CancellationToken cancellationToken)
     {
         var competence = await context.Competencies.FindAsync(new object[] { id }, cancellationToken);

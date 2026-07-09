@@ -16,7 +16,13 @@ public class InterviewRepository(BarsContext context) : IInterviewRepository
     {
         return context.Interviews
             .Include(interview => interview.MatrixRows)
+            .Include(interview => interview.Verdict)
             .FirstOrDefaultAsync(interview => interview.Id == interviewId, cancellationToken);
+    }
+
+    public async Task AddVerdictAsync(Domain.Models.Verdict verdict, CancellationToken cancellationToken)
+    {
+        await context.Verdicts.AddAsync(verdict, cancellationToken);
     }
 
     public Task<bool> HasActiveAsync(int candidateId, int vacancyId, CancellationToken cancellationToken)

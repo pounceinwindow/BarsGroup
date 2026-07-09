@@ -125,6 +125,21 @@ public class Interview
         Status = InterviewStatus.Completed;
     }
 
+    /// <summary>
+    /// Фиксирует вердикт решалы и завершает интервью.
+    /// </summary>
+    public Verdict RecordVerdict(int userId, DeciderVerdict decision, string? comment)
+    {
+        EnsureStatus(InterviewStatus.WaitingForVerdict);
+
+        if (Verdict is not null)
+            throw new DomainException("Verdict has already been recorded.");
+
+        var verdict = Verdict.Record(Id, userId, decision, comment);
+        Complete();
+        return verdict;
+    }
+
     private static Interview Schedule(
         int candidateId,
         int vacancyId,

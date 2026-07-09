@@ -40,4 +40,5 @@ public interface IInterviewRepository
     Task<(List<InterviewDto>, int)> GetFilteredInterviews(
         InterviewFilters filters,
         CancellationToken cancellationToken);
+    Task AddVerdictAsync(Verdict verdict, CancellationToken cancellationToken);
 }

@@ -1,18 +1,22 @@
+@page "/"
 @page "/dashboard"
 @layout MainLayout
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
 <PageTitle>Спектр — дашборд</PageTitle>
 
-<section class="page-content dashboard-page">
-    <div class="welcome-line">
-        <div>
-            <span class="eyebrow dark">Рабочий день · 08 июля 2026</span>
-            <h2>С возвращением, @State.CurrentUserName.Split(' ')[0]</h2>
-        </div>
-        <p>Вы вошли как «@State.Role»</p>
-    </div>
+<AuthorizeView>
+    <Authorized>
+        <section class="page-content dashboard-page">
+            <div class="welcome-line">
+                <div>
+                    <span class="eyebrow dark">Рабочий день · 08 июля 2026</span>
+                    <h2>С возвращением, @(context.User.FindFirst(ClaimTypes.GivenName)?.Value ?? context.User.Identity?.Name)</h2>
+                </div>
+            </div>
 
     <div class="kpi-grid">
         @foreach (var item in DashboardKpis)
@@ -66,6 +70,8 @@
         </article>
     </div>
 </section>
+    </Authorized>
+</AuthorizeView>
 
 @code {
     private IEnumerable<(string Label, int Value, string Class)> DashboardKpis =>

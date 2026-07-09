@@ -13,6 +13,17 @@ public class VacancyRepository(BarsContext context) : IVacancyRepository
         await context.Vacancies.AddAsync(vacancy, cancellationToken);
     }
 
+    public async Task<Vacancy?> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await context.Vacancies.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+    }
+
+    public Task UpdateAsync(Vacancy vacancy, CancellationToken cancellationToken)
+    {
+        context.Vacancies.Update(vacancy);
+        return Task.CompletedTask;
+    }
+
     public async Task DeleteByIdAsync(int id, CancellationToken cancellationToken)
     {
         var vacancy = await context.Vacancies.FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
