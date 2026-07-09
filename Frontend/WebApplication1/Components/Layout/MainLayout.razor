@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
 @inject SpectrumDemoState State
 @inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 
 @if (!State.IsAuthenticated)
 {
@@ -80,6 +82,26 @@ else
 
 @code {
     private bool MobileMenuOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true && !State.IsAuthenticated)
+        {
+            var role = SpectrumDemoState.HrRole;
+            // Попробуем прочитать роли из JWT, если они есть
+            if (authState.User.HasClaim(c => c.Value == "hr_platform_admin" || c.Value == "admin"))
+            {
+                role = SpectrumDemoState.AdminRole;
+            }
+            else if (authState.User.HasClaim(c => c.Value == "decider"))
+            {
+                role = SpectrumDemoState.DeciderRole;
+            }
+            
+            State.Login(role);
+        }
+    }
 
     private string Title => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] switch
     {

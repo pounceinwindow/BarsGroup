@@ -1,8 +1,14 @@
+using System.Security.Claims;
+using Domain.Enums;
+using Domain.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Application;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Components;
 using WebApplication1.Services;
+using WebApplication1.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +22,9 @@ builder.Services.AddScoped<SpectrumDemoState>();
 // База данных
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Аутентификация
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -25,6 +34,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 app.MapStaticAssets();
 

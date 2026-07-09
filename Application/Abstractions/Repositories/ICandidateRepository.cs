@@ -15,4 +15,5 @@ public interface ICandidateRepository
     Task<CandidateResponse?> GetByIdDetailedAsync(int id, CancellationToken cancellationToken);
 
     Task<(List<CandidateListUnit> Items, int TotalCount)> GetFilteredCandidates(CandidateFilters filters);
+
 }

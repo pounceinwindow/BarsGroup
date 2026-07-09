@@ -1,0 +1,131 @@
+@page "/admin/users"
+@layout MainLayout
+@using Application.Abstractions
+@using Microsoft.AspNetCore.Authorization
+@using MediatR
+@using Application.Admin.Query.SearchUsers
+@using Application.Admin.Command.AssignRole
+@using Application.Admin.DTO
+@inject IMediator _mediator
+
+<PageTitle>Спектр — Управление пользователями</PageTitle>
+
+<section class="page-content registry-page">
+    <div class="page-heading-row">
+        <div>
+            <span class="eyebrow dark">Администрирование</span>
+            <h2>Назначение ролей сотрудникам</h2>
+        </div>
+    </div>
+
+    <div class="registry-toolbar" style="align-items: flex-end;">
+        <div class="filter-group">
+            <label>Поиск сотрудника (по LDAP)
+                <input class="filter-input" @bind="SearchQuery" @bind:event="oninput" placeholder="Начните вводить логин..." @onkeyup="SearchUsers" />
+            </label>
+        </div>
+    </div>
+
+    @if (IsSearching)
+    {
+        <p style="margin-top: 15px; color: var(--gray);">Поиск в LDAP (Keycloak)...</p>
+    }
+    else if (FoundUsers.Any())
+    {
+        <div class="registry-table panel" style="margin-top: 20px;">
+            <div class="registry-head"><span>Сотрудник</span><span>Логин</span><span>Действие</span></div>
+            @foreach (var user in FoundUsers)
+            {
+                <div class="registry-row" style="cursor: default;">
+                    <span class="candidate-cell">
+                        <Initials Name="@($"{user.FirstName} {user.LastName}".Trim())" />
+                        <span><strong>@($"{user.FirstName} {user.LastName}".Trim())</strong></span>
+                    </span>
+                    <span data-label="Логин">@user.Username</span>
+                    <span data-label="Действие" style="display: flex; gap: 10px; align-items: center;">
+                        <select @bind="SelectedRoles[user.Username]" class="filter-input" style="width: 150px;">
+                            <option value="">Выберите роль</option>
+                            <option value="hr">HR</option>
+                            <option value="decider">Нанимающий менеджер (Decider)</option>
+                            <option value="hr_platform_admin">Администратор платформы</option>
+                        </select>
+                        <button class="primary-button" style="padding: 5px 15px; font-size: 13px;" @onclick="() => AssignUserRole(user.Username)" disabled="@(string.IsNullOrEmpty(SelectedRoles.GetValueOrDefault(user.Username)))">Назначить</button>
+                    </span>
+                </div>
+            }
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(SearchQuery))
+    {
+        <p style="margin-top: 15px; color: var(--gray);">По вашему запросу сотрудники не найдены.</p>
+    }
+
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div style="margin-top: 20px; padding: 15px; background: @(IsError ? "var(--red-pale)" : "var(--green-pale)"); color: @(IsError ? "var(--red)" : "var(--green)"); border-radius: 5px;">
+            @Message
+        </div>
+    }
+
+</section>
+
+@code {
+    private string SearchQuery = string.Empty;
+    private bool IsSearching = false;
+    private List<IdentityUserDto> FoundUsers = new();
+    private Dictionary<string, string> SelectedRoles = new();
+
+    private string Message = string.Empty;
+    private bool IsError = false;
+
+    // Use a timer or debounce in real app, but for now we search on keyup
+    private async Task SearchUsers(KeyboardEventArgs e)
+    {
+        if (SearchQuery.Length < 3) 
+        {
+            FoundUsers.Clear();
+            return;
+        }
+
+        IsSearching = true;
+        Message = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            FoundUsers = await _mediator.Send(new SearchUsersQuery(SearchQuery));
+            foreach (var u in FoundUsers)
+            {
+                SelectedRoles.TryAdd(u.Username, "");
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = "Ошибка поиска: " + ex.Message;
+            IsError = true;
+        }
+        finally
+        {
+            IsSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AssignUserRole(string username)
+    {
+        var role = SelectedRoles.GetValueOrDefault(username);
+        if (string.IsNullOrEmpty(role)) return;
+
+        try
+        {
+            await _mediator.Send(new AssignRoleCommand(username, role));
+            Message = $"Успех! Сотруднику {username} выдана роль '{role}'.";
+            IsError = false;
+        }
+        catch (Exception ex)
+        {
+            Message = "Ошибка при выдаче роли: " + ex.Message;
+            IsError = true;
+        }
+    }
+}

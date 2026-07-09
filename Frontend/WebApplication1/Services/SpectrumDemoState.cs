@@ -379,6 +379,7 @@ public sealed class SpectrumDemoState
         if (id is null)
         {
             _context.Users.Add(User.Create(
+                firstName.ToLower(),
                 firstName,
                 lastName,
                 "demo-password-hash",

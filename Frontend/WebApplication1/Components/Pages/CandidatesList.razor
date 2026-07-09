@@ -52,6 +52,8 @@
         <span class="result-count">Найдено <strong>@TotalCount</strong></span>
     </div>
 
+    
+
     <div class="registry-table panel">
         <div class="registry-head"><span>Кандидат</span><span>Статус</span><span>Город</span> <span>Почта</span></div>
         @if (Candidates.Count == 0)
@@ -81,7 +83,7 @@
     private int TotalPages => TotalCount == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)Filters.PageSize);
 
     // Инициализируем фильтры с дефолтными значениями страницы
-    private readonly CandidateFilters Filters = new();
+    private readonly CandidateFilters Filters = new() { Page = 1, PageSize = 10 };
 
     protected override async Task OnInitializedAsync()
     {
