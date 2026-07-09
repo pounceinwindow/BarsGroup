@@ -9,4 +9,7 @@ public class CandidateFilters
 {
     public string Search { get; set; } = string.Empty;
     public CandidateStatus Status { get; set; } = CandidateStatus.All;
+
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
 }

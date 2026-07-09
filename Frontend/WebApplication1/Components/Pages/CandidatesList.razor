@@ -12,14 +12,8 @@
 @inject NavigationManager Navigation
 @inject IMediator _mediator
 
-@* <PageTitle>Спектр — @(OnlyPending ? "на согласовании" : "реестр кандидатов")</PageTitle> *@
-
 <section class="page-content registry-page">
     <div class="page-heading-row">
-        @* <div>
-            <span class="eyebrow dark">@(OnlyPending ? "Решения" : "Кандидаты")</span>
-            <h2>@(OnlyPending ? "Кандидаты на согласовании" : "Реестр кандидатов")</h2>
-        </div> *@
         <button class="primary-button action-button" @onclick='() => Navigation.NavigateTo("/candidates/new")'>
             <SvgIcon Name="plus" Size="15" /> Новый кандидат
         </button>
@@ -29,47 +23,64 @@
         <div class="filter-group">
             <label>
                 Поиск
-                <input class="filter-input" @bind="Filters.Search" 
+                <input class="filter-input" @bind="Filters.Search"
                        @bind:after="ApplyFilters" placeholder="ФИО" />
             </label>
             <label>
                 Статус
                 <select @bind="Filters.Status" @bind:after="ApplyFilters">
-                    @* <option value="">Все</option> *@
-                    @foreach (var status in Enum.GetValues<CandidateStatus>()) 
-                        { <option value="@status">@status</option> }
-                 </select>
+                    @foreach (var status in Enum.GetValues<CandidateStatus>())
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
             </label>
 
             <button class="secondary-button" @onclick="ResetFilters">Сбросить фильтры</button>
         </div>
-    <span class="result-count">Найдено <strong>@Candidates.Count</strong></span>
+
+        @* Блок пагинации *@
+        @if (TotalPages > 1)
+        {
+            <div class="pagination" style="margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center;">
+                <button class="secondary-button" disabled="@(Filters.Page == 1)" @onclick="() => GoToPage(Filters.Page - 1)">← Назад</button>
+                <span>Страница @Filters.Page из @TotalPages</span>
+                <button class="secondary-button" disabled="@(Filters.Page == TotalPages)" @onclick="() => GoToPage(Filters.Page + 1)">Вперед →</button>
+            </div>
+        }
+
+        <span class="result-count">Найдено <strong>@TotalCount</strong></span>
     </div>
 
     <div class="registry-table panel">
-    <div class="registry-head"><span>Кандидат</span><span>Статус</span><span>Город</span> <span>Почта</span></div>
-    @if (Candidates.Count == 0)
+        <div class="registry-head"><span>Кандидат</span><span>Статус</span><span>Город</span> <span>Почта</span></div>
+        @if (Candidates.Count == 0)
         {
             <div class="empty-state">
                 <strong>Кандидаты не найдены</strong>
                 <span>Измените запрос или сбросьте фильтры.</span>
             </div>
         }
-    @foreach (var candidate in Candidates)
+        @foreach (var candidate in Candidates)
         {
             <button class="registry-row" @onclick='() => Navigation.NavigateTo($"/candidates/{candidate.Id}")'>
-            <span class="candidate-cell"><Initials Name="@candidate.FullName" /><span><strong>@candidate.FullName</strong><small>@candidate.City · @candidate.Email</small></span></span>
-            <span data-label="Статус"><StatusBadge Status="@candidate.CandidateStatus.ToString()" /></span>
-            <span data-label="Город">@candidate.City</span>
-            <span data-label="Почта">@candidate.Email</span>
+                <span class="candidate-cell"><Initials Name="@candidate.FullName" /><span><strong>@candidate.FullName</strong><small>@candidate.City · @candidate.Email</small></span></span>
+                <span data-label="Статус"><StatusBadge Status="@candidate.CandidateStatus.ToString()" /></span>
+                <span data-label="Город">@candidate.City</span>
+                <span data-label="Почта">@candidate.Email</span>
             </button>
         }
     </div>
 </section>
 
 @code {
-    //
     private List<CandidateListUnit> Candidates = new();
+    private int TotalCount = 0;
+
+    // Вычисляемое свойство для общего количества страниц
+    private int TotalPages => TotalCount == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)Filters.PageSize);
+
+    // Инициализируем фильтры с дефолтными значениями страницы
     private readonly CandidateFilters Filters = new();
 
     protected override async Task OnInitializedAsync()
@@ -79,11 +90,14 @@
 
     private async Task LoadCandidates()
     {
-        Candidates = await _mediator.Send(new GetFilteredCandidatesQuery(Filters));
+        var result = await _mediator.Send(new GetFilteredCandidatesQuery(Filters));
+        Candidates = result.Items;
+        TotalCount = result.TotalCount;
     }
 
     private async Task ApplyFilters()
     {
+        Filters.Page = 1; // При изменении фильтров всегда возвращаемся на первую страницу
         await LoadCandidates();
     }
 
@@ -91,6 +105,14 @@
     {
         Filters.Search = string.Empty;
         Filters.Status = CandidateStatus.All;
+        Filters.Page = 1;
+        await LoadCandidates();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages) return;
+        Filters.Page = page;
         await LoadCandidates();
     }
 }
