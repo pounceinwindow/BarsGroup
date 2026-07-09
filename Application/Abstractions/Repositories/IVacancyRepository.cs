@@ -1,10 +1,11 @@
+using Application.Vacancy;
 using Domain.Models;
 
 namespace Application.Abstractions.Repositories;
 
 public interface IVacancyRepository
 {
-    Task AddAsync(Vacancy vacancy, CancellationToken cancellationToken);
+    Task AddAsync(Domain.Models.Vacancy vacancy, CancellationToken cancellationToken);
 
     //Аккуратно, зависимости с Interview
     Task DeleteByIdAsync(int id, CancellationToken cancellationToken);
@@ -28,4 +29,6 @@ public interface IVacancyRepository
     /// Id компетенций из шаблона вакансии (VacancyCompetency).
     /// </summary>
     Task<IReadOnlyList<int>> GetCompetencyIdsAsync(int vacancyId, CancellationToken cancellationToken);
+
+    Task<List<VacancyDto>> GetAll();
 }

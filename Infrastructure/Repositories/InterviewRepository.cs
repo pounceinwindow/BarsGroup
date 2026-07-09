@@ -1,4 +1,5 @@
 using Application.Abstractions.Repositories;
+using Application.Interview.DTO;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,5 +46,50 @@ public class InterviewRepository(BarsContext context) : IInterviewRepository
     public Task<bool> InterviewExistsAsync(int interviewId, CancellationToken cancellationToken)
     {
         return context.Interviews.AnyAsync(interview => interview.Id == interviewId, cancellationToken);
+    }
+
+    public async Task<(List<InterviewDto>, int)> GetFilteredInterviews(
+        InterviewFilters filters, 
+        CancellationToken cancellationToken)
+    {
+        var interviews = context.Interviews
+            .Include(x => x.Vacancy)
+            .Include(x => x.Candidate)
+            .AsNoTracking();
+
+        if (filters.Status != InterviewStatus.All)
+        {
+            interviews = interviews
+                .Where(x => x.Status == filters.Status);
+        }
+
+        if (!string.IsNullOrEmpty(filters.Search))
+        {
+            interviews = interviews
+                .Where(x => x.Candidate.FullName.Contains(filters.Search));
+        }
+
+        if (!string.IsNullOrEmpty(filters.Vacancy))
+        {
+            interviews = interviews
+                .Where(x => x.Vacancy.Name == filters.Vacancy);
+        }
+
+        var count = await interviews.CountAsync(cancellationToken);
+
+        var items = await interviews
+            .Skip((filters.Page - 1) * filters.PageSize)
+            .Take(filters.PageSize)
+            .Select(x => new InterviewDto
+            {
+                Id = x.Id,
+                Candidate = x.Candidate.FullName,
+                Status = x.Status,
+                Vacancy = x.Vacancy.Name,
+                Date = x.Date.ToShortDateString()
+            })
+            .ToListAsync(cancellationToken);
+
+        return (items, count);
     }
 }

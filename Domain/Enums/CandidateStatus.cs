@@ -3,7 +3,7 @@ namespace Domain.Enums;
 public enum CandidateStatus
 {
     All, // для фильтров [TODO] - исправить
-    LookingForWork,
-    Hired,
-    Archived
+    LookingForWork, // В поиске работы
+    Hired, // Нанят
+    Archived // В резерве
 }

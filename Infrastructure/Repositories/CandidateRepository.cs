@@ -63,7 +63,7 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<(List<CandidateListUnit> Items, int TotalCount)> GetFilteredCandidates(CandidateFilters filters)
+    public async Task<(List<CandidateDto> Items, int TotalCount)> GetFilteredCandidates(CandidateFilters filters)
     {
         var candidates = context.Candidates.AsNoTracking();
 
@@ -85,7 +85,7 @@ public class CandidateRepository(BarsContext context) : ICandidateRepository
             .OrderBy(c => c.Id) // Сортировка обязательна для корректной работы Skip/Take
             .Skip((filters.Page - 1) * filters.PageSize)
             .Take(filters.PageSize)
-            .Select(c => new CandidateListUnit(
+            .Select(c => new CandidateDto(
                 c.Id,
                 c.FullName,
                 c.City,

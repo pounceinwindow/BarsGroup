@@ -1,0 +1,33 @@
+﻿<span class="status-badge @StatusClass">@StatusText</span>
+
+@code {
+    [Parameter, EditorRequired] public string Status { get; set; } = "All";
+
+    private string StatusClass => Status switch
+    {
+        "Hired" => "status-hired",
+        "Completed" => "status-hired",
+        "Archived" => "status-reserve",
+        "Scheduled" => "status-planned",
+        "NextStage" => "status-next",
+        "WaitingForVerdict" => "status-pending",
+        "Canceled" => "status-rejected",
+        "LookingForWork" => "status-new",
+        "All" => "status-new",
+        _ => "status-new"
+    };
+
+    private string StatusText => Status switch
+    {
+        "All" => "Все",
+        "Hired" => "Нанят",
+        "LookingForWork" => "В поиске работы",
+        "Archived" => "В резерве",
+        "Scheduled" => "Запланировано",
+        "NextStage" => "Следующий этап",
+        "WaitingForVerdict" => "Ожидает решения",
+        "Canceled" => "Отклонено",
+        "Completed" => "Завершено",
+        _ => "Все"
+    };
+}

@@ -1,5 +1,6 @@
 using Application.Abstractions.Repositories;
 using Application.Exceptions;
+using Application.Vacancy;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -130,5 +131,13 @@ public class VacancyRepository(BarsContext context) : IVacancyRepository
             .Where(vacancyCompetency => vacancyCompetency.VacancyId == vacancyId)
             .Select(vacancyCompetency => vacancyCompetency.CompetencyId)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<VacancyDto>> GetAll()
+    {
+        return await context.Vacancies
+            .AsNoTracking()
+            .Select(x => new VacancyDto(x.Name))
+            .ToListAsync();
     }
 }
