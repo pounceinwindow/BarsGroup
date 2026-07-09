@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,25 +10,25 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
+            migrationBuilder.DropColumn(
+                name: "RevokedBy",
+                table: "Users");
+
+            migrationBuilder.AddColumn<int>(
                 name: "RevokedBy",
                 table: "Users",
                 type: "integer",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+                nullable: true);
 
-            migrationBuilder.AlterColumn<int>(
+            migrationBuilder.DropColumn(
+                name: "AssignedBy",
+                table: "Users");
+
+            migrationBuilder.AddColumn<int>(
                 name: "AssignedBy",
                 table: "Users",
                 type: "integer",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+                nullable: true);
         }
 
         /// <inheritdoc />
