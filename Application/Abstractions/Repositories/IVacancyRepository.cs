@@ -24,6 +24,11 @@ public interface IVacancyRepository
     Task RemoveCompetencyByIdAsync(int vacancyId, int competencyId, CancellationToken cancellationToken);
 
     Task RemoveCompetencyByNameAsync(string vacancyName, string competencyName,  CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Удаляет все компетенции из вакансии.
+    /// </summary>
+    Task ClearCompetenciesAsync(int vacancyId, CancellationToken cancellationToken);
 
     Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken);
 

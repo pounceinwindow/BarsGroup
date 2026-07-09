@@ -461,7 +461,8 @@ public sealed class SpectrumDemoState
         Department = vacancy.Department,
         Status = vacancy.Status,
         Description = vacancy.Description,
-        IsActive = vacancy.IsActive
+        IsActive = vacancy.IsActive,
+        CompetencyIds = vacancy.CompetencyIds.ToList()
     };
 
     public static CompetencyForm ToForm(DemoCompetency competency) => new()
@@ -832,6 +833,7 @@ public sealed class VacancyForm
     public string Status { get; set; } = "Открыта";
     public string Description { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    public List<int> CompetencyIds { get; set; } = new();
 }
 
 public sealed class CompetencyForm

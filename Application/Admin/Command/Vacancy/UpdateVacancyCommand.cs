@@ -1,4 +1,5 @@
 using Application.Abstractions.Repositories;
+using Application.Abstractions;
 using Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -7,18 +8,22 @@ namespace Application.Admin.Command.Vacancy
 {
     public record UpdateVacancyCommand(
         int Id,
-        string VacancyName) : IRequest<Result>;
+        string VacancyName,
+        List<int> CompetencyIds) : IRequest<Result>;
 
     internal class UpdateVacancyCommandHandler : IRequestHandler<UpdateVacancyCommand, Result>
     {
         private readonly IVacancyRepository _repo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<UpdateVacancyCommandHandler> _logger;
 
         public UpdateVacancyCommandHandler(
             IVacancyRepository repo,
+            IUnitOfWork unitOfWork,
             ILogger<UpdateVacancyCommandHandler> logger)
         {
             _repo = repo;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -33,9 +38,16 @@ namespace Application.Admin.Command.Vacancy
                     return Result.Failure("Vacancy not found");
 
                 vacancy.UpdateName(request.VacancyName);
-
                 await _repo.UpdateAsync(vacancy, cancellationToken);
+                await _repo.ClearCompetenciesAsync(vacancy.Id, cancellationToken);
 
+                foreach (var competencyId in request.CompetencyIds)
+                {
+                    await _repo.AddCompetencyByIdAsync(vacancy.Id, competencyId, cancellationToken);
+                }
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                
                 return Result.Success();
             }
             catch (Exception ex)

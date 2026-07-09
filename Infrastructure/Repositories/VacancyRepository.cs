@@ -124,6 +124,15 @@ public class VacancyRepository(BarsContext context) : IVacancyRepository
         await RemoveCompetencyByIdAsync(vacancyId, competencyId, cancellationToken);
     }
 
+    public async Task ClearCompetenciesAsync(int vacancyId, CancellationToken cancellationToken)
+    {
+        var links = await context.VacancyCompetencies
+            .Where(vc => vc.VacancyId == vacancyId)
+            .ToListAsync(cancellationToken);
+            
+        context.VacancyCompetencies.RemoveRange(links);
+    }
+
     public Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken)
     {
         return context.Vacancies.AnyAsync(vacancy => vacancy.Id == id, cancellationToken);

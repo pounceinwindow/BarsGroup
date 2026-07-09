@@ -38,7 +38,21 @@
                     <div class="panel-heading"><div><span class="eyebrow dark">@(SelectedVacancyId is null ? "Создание" : "Редактирование")</span><h3>Вакансия</h3></div></div>
                     <div class="form-grid">
                         <label class="span-2">Название<input @bind="VacancyForm.Title" @bind:event="oninput" /></label>
-                        <p class="form-note span-2">В текущей Domain-модели вакансии хранится только название, поэтому сохраняем именно его.</p>
+                        
+                        <div class="span-2">
+                            <label>Компетенции (выберите от 3 до 15)</label>
+                            <div class="competencies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+                                @foreach (var competency in State.Competencies.Where(c => c.IsActive))
+                                {
+                                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                                        <input type="checkbox" 
+                                               checked="@VacancyForm.CompetencyIds.Contains(competency.Id)"
+                                               @onchange="@(e => ToggleCompetency(competency.Id, e.Value))" />
+                                        @competency.Name
+                                    </label>
+                                }
+                            </div>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button class="secondary-button" @onclick="ResetVacancyForm">Очистить</button>
@@ -299,17 +313,36 @@
 
     private async Task SaveVacancy()
     {
+        if (VacancyForm.CompetencyIds.Count < 3 || VacancyForm.CompetencyIds.Count > 15)
+        {
+            await ShowToast("Выберите от 3 до 15 компетенций.");
+            return;
+        }
+
         if (SelectedVacancyId is null)
         {
-            await _mediator.Send(new CreateVacancyCommand(VacancyForm.Title));
+            await _mediator.Send(new CreateVacancyCommand(VacancyForm.Title, VacancyForm.CompetencyIds));
         }
         else
         {
-            await _mediator.Send(new UpdateVacancyCommand(SelectedVacancyId.Value, VacancyForm.Title));
+            await _mediator.Send(new UpdateVacancyCommand(SelectedVacancyId.Value, VacancyForm.Title, VacancyForm.CompetencyIds));
         }
         State.Reload();
         ResetVacancyForm();
         await ShowToast("Вакансия сохранена");
+    }
+
+    private void ToggleCompetency(int competencyId, object? isChecked)
+    {
+        if (isChecked is true)
+        {
+            if (!VacancyForm.CompetencyIds.Contains(competencyId))
+                VacancyForm.CompetencyIds.Add(competencyId);
+        }
+        else
+        {
+            VacancyForm.CompetencyIds.Remove(competencyId);
+        }
     }
 
     private async Task SaveCompetency()
