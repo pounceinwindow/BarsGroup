@@ -1,4 +1,4 @@
-﻿using Application.PdfDocuments;
+using Application.PdfDocuments;
 using Application.Abstractions;
 using Application.Abstractions.Repositories;
 using Infrastructure.PdfDocuments;
@@ -32,6 +32,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICompetencyRepository, CompetencyRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddHttpClient<IIdentityService, Infrastructure.Identity.KeycloakIdentityService>();
 
         QuestPDF.Settings.License = LicenseType.Community;
         services.AddSingleton<IPdfDocumentService, PdfDocumentService>();
